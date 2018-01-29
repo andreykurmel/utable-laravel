@@ -14,3 +14,12 @@
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/table', function () {
+    return view('table');
+})->name('table');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
