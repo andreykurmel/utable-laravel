@@ -87,17 +87,17 @@ class TableService {
                     'checkAll' => true
                 ];
             }
-/*------------------------------------------------------*/
-            $sql = "
-            SELECT ts.field, di.option 
-            FROM tb 
-            INNER JOIN `tb_settings` as ts ON tb.id = ts.tb_id 
-            INNER JOIN ddl_items as di ON ts.ddl_id = di.list_id 
-            WHERE di.option IS NOT NULL AND tb.db_tb = '".$tableName."'";
-            $ddl = $conn->query($sql);
 
-            while($row = $ddl->fetch_assoc()) {
-                $respDDLs[$row['field']][] = $row['option'];
+            $ddls = DB::table('tb')
+                ->join('tb_settings as ts', 'tb.id', '=', 'ts.tb_id')
+                ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
+                ->select('ts.field', 'di.option')
+                ->where('tb.db_tb', '=', $tableName)
+                ->whereNotNull('di.option')
+                ->get();
+
+            foreach ($ddls as $row) {
+                $respDDLs[$row->field][] = $row->option;
             }
         }
 
@@ -106,26 +106,26 @@ class TableService {
         $responseArray["key_settings"] = array();
         $responseArray["filters"] = $respFilters;
         $responseArray["ddls"] = $respDDLs;
-        $responseArray["rows"] = $rowsCount->fetch_assoc()['rows'];
-        if ($result->num_rows > 0) {
+        $responseArray["rows"] = $rowsCount;
+        if ($result) {
+            $responseArray["data"] = $result;
             // output data of each row
-            while($row = $result->fetch_assoc()) {
-                if(sizeof($responseArray["key"]) == 0) {
-                    $responseArray["key"] = array_keys($row);
-                    $key_settings = $conn->query("SELECT ts.* FROM tb_settings as ts INNER JOIN tb ON tb.id = ts.tb_id WHERE tb.db_tb = '".$tableName."'");
-                    while($setting = $key_settings->fetch_assoc()) {
-                        $responseArray["key_settings"][$setting['field']] = $setting;
-                    }
+            if(sizeof($responseArray["key"]) == 0) {
+                $responseArray["key"] = array_keys((array)$result[0]);
+
+                $key_settings = DB::table('tb_settings as ts')
+                    ->join('tb', 'tb.id', '=', 'ts.tb_id')
+                    ->select('ts.*')
+                    ->where('tb.db_tb', '=', $tableName)
+                    ->get();
+                foreach ($key_settings as $setting) {
+                    $responseArray["key_settings"][$setting->field] = $setting;
                 }
-                array_push($responseArray["data"],$row);
             }
         } else {
-            $data = $conn->query("SELECT * FROM ". $tableName . " LIMIT 1");
-            $row = $data->fetch_assoc();
-            foreach ($row as $key => $val) {
-                $row[$key] = null;
-            }
-            array_push($responseArray["data"],$row);
+            $data = (array) DB::table($tableName)->first();
+            $data = array_fill_keys(array_keys($data), null);
+            array_push($responseArray["data"],$data);
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "No Data";
         }

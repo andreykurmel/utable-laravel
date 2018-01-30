@@ -43,4 +43,59 @@ class TableController extends Controller
     public function getSelectedTable(Request $request) {
         return $this->tableService->getData($request->tableName, $request);
     }
+
+    public function addTableRow(Request $request) {
+        $tableName= $request->tableName;
+
+        $params = $request->except(['id', 'tableName']);
+
+        $id = DB::table($tableName)->insert($params);
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['last_id'] = $id;
+            $responseArray['msg'] = "Data Inserted Successfully";
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function updateTableRow(Request $request) {
+        $id = $request->id;
+        $tableName= $request->tableName;
+
+        $params = $request->except(['id', 'tableName']);
+
+        $res = DB::table($tableName)->where('id', '=', $id)->update($params);
+
+        if ($res) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = "Data Updated Successfully";
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function deleteTableRow(Request $request) {
+        $id = $request->id;
+        $tableName= $request->tableName;
+
+        $res = DB::table($tableName)->where('id', '=', $id)->delete();
+
+        if ($res) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = 'Deleted Successfully';
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
 }
