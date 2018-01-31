@@ -9,13 +9,12 @@ class RedirectController extends Controller
     /**
      * Invoke the controller method.
      *
-     * @param  array  $args
+     * @param  string  $destination
+     * @param  int  $status
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function __invoke(...$args)
+    public function __invoke($destination, $status = 301)
     {
-        list($destination, $status) = array_slice($args, -2);
-
         return new RedirectResponse($destination, $status);
     }
 }

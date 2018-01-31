@@ -171,8 +171,8 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
     {
         $segments = explode('/', $this->decodedPath());
 
-        return array_values(array_filter($segments, function ($value) {
-            return $value !== '';
+        return array_values(array_filter($segments, function ($v) {
+            return $v !== '';
         }));
     }
 
@@ -287,26 +287,22 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      * Merge new input into the current request's input array.
      *
      * @param  array  $input
-     * @return \Illuminate\Http\Request
+     * @return void
      */
     public function merge(array $input)
     {
         $this->getInputSource()->add($input);
-
-        return $this;
     }
 
     /**
      * Replace the input for the current request.
      *
      * @param  array  $input
-     * @return \Illuminate\Http\Request
+     * @return void
      */
     public function replace(array $input)
     {
         $this->getInputSource()->replace($input);
-
-        return $this;
     }
 
     /**

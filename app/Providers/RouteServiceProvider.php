@@ -1,20 +1,30 @@
 <?php
 
-namespace App\Providers;
+namespace Vanguard\Providers;
 
-use Illuminate\Support\Facades\Route;
+use Route;
+use Vanguard\Permission;
+use Vanguard\Repositories\Role\RoleRepository;
+use Vanguard\Repositories\Session\SessionRepository;
+use Vanguard\Repositories\User\UserRepository;
+use Illuminate\Routing\Router;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RouteServiceProvider extends ServiceProvider
 {
     /**
-     * This namespace is applied to your controller routes.
-     *
+     * This namespace is applied to the controller routes in your web routes file.
      * In addition, it is set as the URL generator's root namespace.
-     *
      * @var string
      */
-    protected $namespace = 'App\Http\Controllers';
+    protected $webNamespace = 'Vanguard\Http\Controllers\Web';
+
+    /**
+     * This namespace is applied to the controller routes in your api routes file.
+     * @var string
+     */
+    protected $apiNamespace = 'Vanguard\Http\Controllers\Api';
 
     /**
      * Define your route model bindings, pattern filters, etc.
@@ -23,9 +33,11 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
-
         parent::boot();
+
+        $this->bindUser();
+        $this->bindRole();
+        $this->bindSession();
     }
 
     /**
@@ -35,11 +47,11 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function map()
     {
-        $this->mapApiRoutes();
+        if ($this->app['config']->get('auth.expose_api')) {
+            $this->mapApiRoutes();
+        }
 
         $this->mapWebRoutes();
-
-        //
     }
 
     /**
@@ -51,9 +63,12 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes()
     {
-        Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+        Route::group([
+            'namespace' => $this->webNamespace,
+            'middleware' => 'web',
+        ], function ($router) {
+            require base_path('routes/web.php');
+        });
     }
 
     /**
@@ -65,9 +80,38 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapApiRoutes()
     {
-        Route::prefix('api')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+        Route::group([
+            'middleware' => 'api',
+            'namespace' => $this->apiNamespace,
+            'prefix' => 'api',
+        ], function () {
+            require base_path('routes/api.php');
+        });
+    }
+
+    private function bindUser()
+    {
+        $this->bindUsingRepository('user', UserRepository::class);
+    }
+
+    private function bindRole()
+    {
+        $this->bindUsingRepository('role', RoleRepository::class);
+    }
+
+    private function bindSession()
+    {
+        $this->bindUsingRepository('session', SessionRepository::class);
+    }
+
+    private function bindUsingRepository($entity, $repository, $method = 'find')
+    {
+        Route::bind($entity, function ($id) use ($repository, $method) {
+            if ($object = app($repository)->$method($id)) {
+                return $object;
+            }
+
+            throw new NotFoundHttpException("Resource not found.");
+        });
     }
 }

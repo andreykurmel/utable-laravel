@@ -24,9 +24,7 @@ var_dump(array(
 $eHandler[0]->setExceptionHandler('print_r');
 
 if (true) {
-    class Broken implements \Serializable
-    {
-    }
+    class Broken implements \Serializable {};
 }
 
 ?>

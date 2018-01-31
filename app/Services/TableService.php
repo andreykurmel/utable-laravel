@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Vanguard\Services;
 
 use Illuminate\Support\Facades\DB;
 

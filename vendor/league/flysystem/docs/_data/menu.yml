@@ -1,7 +1,6 @@
 Getting Started:
     Introduction: '/'
     Installation: '/installation/'
-    Sponsors: '/sponsors/'
     Integrations: '/integrations/'
     Core concepts: '/core-concepts/'
     The API: '/api/'
@@ -18,7 +17,6 @@ Adapters:
     AWS S3 V2: '/adapter/aws-s3-v2/'
     AWS S3 V3: '/adapter/aws-s3-v3/'
     Copy.com: '/adapter/copy/'
-    DigitalOcean Spaces: '/adapter/digitalocean-spaces/'
     Dropbox: '/adapter/dropbox/'
     FTP: '/adapter/ftp/'
     GridFS: '/adapter/gridfs/'

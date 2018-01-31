@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace Vanguard\Http\Middleware;
 
-use Illuminate\Cookie\Middleware\EncryptCookies as Middleware;
+use Illuminate\Cookie\Middleware\EncryptCookies as BaseEncrypter;
 
-class EncryptCookies extends Middleware
+class EncryptCookies extends BaseEncrypter
 {
     /**
      * The names of the cookies that should not be encrypted.
@@ -12,6 +12,6 @@ class EncryptCookies extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        'sidebar'
     ];
 }

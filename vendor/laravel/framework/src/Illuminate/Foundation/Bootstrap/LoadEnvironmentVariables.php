@@ -39,11 +39,9 @@ class LoadEnvironmentVariables
     protected function checkForSpecificEnvironmentFile($app)
     {
         if ($app->runningInConsole() && ($input = new ArgvInput)->hasParameterOption('--env')) {
-            if ($this->setEnvironmentFilePath(
+            $this->setEnvironmentFilePath(
                 $app, $app->environmentFile().'.'.$input->getParameterOption('--env')
-            )) {
-                return;
-            }
+            );
         }
 
         if (! env('APP_ENV')) {
@@ -60,16 +58,12 @@ class LoadEnvironmentVariables
      *
      * @param  \Illuminate\Contracts\Foundation\Application  $app
      * @param  string  $file
-     * @return bool
+     * @return void
      */
     protected function setEnvironmentFilePath($app, $file)
     {
         if (file_exists($app->environmentPath().'/'.$file)) {
             $app->loadEnvironmentFrom($file);
-
-            return true;
         }
-
-        return false;
     }
 }

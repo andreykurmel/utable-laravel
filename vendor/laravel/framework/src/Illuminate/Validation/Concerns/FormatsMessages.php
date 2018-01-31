@@ -20,7 +20,9 @@ trait FormatsMessages
      */
     protected function getMessage($attribute, $rule)
     {
-        $inlineMessage = $this->getInlineMessage($attribute, $rule);
+        $inlineMessage = $this->getFromLocalArray(
+            $attribute, $lowerRule = Str::snake($rule)
+        );
 
         // First we will retrieve the custom message for the validation rule if one
         // exists. If a custom validation message is being used we'll return the
@@ -28,8 +30,6 @@ trait FormatsMessages
         if (! is_null($inlineMessage)) {
             return $inlineMessage;
         }
-
-        $lowerRule = Str::snake($rule);
 
         $customMessage = $this->getCustomMessageFromTranslator(
             $customKey = "validation.custom.{$attribute}.{$lowerRule}"
@@ -61,22 +61,6 @@ trait FormatsMessages
         return $this->getFromLocalArray(
             $attribute, $lowerRule, $this->fallbackMessages
         ) ?: $key;
-    }
-
-    /**
-     * Get the proper inline error message for standard and size rules.
-     *
-     * @param  string  $attribute
-     * @param  string  $rule
-     * @return string|null
-     */
-    protected function getInlineMessage($attribute, $rule)
-    {
-        $inlineEntry = $this->getFromLocalArray($attribute, Str::snake($rule));
-
-        return is_array($inlineEntry) && in_array($rule, $this->sizeRules)
-                    ? $inlineEntry[$this->getAttributeType($attribute)]
-                    : $inlineEntry;
     }
 
     /**

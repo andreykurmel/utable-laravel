@@ -3,7 +3,6 @@
 namespace Illuminate\Notifications\Messages;
 
 use Illuminate\Notifications\Action;
-use Illuminate\Contracts\Support\Htmlable;
 
 class SimpleMessage
 {
@@ -142,7 +141,7 @@ class SimpleMessage
     /**
      * Add a line of text to the notification.
      *
-     * @param  mixed  $line
+     * @param  \Illuminate\Notifications\Action|string  $line
      * @return $this
      */
     public function line($line)
@@ -153,7 +152,7 @@ class SimpleMessage
     /**
      * Add a line of text to the notification.
      *
-     * @param  mixed  $line
+     * @param  \Illuminate\Notifications\Action|string|array  $line
      * @return $this
      */
     public function with($line)
@@ -172,15 +171,11 @@ class SimpleMessage
     /**
      * Format the given line of text.
      *
-     * @param  \Illuminate\Contracts\Support\Htmlable|string|array  $line
-     * @return \Illuminate\Contracts\Support\Htmlable|string
+     * @param  string|array  $line
+     * @return string
      */
     protected function formatLine($line)
     {
-        if ($line instanceof Htmlable) {
-            return $line;
-        }
-
         if (is_array($line)) {
             return implode(' ', array_map('trim', $line));
         }

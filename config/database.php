@@ -34,24 +34,30 @@ return [
     'connections' => [
 
         'sqlite' => [
-            'driver' => 'sqlite',
+            'driver'   => 'sqlite',
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
-            'prefix' => '',
+            'prefix'   => env('DB_PREFIX', ''),
+        ],
+
+        'sqlite_memory' => [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => env('DB_PREFIX', ''),
         ],
 
         'mysql' => [
-            'driver' => 'mysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', 'localhost'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_DATABASE', 'forge'),
+            'username'  => env('DB_USERNAME', 'forge'),
+            'password'  => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => 'utf8mb4',
+            'charset'   => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'strict' => true,
-            'engine' => null,
+            'prefix'    => env('DB_PREFIX', ''),
+            'strict'    => false,
+            'engine'    => 'InnoDB'
         ],
 
         'pgsql' => [
@@ -102,16 +108,20 @@ return [
     | provides a richer set of commands than a typical key-value systems
     | such as APC or Memcached. Laravel makes it easy to dig right in.
     |
+    | Note: Don't forget to uncomment RedisServiceProvider inside config/app.php
+    | file after you install predis package.
+    |
     */
 
     'redis' => [
 
         'client' => 'predis',
 
+        'cluster' => false,
+
         'default' => [
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'password' => env('REDIS_PASSWORD', null),
-            'port' => env('REDIS_PORT', 6379),
+            'host'     => '127.0.0.1',
+            'port'     => 6379,
             'database' => 0,
         ],
 

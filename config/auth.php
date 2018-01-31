@@ -4,6 +4,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Social Authentication Providers
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the list of enabled social authentication providers.
+    |
+    */
+
+    'social' => [
+        'providers' => ['facebook', 'twitter', 'google']
+    ],
+
+   /*
+   |--------------------------------------------------------------------------
+   | JSON API
+   |--------------------------------------------------------------------------
+   |
+   | Should our JSON api be exposed to the public? If you want to enable the
+   | API, just set the following option to "true":
+   |
+   | Default: false
+   */
+
+    'expose_api' => env('EXPOSE_API', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Defaults
     |--------------------------------------------------------------------------
     |
@@ -42,7 +68,7 @@ return [
         ],
 
         'api' => [
-            'driver' => 'token',
+            'driver' => 'jwt',
             'provider' => 'users',
         ],
     ],
@@ -67,7 +93,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\User::class,
+            'model' => Vanguard\User::class,
         ],
 
         // 'users' => [
@@ -80,6 +106,10 @@ return [
     |--------------------------------------------------------------------------
     | Resetting Passwords
     |--------------------------------------------------------------------------
+    |
+    | Here you may set the options for resetting passwords including the view
+    | that is your password reset e-mail. You may also set the name of the
+    | table that maintains all of the reset tokens for your application.
     |
     | You may specify multiple password reset configurations if you have more
     | than one user table or model in the application and you want to have
@@ -94,6 +124,7 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
+            'email' => 'emails.password.remind',
             'table' => 'password_resets',
             'expire' => 60,
         ],

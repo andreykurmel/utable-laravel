@@ -271,8 +271,6 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function dd(...$args)
     {
-        http_response_code(500);
-
         call_user_func_array([$this, 'dump'], $args);
 
         die(1);
@@ -393,7 +391,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     public function except($keys)
     {
         if ($keys instanceof self) {
-            $keys = $keys->all();
+            $keys = $keys->keys()->all();
         } elseif (! is_array($keys)) {
             $keys = func_get_args();
         }
@@ -660,12 +658,6 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function groupBy($groupBy, $preserveKeys = false)
     {
-        if (is_array($groupBy)) {
-            $nextGroups = $groupBy;
-
-            $groupBy = array_shift($nextGroups);
-        }
-
         $groupBy = $this->valueRetriever($groupBy);
 
         $results = [];
@@ -688,13 +680,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
             }
         }
 
-        $result = new static($results);
-
-        if (! empty($nextGroups)) {
-            return $result->map->groupBy($nextGroups, $preserveKeys);
-        }
-
-        return $result;
+        return new static($results);
     }
 
     /**
@@ -1064,10 +1050,6 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     {
         if (is_null($keys)) {
             return new static($this->items);
-        }
-
-        if ($keys instanceof self) {
-            $keys = $keys->all();
         }
 
         $keys = is_array($keys) ? $keys : func_get_args();

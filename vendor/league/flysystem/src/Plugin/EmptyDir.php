@@ -17,7 +17,7 @@ class EmptyDir extends AbstractPlugin
     /**
      * Empty a directory's contents.
      *
-     * @param string $dirname
+     * @param $dirname
      */
     public function handle($dirname)
     {

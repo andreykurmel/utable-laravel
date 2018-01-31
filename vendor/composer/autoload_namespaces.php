@@ -6,10 +6,12 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Webpatser\\Countries' => array($vendorDir . '/webpatser/laravel-countries/src'),
     'Prophecy\\' => array($vendorDir . '/phpspec/prophecy/src'),
     'Parsedown' => array($vendorDir . '/erusev/parsedown'),
     'Mockery' => array($vendorDir . '/mockery/mockery/library'),
-    'JakubOnderka\\PhpConsoleHighlighter' => array($vendorDir . '/jakub-onderka/php-console-highlighter/src'),
-    'JakubOnderka\\PhpConsoleColor' => array($vendorDir . '/jakub-onderka/php-console-color/src'),
+    'Laracasts\\Presenter' => array($vendorDir . '/laracasts/presenter/src'),
     'Doctrine\\Common\\Lexer\\' => array($vendorDir . '/doctrine/lexer/lib'),
+    'Detection' => array($vendorDir . '/mobiledetect/mobiledetectlib/namespaced'),
+    'Barryvdh' => array($vendorDir . '/barryvdh/reflection-docblock/src'),
 );

@@ -946,7 +946,7 @@ class ResponseTest extends ResponseTestCase
 
         $ianaCodesReasonPhrases = array();
 
-        $xpath = new \DOMXPath($ianaHttpStatusCodes);
+        $xpath = new \DomXPath($ianaHttpStatusCodes);
         $xpath->registerNamespace('ns', 'http://www.iana.org/assignments');
 
         $records = $xpath->query('//ns:record');

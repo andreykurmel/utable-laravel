@@ -39,17 +39,6 @@ class AnonymousNotifiable
     }
 
     /**
-     * Send the given notification immediately.
-     *
-     * @param  mixed  $notification
-     * @return void
-     */
-    public function notifyNow($notification)
-    {
-        app(Dispatcher::class)->sendNow($this, $notification);
-    }
-
-    /**
      * Get the notification routing information for the given driver.
      *
      * @param  string  $driver

@@ -95,7 +95,6 @@ return [
     | correspond with one of the application's configured cache stores.
     |
     */
-
     'store' => null,
 
     /*
@@ -176,7 +175,6 @@ return [
     | the HTTP protocol. You are free to modify this option if needed.
     |
     */
-
     'http_only' => true,
 
     /*
@@ -191,7 +189,6 @@ return [
     | Supported: "lax", "strict"
     |
     */
-
     'same_site' => null,
 
 ];

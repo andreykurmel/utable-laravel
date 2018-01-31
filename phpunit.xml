@@ -9,23 +9,26 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Feature">
+        <testsuite name="Feature Tests">
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
 
-        <testsuite name="Unit">
+        <testsuite name="Unit Tests">
             <directory suffix="Test.php">./tests/Unit</directory>
         </testsuite>
     </testsuites>
     <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">./app</directory>
+        <whitelist>
+            <directory suffix=".php">app/</directory>
         </whitelist>
     </filter>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_DEBUG" value="true"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="QUEUE_DRIVER" value="sync"/>
+        <env name="DB_CONNECTION" value="sqlite_memory"/>
+        <env name="MAIL_DRIVER" value="smtp"/>
     </php>
 </phpunit>

@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of sebastian/comparator.
+ * This file is part of the Comparator package.
  *
  * (c) Sebastian Bergmann <sebastian@phpunit.de>
  *
@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass SebastianBergmann\Comparator\ResourceComparator
- *
  * @uses SebastianBergmann\Comparator\Comparator
  * @uses SebastianBergmann\Comparator\Factory
  * @uses SebastianBergmann\Comparator\ComparisonFailure
@@ -30,8 +29,8 @@ class ResourceComparatorTest extends TestCase
 
     public function acceptsSucceedsProvider()
     {
-        $tmpfile1 = \tmpfile();
-        $tmpfile2 = \tmpfile();
+        $tmpfile1 = tmpfile();
+        $tmpfile2 = tmpfile();
 
         return [
           [$tmpfile1, $tmpfile1],
@@ -42,7 +41,7 @@ class ResourceComparatorTest extends TestCase
 
     public function acceptsFailsProvider()
     {
-        $tmpfile1 = \tmpfile();
+        $tmpfile1 = tmpfile();
 
         return [
           [$tmpfile1, null],
@@ -53,8 +52,8 @@ class ResourceComparatorTest extends TestCase
 
     public function assertEqualsSucceedsProvider()
     {
-        $tmpfile1 = \tmpfile();
-        $tmpfile2 = \tmpfile();
+        $tmpfile1 = tmpfile();
+        $tmpfile2 = tmpfile();
 
         return [
           [$tmpfile1, $tmpfile1],
@@ -64,8 +63,8 @@ class ResourceComparatorTest extends TestCase
 
     public function assertEqualsFailsProvider()
     {
-        $tmpfile1 = \tmpfile();
-        $tmpfile2 = \tmpfile();
+        $tmpfile1 = tmpfile();
+        $tmpfile2 = tmpfile();
 
         return [
           [$tmpfile1, $tmpfile2],

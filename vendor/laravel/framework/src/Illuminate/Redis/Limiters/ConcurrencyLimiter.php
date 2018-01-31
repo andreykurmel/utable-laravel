@@ -120,7 +120,6 @@ LUA;
     /**
      * Release the lock.
      *
-     * @param  string  $key
      * @return void
      */
     protected function release($key)

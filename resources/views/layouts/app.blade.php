@@ -1,85 +1,106 @@
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<!doctype html>
+<html lang="en">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>@yield('page-title') | {{ settings('app_name') }}</title>
 
-    <!-- Styles -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/all.css') }}" rel="stylesheet">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
-    @stack('styles')
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
+
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ url('assets/img/icons/apple-touch-icon-144x144.png') }}" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ url('assets/img/icons/apple-touch-icon-152x152.png') }}" />
+    <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-32x32.png') }}" sizes="32x32" />
+    <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-16x16.png') }}" sizes="16x16" />
+    <meta name="application-name" content="{{ settings('app_name') }}"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="{{ url('assets/img/icons/mstile-144x144.png') }}" />
+
+    {{-- For production, it is recommended to combine following styles into one. --}}
+    {!! HTML::style('assets/css/bootstrap.min.css') !!}
+    {!! HTML::style('assets/css/font-awesome.min.css') !!}
+    {!! HTML::style('assets/css/metisMenu.css') !!}
+    {!! HTML::style('assets/css/sweetalert.css') !!}
+    {!! HTML::style('assets/css/bootstrap-social.css') !!}
+    {!! HTML::style('assets/css/app.css') !!}
+
+    @yield('styles')
 </head>
 <body>
-    <div id="app">
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container">
-                <div class="navbar-header">
-
-                    <!-- Collapsed Hamburger -->
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#app-navbar-collapse" aria-expanded="false">
-                        <span class="sr-only">Toggle Navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-
-                    <!-- Branding Image -->
-                    <a class="navbar-brand" href="{{ url('/') }}">
-                        {{ config('app.name', 'Laravel') }}
-                    </a>
-                </div>
-
-                <div class="collapse navbar-collapse" id="app-navbar-collapse">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="nav navbar-nav">
-                        &nbsp;
-                    </ul>
-
-                    <!-- Right Side Of Navbar -->
-                    <ul class="nav navbar-nav navbar-right">
-                        <!-- Authentication Links -->
-                        @guest
-                            <li><a href="{{ route('login') }}">Login</a></li>
-                            <li><a href="{{ route('register') }}">Register</a></li>
-                        @else
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true">
-                                    {{ Auth::user()->name }} <span class="caret"></span>
-                                </a>
-
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a href="{{ route('logout') }}"
-                                            onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                            Logout
-                                        </a>
-
-                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                            {{ csrf_field() }}
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endguest
-                    </ul>
-                </div>
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="{{ route('dashboard') }}" style="padding: 7px 0 0 0;">
+                    <img src="{{ url('assets/img/vanguard-logo.png') }}" height="40" alt="{{ settings('app_name') }}">
+                </a>
             </div>
-        </nav>
+            <div id="navbar" class="navbar-collapse">
+                <a href="#" id="sidebar-toggle" class="btn">
+                    <i class="navbar-icon fa fa-bars icon"></i>
+                </a>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle avatar" data-toggle="dropdown">
+                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->present()->avatar }}">
+                            {{ Auth::user()->present()->name }}
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="{{ route('profile') }}">
+                                    <i class="fa fa-user"></i>
+                                    @lang('app.my_profile')
+                                </a>
+                            </li>
+                            @if (config('session.driver') == 'database')
+                                <li>
+                                    <a href="{{ route('profile.sessions') }}">
+                                        <i class="fa fa-list"></i>
+                                        @lang('app.active_sessions')
+                                    </a>
+                                </li>
+                            @endif
+                            <li>
+                                <a href="{{ route('auth.logout') }}">
+                                    <i class="fa fa-sign-out"></i>
+                                    @lang('app.logout')
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-        @yield('content')
+    @if(Auth::user())
+        @include('partials.sidebar')
+    @endif
+
+    <div id="page-wrapper">
+        <div class="container-fluid">
+            @yield('content')
+        </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}"></script>
-    <script src="{{ asset('js/all.js') }}"></script>
-    @stack('scripts')
+    {{-- For production, it is recommended to combine following scripts into one. --}}
+    {!! HTML::script('assets/js/jquery-2.1.4.min.js') !!}
+    {!! HTML::script('assets/js/bootstrap.min.js') !!}
+    {!! HTML::script('assets/js/metisMenu.min.js') !!}
+    {!! HTML::script('assets/js/sweetalert.min.js') !!}
+    {!! HTML::script('assets/js/delete.handler.js') !!}
+    {!! HTML::script('assets/plugins/js-cookie/js.cookie.js') !!}
+    <script type="text/javascript">
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+    </script>
+    {!! HTML::script('vendor/jsvalidation/js/jsvalidation.js') !!}
+    {!! HTML::script('assets/js/as/app.js') !!}
+    @yield('scripts')
 </body>
 </html>
