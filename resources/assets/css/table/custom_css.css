@@ -1,0 +1,91 @@
+.selectcustom{
+    border-radius: 4px;
+    padding: 0px 9px;
+    border: 0px none;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    line-height: 16px;
+    box-shadow: 0px 0px 0px 1px rgba(51, 153, 255, 0) inset, 0px 2px 5px rgba(0, 0, 0, 0.35) inset, 0px 1px 1px rgba(255, 255, 255, 0.5), 0px 0px 0px rgba(51, 153, 255, 0);
+    background: -moz-linear-gradient(center top , #FFF, #E6E6E6) repeat scroll 0% 0% transparent;
+    width:100px;
+    color: #444;
+}
+
+.accordion dt {
+    color: #666666;
+    background: #d6dadf url(../img/old-browsers/colors/bg_button.png) repeat-x;
+    -webkit-background-size: 100% 100%;
+    -moz-background-size: 100% 100%;
+    -o-background-size: 100% 100%;
+    background-size: 100% 100%;
+    background: -webkit-gradient(linear, left top, left bottom, from(#efeff4), to(#d6dadf));
+    background: -webkit-linear-gradient(top, #efeff4, #d6dadf);
+    background: -moz-linear-gradient(top, #efeff4, #d6dadf);
+    background: -ms-linear-gradient(top, #efeff4, #d6dadf);
+    background: -o-linear-gradient(top, #efeff4, #d6dadf);
+    background: linear-gradient(top, #efeff4, #d6dadf);
+    border-color: #cccccc;
+    display: block;
+    position: relative;
+    padding: 10px 11px;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    cursor: pointer;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 1px 1px rgba(0, 0, 0, 0.15);
+    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 1px 1px rgba(0, 0, 0, 0.15);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 1px 1px rgba(0, 0, 0, 0.15)
+}
+
+.accordion .dt:first-child {
+    border-top-width: 0;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+list > li:first-child {
+    border-top: 0;
+}
+
+.list > li {
+    border-top: 1px dotted #cccccc;
+    position: relative;
+}
+
+.list > li, .list-link {
+    padding: 4px 0;
+    color: #808080;
+    min-height: 16px;
+    line-height: 16px;
+}
+
+.list li{
+        margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+}
+
+.mr5{
+    margin-right:5px;
+}
+
+.editable-modal td{
+        vertical-align:baseline;
+}
+
+.editable-modal td input{
+        margin-bottom:5px;
+}
+
+.editable-modal .custom-scroll {
+    overflow-y:auto !important;
+}

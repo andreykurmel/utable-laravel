@@ -5,7 +5,8 @@ namespace Vanguard\Services;
 use Illuminate\Support\Facades\DB;
 
 class TableService {
-    public function getData($tableName, $post) {
+    public function getData($post) {
+        $tableName = $post->tableName;
         $responseArray = array();
         $page = isset($post->p) ? (int)$post->p : 0;
         $count = isset($post->c) ? (int)$post->c : 0;
@@ -74,11 +75,12 @@ class TableService {
                 ->join('tb', 'tb.id', '=', 'tb_settings.tb_id')
                 ->select('tb_settings.field as field', 'tb_settings.name as name')
                 ->where('tb.db_tb', '=', $tableName)
-                ->where('tb_settings', '=', 'Yes')
+                ->where('tb_settings.filter', '=', 'Yes')
                 ->get();
             foreach ($selected_filters as $sf) {
                 $datas = DB::table($tableName)
-                    ->select($sf->field." as value", "true as checked")
+                    ->select($sf->field." as value")
+                    ->selectRaw("true as checked")
                     ->distinct()->first();
                 $respFilters[] = [
                     'key' => $sf->field,

@@ -1,0 +1,17 @@
+.navbar-default {
+    background-color: transparent;
+}
+
+/* --- show/hide columns + downloaders --- */
+.selectcustom {
+    border-radius: 4px;
+    padding: 0px 9px;
+    border: 0px none;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    line-height: 16px;
+    box-shadow: 0px 0px 0px 1px rgba(51, 153, 255, 0) inset, 0px 2px 5px rgba(0, 0, 0, 0.35) inset, 0px 1px 1px rgba(255, 255, 255, 0.5), 0px 0px 0px rgba(51, 153, 255, 0);
+    background: -moz-linear-gradient(center top , #FFF, #E6E6E6) repeat scroll 0% 0% transparent;
+    width:100px;
+    color: #444;
+}

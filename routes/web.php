@@ -3,7 +3,7 @@
  * Utable routes
  */
 Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
-Route::get('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
+Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
 Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
 Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
 Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');

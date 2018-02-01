@@ -42,7 +42,7 @@ class TableController extends Controller
     }
 
     public function getSelectedTable(Request $request) {
-        return $this->tableService->getData($request->tableName, $request);
+        return $this->tableService->getData($request);
     }
 
     public function addTableRow(Request $request) {
