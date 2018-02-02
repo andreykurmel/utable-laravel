@@ -28,7 +28,7 @@
     {!! HTML::style('css/table.css') !!}
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
-<body class="clearfix with-menu"  ng-app="myApp" ng-controller="myCtrl">
+<body class="clearfix with-menu"  ng-app="myApp" ng-controller="myCtrl" style="display: none;">
     <div class="div-screen">
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
@@ -121,9 +121,106 @@
                     <!-- Content -->
                     <div class="tabs-content" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; left: 20px; bottom: 10px; top: 100px;">
 
-                        <div id="list_view" style='padding:5px 20px 20px 20px; position: absolute; height: 100%; top: 0; left: 0; right: 0;'>
+                        <div id="list_view" style='padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
+                            <h2 style='font-size:14px;' id='main-search-wrapper' ng-if="selectedTableName == 'st'">
+                                <span class="input ">
+                                   <form method="post" action="#" id='frm-search-latlng' style='padding-bottom: 2px;'>
+                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
+                                      <input name="dec-lat" id="frm-dec-lat" class="input-unstyled input-sep validate[required]" placeholder="Latitude" value="" maxlength="50" style='width:100px' type="text">
+                                      <input name="dec-lng" id="frm-dec-lng" class="input-unstyled input-sep validate[required]" placeholder="Longitude" value="" maxlength="50" style='width:100px' type="text">
+                                      <input name="dec-radius" id="frm-dec-radius" class="input-unstyled validate[required]" placeholder="Radius MI" style='width:70px' value=""  maxlength="2" type="text">
+                                      <select id='tower-owners-latlng' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
+                                            <option value="all">Owner:All</option>
+                                                                  </select>
+                                      <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
+                                   </form>
+                                   <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
+                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
+                                      <input name="address" id="frm-address" class="input-unstyled input-sep" placeholder="Street Address" value="" maxlength="50" style='width:100px' type="text">
+                                      <input name="city" id="frm-city" class="input-unstyled input-sep" placeholder="City" value="" maxlength="50" style='width:100px' type="text">
+                                      <select id='frm-state' name="state" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px' >
+                                        <option value="">State</option>
+                                        <option value="AK">Alaska</option>
+                                        <option value="AL">Alabama</option>
+                                        <option value="AR">Arkansas</option>
+                                        <option value="AZ">Arizona</option>
+                                        <option value="CA">California</option>
+                                        <option value="CO">Colorado</option>
+                                        <option value="CT">Connecticut</option>
+                                        <option value="DC">District of Columbia</option>
+                                        <option value="DE">Delaware</option>
+                                        <option value="FL">Florida</option>
+                                        <option value="GA">Georgia</option>
+                                        <option value="HI">Hawaii</option>
+                                        <option value="IA">Iowa</option>
+                                        <option value="ID">Idaho</option>
+                                        <option value="IL">Illinois</option>
+                                        <option value="IN">Indiana</option>
+                                        <option value="KS">Kansas</option>
+                                        <option value="KY">Kentucky</option>
+                                        <option value="LA">Louisiana</option>
+                                        <option value="MA">Massachusetts</option>
+                                        <option value="MD">Maryland</option>
+                                        <option value="ME">Maine</option>
+                                        <option value="MI">Michigan</option>
+                                        <option value="MN">Minnesota</option>
+                                        <option value="MO">Missouri</option>
+                                        <option value="MS">Mississippi</option>
+                                        <option value="MT">Montana</option>
+                                        <option value="NC">North Carolina</option>
+                                        <option value="ND">North Dakota</option>
+                                        <option value="NE">Nebraska</option>
+                                        <option value="NH">New Hampshire</option>
+                                        <option value="NJ">New Jersey</option>
+                                        <option value="NM">New Mexico</option>
+                                        <option value="NV">Nevada</option>
+                                        <option value="NY">New York</option>
+                                        <option value="OH">Ohio</option>
+                                        <option value="OK">Oklahoma</option>
+                                        <option value="OR">Oregon</option>
+                                        <option value="PA">Pennsylvania</option>
+                                        <option value="RI">Rhode Island</option>
+                                        <option value="SC">South Carolina</option>
+                                        <option value="SD">South Dakota</option>
+                                        <option value="TN">Tennessee</option>
+                                        <option value="TX">Texas</option>
+                                        <option value="UT">Utah</option>
+                                        <option value="VA">Virginia</option>
+                                        <option value="VT">Vermont</option>
+                                        <option value="WA">Washington</option>
+                                        <option value="WI">Wisconsin</option>
+                                        <option value="WV">West Virginia</option>
+                                        <option value="WY">Wyoming</option>
+                                        <option value="PR">Puerto Rico</option>
+                                        <option value="VI">Virgin Islands</option>
+                                      </select>
 
-                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 20px;">
+                                          <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
+                                          <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
+                                          <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
+                                                <option value="all">Owner:All</option>
+                                                                </select>
+                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
+                                       </form>
+                                  </span>
+                                <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' ng-click="toggleSearchType()">
+                                    <i class="icon-page-list icon-size1"></i>
+                                </a>
+                                <div id="block-search-type" ng-show="showSearchType" style="position:relative;">
+                                    <span class="selectMultiple multiple white-gradient check-list replacement" style="width: 178px;position: absolute;z-index: 1500;" ng-style="frmSearchAddresIsVisible() ? {'left': '466px'} : {'left': '356px'}" tabindex="0">
+                                        <span class="drop-down">
+                                            <span class="selected" ng-click="showLatSearch()" id="search_type_lat">
+                                                <span class="check"></span>Latitude/Longitude
+                                            </span>
+                                            <span ng-click="showAddressSearch()" id="search_type_address">
+                                                <span class="check"></span>Address/Location
+                                            </span>
+                                        </span>
+                                    </span>
+                                </div>
+                            </h2>
+
+                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 20px; left: 20px;" ng-style="selectedTableName == 'st' ? {'top': '50px'} : {'top': '10px'}">
 
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
@@ -151,9 +248,9 @@
                                         </tr>
                                         </thead>
 
-                                        <tbody >
+                                        <tbody style="visibility: hidden;">
                                         <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
-                                            <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0">
+                                            <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
                                                 <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><i class="icon-info-round"> </i>
                                                     <b>[[value]]</b>
                                                 </a>
@@ -279,109 +376,12 @@
                         </div>
 
                         <div id="map_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
-                            <div id="map-google" style="position: absolute; height: 100%; top: 0; left: 0; right: 0;"></div>
+                            <div id="map-google" style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;"></div>
                         </div>
 
-                        <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; height: 100%; top: 0; left: 0; right: 0;">
-                            <h2 style='font-size:14px;' id='main-search-wrapper' ng-if="selectedTableName == 'st'">
-                                <span class="input ">
-                                   <form method="post" action="#" id='frm-search-latlng' style='padding-bottom: 2px;'>
-                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
-                                      <input name="dec-lat" id="frm-dec-lat" class="input-unstyled input-sep validate[required]" placeholder="Latitude" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="dec-lng" id="frm-dec-lng" class="input-unstyled input-sep validate[required]" placeholder="Longitude" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="dec-radius" id="frm-dec-radius" class="input-unstyled validate[required]" placeholder="Radius MI" style='width:70px' value=""  maxlength="2" type="text">
-                                      <select id='tower-owners-latlng' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
-                                            <option value="all">Owner:All</option>
-                                                                  </select>
-                                      <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
-                                   </form>
-                                   <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
-                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
-                                      <input name="address" id="frm-address" class="input-unstyled input-sep" placeholder="Street Address" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="city" id="frm-city" class="input-unstyled input-sep" placeholder="City" value="" maxlength="50" style='width:100px' type="text">
-                                      <select id='frm-state' name="state" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px' >
-                                        <option value="">State</option>
-                                        <option value="AK">Alaska</option>
-                                        <option value="AL">Alabama</option>
-                                        <option value="AR">Arkansas</option>
-                                        <option value="AZ">Arizona</option>
-                                        <option value="CA">California</option>
-                                        <option value="CO">Colorado</option>
-                                        <option value="CT">Connecticut</option>
-                                        <option value="DC">District of Columbia</option>
-                                        <option value="DE">Delaware</option>
-                                        <option value="FL">Florida</option>
-                                        <option value="GA">Georgia</option>
-                                        <option value="HI">Hawaii</option>
-                                        <option value="IA">Iowa</option>
-                                        <option value="ID">Idaho</option>
-                                        <option value="IL">Illinois</option>
-                                        <option value="IN">Indiana</option>
-                                        <option value="KS">Kansas</option>
-                                        <option value="KY">Kentucky</option>
-                                        <option value="LA">Louisiana</option>
-                                        <option value="MA">Massachusetts</option>
-                                        <option value="MD">Maryland</option>
-                                        <option value="ME">Maine</option>
-                                        <option value="MI">Michigan</option>
-                                        <option value="MN">Minnesota</option>
-                                        <option value="MO">Missouri</option>
-                                        <option value="MS">Mississippi</option>
-                                        <option value="MT">Montana</option>
-                                        <option value="NC">North Carolina</option>
-                                        <option value="ND">North Dakota</option>
-                                        <option value="NE">Nebraska</option>
-                                        <option value="NH">New Hampshire</option>
-                                        <option value="NJ">New Jersey</option>
-                                        <option value="NM">New Mexico</option>
-                                        <option value="NV">Nevada</option>
-                                        <option value="NY">New York</option>
-                                        <option value="OH">Ohio</option>
-                                        <option value="OK">Oklahoma</option>
-                                        <option value="OR">Oregon</option>
-                                        <option value="PA">Pennsylvania</option>
-                                        <option value="RI">Rhode Island</option>
-                                        <option value="SC">South Carolina</option>
-                                        <option value="SD">South Dakota</option>
-                                        <option value="TN">Tennessee</option>
-                                        <option value="TX">Texas</option>
-                                        <option value="UT">Utah</option>
-                                        <option value="VA">Virginia</option>
-                                        <option value="VT">Vermont</option>
-                                        <option value="WA">Washington</option>
-                                        <option value="WI">Wisconsin</option>
-                                        <option value="WV">West Virginia</option>
-                                        <option value="WY">Wyoming</option>
-                                        <option value="PR">Puerto Rico</option>
-                                        <option value="VI">Virgin Islands</option>
-                                      </select>
+                        <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
-                                          <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
-                                          <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
-                                          <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
-                                                <option value="all">Owner:All</option>
-                                                                </select>
-                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
-                                       </form>
-                                  </span>
-                                <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' ng-click="toggleSearchType()">
-                                    <i class="icon-page-list icon-size1"></i>
-                                </a>
-                                <div id="block-search-type" ng-show="showSearchType" style="position:relative;">
-                                    <span class="selectMultiple multiple white-gradient check-list replacement" style="width: 178px;position: absolute;z-index: 1500;" ng-style="frmSearchAddresIsVisible() ? {'left': '466px'} : {'left': '356px'}" tabindex="0">
-                                        <span class="drop-down">
-                                            <span class="selected" ng-click="showLatSearch()" id="search_type_lat">
-                                                <span class="check"></span>Latitude/Longitude
-                                            </span>
-                                            <span ng-click="showAddressSearch()" id="search_type_address">
-                                                <span class="check"></span>Address/Location
-                                            </span>
-                                        </span>
-                                    </span>
-                                </div>
-                            </h2>
-
-                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 20px; left: 20px;" ng-style="selectedTableName == 'st' ? {'top': '50px'} : {'top': '10px'}">
+                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 20px;">
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
                                         <label>

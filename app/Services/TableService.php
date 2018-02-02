@@ -13,6 +13,7 @@ class TableService {
         $query = isset($post->q) && !empty((array)json_decode($post->q)) ? (array)json_decode($post->q) : ['opt' => ''];
         $fields = isset($post->fields) ? (array)json_decode($post->fields) : [];
         $filterData = isset($post->filterData) ? (array)json_decode($post->filterData) : [];
+        $changedFilter = isset($post->changedFilter) && $post->changedFilter ? json_decode($post->changedFilter) : false;
         if (!isset($query['opt'])) {
             $query['opt'] = "";
         }
@@ -40,26 +41,45 @@ class TableService {
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
-            $sql->where(function ($query, $fields) {
+            $sql->where(function ($q) use ($fields, $query) {
                 foreach ($fields as $field => $val) {
-                    $query->orWhere($field, 'LIKE', "%".$query['searchKeyword']."%");
+                    $q->orWhere($field, 'LIKE', "%".$query['searchKeyword']."%");
                 }
             });
         }
 
         if (!empty($filterData)) {
-            foreach ($filterData as $filterElem) {
-                if (!$filterElem->checkAll) {
-                    $excludedVals = [];
-                    foreach ($filterElem->val as $item) {
-                        if (!$item->checked) {
-                            $excludedVals[] = $item->value;
+            if ($changedFilter && $changedFilter->status) {
+                //if "all" -> then disable filters and show all records
+                //else :
+                if ($changedFilter->val != "all") {
+                    foreach ($filterData as $filterElem) {
+                        if (!$filterElem->checkAll) {
+                            $includedVals = [];
+                            foreach ($filterElem->val as $item) {
+                                if (!$item->checked) {
+                                    $includedVals[] = $item->value;
+                                }
+                            }
+                            $sql->orWhereIn($filterElem->key, $includedVals);
                         }
                     }
-                    $sql->whereNotIn($filterElem->key, $excludedVals);
+                }
+            } else {
+                foreach ($filterData as $filterElem) {
+                    if (!$filterElem->checkAll) {
+                        $excludedVals = [];
+                        foreach ($filterElem->val as $item) {
+                            if (!$item->checked) {
+                                $excludedVals[] = $item->value;
+                            }
+                        }
+                        $sql->whereNotIn($filterElem->key, $excludedVals);
+                    }
                 }
             }
         }
+        $resultSQL = clone $sql;
 
         $rowsCount = $sql->count();
         if ($count) {
@@ -71,23 +91,43 @@ class TableService {
         $respFilters = [];
         $respDDLs = [];
         if (isset($post->getfilters)) {
+            //get columns for which filters are enabled
             $selected_filters = DB::table('tb_settings')
                 ->join('tb', 'tb.id', '=', 'tb_settings.tb_id')
                 ->select('tb_settings.field as field', 'tb_settings.name as name')
                 ->where('tb.db_tb', '=', $tableName)
                 ->where('tb_settings.filter', '=', 'Yes')
                 ->get();
+
             foreach ($selected_filters as $sf) {
-                $datas = DB::table($tableName)
+                //get values for each filter
+                $filter_vals = DB::table($tableName)
                     ->select($sf->field." as value")
                     ->selectRaw("true as checked")
-                    ->distinct()->first();
-                $respFilters[] = [
-                    'key' => $sf->field,
-                    'name' => $sf->name,
-                    'val' => $datas ? $datas : [],
-                    'checkAll' => true
-                ];
+                    ->distinct()->get();
+                $data_items = (clone $resultSQL)->select($sf->field." as value")->distinct()->get();
+                //if user switched off some filters -> then display it in the result data
+                if ($filter_vals->count() == $data_items->count()) {
+                    $filterObj = [
+                        'key' => $sf->field,
+                        'name' => $sf->name,
+                        'val' => $filter_vals ? $filter_vals : [],
+                        'checkAll' => true
+                    ];
+                } else {
+                    for ($i = 0; $i < $filter_vals->count(); $i++) {
+                        if (!$data_items->where('value', $filter_vals[$i]->value)->all()) {
+                            $filter_vals[$i]->checked = false;
+                        }
+                    }
+                    $filterObj = [
+                        'key' => $sf->field,
+                        'name' => $sf->name,
+                        'val' => $filter_vals ? $filter_vals : [],
+                        'checkAll' => false
+                    ];
+                }
+                $respFilters[] = $filterObj;
             }
 
             $ddls = DB::table('tb')
@@ -109,7 +149,7 @@ class TableService {
         $responseArray["filters"] = $respFilters;
         $responseArray["ddls"] = $respDDLs;
         $responseArray["rows"] = $rowsCount;
-        if ($result) {
+        if (count($result)) {
             $responseArray["data"] = $result;
             // output data of each row
             if(sizeof($responseArray["key"]) == 0) {

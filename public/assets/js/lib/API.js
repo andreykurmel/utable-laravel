@@ -25,17 +25,20 @@ app.factory('API', ['$http', '$q', function ($http, $q) {
         })
     }
 
-    callAPI.changePage = function (tableName, selectedPage, selectedEntries, query, tableObj, filterData) {
+    callAPI.changePage = function (tableName, selectedPage, selectedEntries, query, tableObj, filterData, changedFilter) {
         return $http({
             method: 'POST',
-            url: baseHttpUrl + '/getSelectedTable?tableName=' + tableName,
+            url: baseHttpUrl + '/getSelectedTable',
             dataType: "json",
             data: {
+                tableName: tableName,
+                getfilters: true,
                 p: selectedPage,
                 c: selectedEntries,
                 q: JSON.stringify(query),
                 fields: JSON.stringify(tableObj),
-                filterData: JSON.stringify(filterData)
+                filterData: JSON.stringify(filterData),
+                changedFilter: JSON.stringify(changedFilter)
             },
             headers: {
                 'Content-Type': 'application/json'

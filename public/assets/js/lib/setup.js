@@ -2656,7 +2656,7 @@
 	var types = ['DOMMouseScroll', 'mousewheel'];
 
 	// Event handler function
-	function mouseWheelHandler(event)
+	/*function mouseWheelHandler(event)
 	{
 		var sentEvent = event || window.event,
 			orgEvent = sentEvent.originalEvent || sentEvent,
@@ -2734,6 +2734,6 @@
 		{
 			return this.off("mousewheel", fn);
 		}
-	});
+	});*/
 
 })(this.jQuery, window, document);

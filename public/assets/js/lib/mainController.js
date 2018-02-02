@@ -7,6 +7,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             obj[k] = null;
         });
     };
+    $scope.changedFilter = false;
     $scope.showFilterTabs = [];
     $scope.uTables = [];
     $scope.uTableSettings = [];
@@ -50,7 +51,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $scope.mapapp = new google.maps.Map(document.getElementById('map-google'), optionsMap);
 
         $scope.markers = [];
-        var iconbasepath = "/assets/images/tables/", icon_path;
+        var iconbasepath = "assets/img/tables/", icon_path;
         for (var i=0; i<$scope.selectedTableData.length; i++) {
             if ($scope.selectedTableData[i].lat_dec && $scope.selectedTableData[i].long_dec) {
                 if ($scope.selectedTableData[i].twr_type && tower_types[$scope.selectedTableData[i].twr_type]) {
@@ -77,7 +78,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
 
         $scope.mapapp = new google.maps.Map(document.getElementById('map-details'), optionsMap);
 
-        var icon_path = "/assets/images/tables/";
+        var icon_path = "assets/img/tables/";
         if ($scope.editData.twr_type && tower_types[$scope.editData.twr_type]) {
             icon_path += tower_types[$scope.editData.twr_type];
         } else {
@@ -317,6 +318,11 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         filterObj.checkAll = allStatus;
 
         //get filtered data
+        $scope.changedFilter = {
+            name: filterObj.key,
+            val: value,
+            status: status
+        };
         $scope.changePage(1);
     }
 
@@ -326,6 +332,11 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         })
 
         //get filtered data
+        $scope.changedFilter = {
+            name: filterObj.key,
+            val: "all",
+            status: filterObj.checkAll
+        };
         $scope.changePage(1);
     }
 
@@ -491,11 +502,13 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             }
         }
 
-        API.changePage($scope.selectedTableName, page-1, $scope.selectedEntries, query, TableKeysObj, $scope.filterData).then(function(response){
+        API.changePage($scope.selectedTableName, page-1, $scope.selectedEntries, query, TableKeysObj, $scope.filterData, $scope.changedFilter).then(function(response){
             if (response.status == 200 && response.data.key) {
+                $scope.changedFilter = false;
                 $scope.sumArr = [];
                 $scope.selectedTableData = response.data.data;
                 $scope.selectedTableRows = response.data.rows;
+                $scope.filterData = response.data.filters;
                 angular.copy($scope.selectedTableData[0],$scope.addObj);
                 setAllNullObj($scope.addObj);
                 var maxPage = Math.ceil($scope.selectedTableRows/$scope.selectedEntries);
@@ -848,5 +861,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.frmSearchAddresIsVisible = function () {
         return $('#frm-search-address').is(':visible');
     }
+
+
+    $('body').css('display', 'block');
 
 }]);

@@ -2032,7 +2032,7 @@ li.message-menu {
 				left: 11px;
 			}
 
-	.icon-phone:before				{ content: '!'; }
+	/*.icon-phone:before				{ content: '!'; }
 	.icon-mobile:before				{ content: '"'; }
 	.icon-tag:before				{ content: '#'; }
 	.icon-directions:before			{ content: '$'; }
@@ -2152,7 +2152,7 @@ li.message-menu {
 	.icon-search:before				{ content: 'Ã´'; }
 	.icon-ellipsis:before			{ content: 'Ã¶'; }
 	.icon-bullet-list:before		{ content: 'Â®'; }
-	.icon-creative-commons:before	{ content: 'Â©'; }
+	.icon-creative-commons:before	{ content: 'Â©'; }*/
 
 
 /********************************************************/
