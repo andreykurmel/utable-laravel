@@ -61,6 +61,11 @@ class TableController extends Controller
         $tableName= $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
+        foreach ($params as $key => $par) {
+            if (strpos('/', $key)) {
+                unset($params[$key]);
+            }
+        }
 
         $id = DB::connection('mysql_data')->table($tableName)->insert($params);
 
@@ -81,6 +86,11 @@ class TableController extends Controller
         $tableName= $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
+        foreach ($params as $key => $par) {
+            if (strpos('/', $key)) {
+                unset($params[$key]);
+            }
+        }
 
         $res = DB::connection('mysql_data')->table($tableName)->where('id', '=', $id)->update($params);
 
