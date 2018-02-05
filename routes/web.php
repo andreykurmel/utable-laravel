@@ -9,7 +9,8 @@ Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updat
 Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
 
 Route::get('/', function () {
-    return view('table');
+    $socialProviders = config('auth.social.providers');
+    return view('table', compact('socialProviders'));
 });
 
 /**

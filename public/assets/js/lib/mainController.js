@@ -8,6 +8,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         });
     };
     $scope.changedFilter = false;
+    $scope.changedKeyword = false;
     $scope.showFilterTabs = [];
     $scope.uTables = [];
     $scope.uTableSettings = [];
@@ -29,6 +30,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.tableDDLs = [];
     $scope.urlRoute = $route;
     $scope.showModal = $scope.showColumnsMenu = $scope.showSearchType = $scope.filterMenuHide = $scope.loadingfromserver = $scope.showAddRow = false;
+    $scope.showLoginForm = $scope.showRegisterForm = false;
     $scope.sumArr = [];
     $scope.visibleColumns = {};
     $scope.showEntries = [10, 20, 50, 100];
@@ -381,7 +383,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         })
     }
 
-    $scope.updateSettingsRow = function(tableObj){
+    $scope.updateSettingsRow = function(tableObj) {
+        $scope.loadingfromserver = true;
         var selectedTableObj = {};
         if (!tableObj.id) {
             return;
@@ -396,6 +399,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         }
         API.updateRow(strParams).then(function(response){
             console.log("response",response);
+            $scope.changePage(1);
         })
     }
 
@@ -486,6 +490,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         if ($scope.searchKeyword) {
             query.searchKeyword = $scope.searchKeyword;
         }
+        query.changedKeyword = $scope.changedKeyword;
+        $scope.changedKeyword = false;
 
         if ($scope.selectedTableName == 'st') {
             if ($('#frm-search-address').is(':visible')) {

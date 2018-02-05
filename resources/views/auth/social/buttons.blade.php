@@ -25,6 +25,15 @@
             </div>
         @endif
 
+        @if (in_array('linkedin', $socialProviders))
+            <div class="col-md-{{ $colSize }} col-spaced">
+                <a class="btn btn-block btn-social btn-linkedin"  href="{{ url('auth/linkedin/login') }}">
+                    <i class="fa fa-linkedin"></i>
+                    LinkedIn
+                </a>
+            </div>
+        @endif
+
         @if (in_array('google', $socialProviders))
             <div class="col-md-{{ $colSize }} col-spaced">
                 <a class="btn btn-block btn-social btn-google"  href="{{ url('auth/google/login') }}">

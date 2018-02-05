@@ -55,13 +55,13 @@
                             </li>
                         @else
                             <li style="display: inline-block">
-                                <a href="{{ route('login') }}">
+                                <a href="javascript:void(0)" ng-click="showLoginForm = true">
                                     <i class="fa fa-sign-in"></i>
                                     @lang('app.login')
                                 </a>
                             </li>
                             <li style="display: inline-block">
-                                <a href="{{ route('register') }}">
+                                <a href="javascript:void(0)" ng-click="showRegisterForm = true">
                                     <i class="fa fa-user-plus"></i>
                                     @lang('app.register')
                                 </a>
@@ -195,14 +195,14 @@
                                         <option value="VI">Virgin Islands</option>
                                       </select>
 
-                                          <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
-                                          <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
-                                          <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
-                                                <option value="all">Owner:All</option>
-                                                                </select>
-                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
-                                       </form>
-                                  </span>
+                                      <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
+                                      <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
+                                      <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
+                                            <option value="all">Owner:All</option>
+                                                            </select>
+                                      <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
+                                   </form>
+                                </span>
                                 <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' ng-click="toggleSearchType()">
                                     <i class="icon-page-list icon-size1"></i>
                                 </a>
@@ -227,18 +227,18 @@
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                            <span class="select-value" style="height: inherit">[[ selectedEntries ]]</span>
-                                <span class="select-arrow"></span>
-                                <span class="drop-down custom-scroll">
-                                    <span ng-class="selectedEntries == val ? 'selected' : ''" ng-repeat="val in showEntries" ng-click="changeEntries(val)">[[ val ]]</span>
-                                </span>
-                            </span>
+                                            <span class="select-value" style="height: inherit">[[ selectedEntries ]]</span>
+                                                <span class="select-arrow"></span>
+                                                <span class="drop-down custom-scroll">
+                                                    <span ng-class="selectedEntries == val ? 'selected' : ''" ng-repeat="val in showEntries" ng-click="changeEntries(val)">[[ val ]]</span>
+                                                </span>
+                                            </span>
                                             entries
                                         </label>
                                     </div>
                                     <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" ng-click="addData()">Add</a>
                                     <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow">
-                                    <div class="dataTables_filter"><label>Search by Keyword:<input ng-model="searchKeyword" ng-change="changePage(1, '')" ng-model-options="{debounce:1000}" type="search" class="" placeholder="Within listed entries"></label></div>
+                                    <div class="dataTables_filter"><label>Search by Keyword:<input ng-model="searchKeyword" ng-change="changedKeyword=true;changePage(1, '')" ng-model-options="{debounce:1000}" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" style="margin-bottom: 0;">
@@ -368,7 +368,7 @@
                                         <a class="paginate_button first" data-dt-idx="0" tabindex="0" ng-click="changePage(1, '')">First
                                         </a><a class="paginate_button previous" data-dt-idx="1" tabindex="0" ng-click="changePage(selectedPage>1 ? selectedPage : 1, '')">Previous
                                         </a><span ng-repeat="btn in paginateBtns"><span ng-show="btn == '...' || btn == '....'">...</span><a ng-show="btn != '...' && btn != '....'" class="paginate_button" tabindex="0" ng-click="changePage(btn, '')">[[btn]]
-                        </a></span><a class="paginate_button next" data-dt-idx="2" tabindex="0" ng-click="changePage((selectedPage+1)<(selectedTableRows/selectedEntries) ? selectedPage+2 : (selectedTableRows/selectedEntries), '')">Next
+                                        </a></span><a class="paginate_button next" data-dt-idx="2" tabindex="0" ng-click="changePage((selectedPage+1)<(selectedTableRows/selectedEntries) ? selectedPage+2 : (selectedTableRows/selectedEntries), '')">Next
                                         </a><a class="paginate_button last" data-dt-idx="3" tabindex="0" ng-click="changePage(selectedTableRows/selectedEntries, '')">Last</a>
                                     </div>
                                 </div>
@@ -387,12 +387,12 @@
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                            <span class="select-value" style="height: inherit">[[ selectedEntries ]]</span>
-                                <span class="select-arrow"></span>
-                                <span class="drop-down custom-scroll">
-                                    <span ng-class="selectedEntries == val ? 'selected' : ''" ng-repeat="val in showEntries" ng-click="changeEntries(val)">[[ val ]]</span>
-                                </span>
-                            </span>
+                                            <span class="select-value" style="height: inherit">[[ selectedEntries ]]</span>
+                                                <span class="select-arrow"></span>
+                                                <span class="drop-down custom-scroll">
+                                                    <span ng-class="selectedEntries == val ? 'selected' : ''" ng-repeat="val in showEntries" ng-click="changeEntries(val)">[[ val ]]</span>
+                                                </span>
+                                            </span>
                                             entries
                                         </label>
                                     </div>
@@ -611,6 +611,141 @@
                 <div id='block-cols-list'></div>
             </div>
         </div>
+
+        {{-- Login form --}}
+        <div ng-show="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+            <div class="auth" style="font-size: 14px;">
+                <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                    <div class="form-wrap" id="login">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <img src="{{ url('assets/img/vanguard-logo.png') }}" alt="{{ settings('app_name') }}">
+                        </div>
+
+                        {{-- This will simply include partials/messages.blade.php view here --}}
+                        @include('partials/messages')
+
+                        <form role="form" action="<?= url('login') ?>" method="POST" id="login-form" autocomplete="off">
+                            <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+
+                            @if (Input::has('to'))
+                                <input type="hidden" value="{{ Input::get('to') }}" name="to">
+                            @endif
+
+                            <div class="form-group input-icon">
+                                <label for="username" class="sr-only">@lang('app.email_or_username')</label>
+                                <i class="fa fa-user"></i>
+                                <input type="email" name="username" class="form-control" placeholder="@lang('app.email_or_username')" style="border-radius: 4px;">
+                            </div>
+                            <div class="form-group password-field input-icon">
+                                <label for="password" class="sr-only">@lang('app.password')</label>
+                                <i class="fa fa-lock"></i>
+                                <input type="password" name="password" class="form-control" placeholder="@lang('app.password')">
+                                @if (settings('forgot_password'))
+                                    <a href="<?= url('password/remind') ?>" class="forgot" style="top: 9px;">@lang('app.i_forgot_my_password')</a>
+                                @endif
+                            </div>
+                            <div style="margin-bottom:20px;">
+
+                                @if (settings('remember_me'))
+                                    <input type="checkbox" name="remember" id="remember" value="1"/>
+                                    <label for="remember" style="font-weight: 400;">@lang('app.remember_me')</label>
+                                @endif
+
+                                @if (settings('reg_enabled'))
+                                    <a href="<?= url("register") ?>" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
+                                @endif
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-login">
+                                    @lang('app.log_in')
+                                </button>
+                            </div>
+
+                        </form>
+
+                        @include('auth.social.buttons')
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                            <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showLoginForm = false"></div>
+
+        {{-- Register form --}}
+        <div ng-show="showRegisterForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+            <div class="auth" style="font-size: 14px;">
+                <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                    <div class="form-wrap">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <img src="{{ url('assets/img/vanguard-logo.png') }}" alt="{{ settings('app_name') }}">
+                        </div>
+
+                        @include('partials/messages')
+
+                        <form role="form" action="<?= url('register') ?>" method="post" id="registration-form" autocomplete="off">
+                            <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+                            <div class="form-group input-icon">
+                                <i class="fa fa-at"></i>
+                                <input type="email" name="email" class="form-control" placeholder="@lang('app.email')" value="{{ old('email') }}">
+                            </div>
+                            <div class="form-group input-icon">
+                                <i class="fa fa-user"></i>
+                                <input type="text" name="username" class="form-control" placeholder="@lang('app.username')"  value="{{ old('username') }}">
+                            </div>
+                            <div class="form-group input-icon">
+                                <i class="fa fa-lock"></i>
+                                <input type="password" name="password" class="form-control" placeholder="@lang('app.password')">
+                            </div>
+                            <div class="form-group input-icon">
+                                <i class="fa fa-lock"></i>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="@lang('app.confirm_password')">
+                            </div>
+
+                            @if (settings('tos'))
+                                <div class="form-group">
+                                    <div class="checkbox">
+                                        <input type="checkbox" name="tos" id="tos" value="1"/>
+                                        <label for="tos">@lang('app.i_accept') <a href="#tos-modal" data-toggle="modal">@lang('app.terms_of_service')</a></label>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Only display captcha if it is enabled --}}
+                            @if (settings('registration.captcha.enabled'))
+                                <div class="form-group">
+                                    {!! app('captcha')->display() !!}
+                                </div>
+                            @endif
+                            {{-- end captcha --}}
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-register">
+                                    @lang('app.register')
+                                </button>
+                            </div>
+
+                            <div style="margin-bottom:20px;text-align:center;">
+                                <a href="<?= url("login") ?>" style="color: #337ab7;">Already have account?</a>
+                            </div>
+                        </form>
+
+                        @include('auth.social.buttons')
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                            <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="showRegisterForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showRegisterForm = false"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>
@@ -646,5 +781,12 @@
     {!! HTML::script('assets/js/lib/route.js') !!}
     {!! HTML::script('assets/js/lib/API.js') !!}
     {!! HTML::script('assets/js/lib/mainController.js') !!}
+
+    {{-- Login scripts --}}
+    {!! HTML::script('assets/js/as/login.js') !!}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\LoginRequest', '#login-form') !!}
+
+    {{-- Register scripts --}}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
 </body>
 </html>

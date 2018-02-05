@@ -24,10 +24,10 @@ class TableService {
             return $responseArray;
         }
 
-        $sql = DB::table($tableName);
+        $sql = DB::connection('mysql_data')->table($tableName);
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
-                if (!in_array($key, ['opt', 'searchKeyword']) && $val) {
+                if (!in_array($key, ['opt', 'searchKeyword', 'changedKeyword']) && $val) {
                     $sql->where($key, '=', $val);
                 }
             }
@@ -48,21 +48,19 @@ class TableService {
             });
         }
 
-        if (!empty($filterData)) {
+        if (!empty($filterData) && empty($query['changedKeyword'])) {
             if ($changedFilter && $changedFilter->status) {
                 //if "all" -> then disable filters and show all records
                 //else :
                 if ($changedFilter->val != "all") {
                     foreach ($filterData as $filterElem) {
-                        if (!$filterElem->checkAll) {
-                            $includedVals = [];
-                            foreach ($filterElem->val as $item) {
-                                if (!$item->checked) {
-                                    $includedVals[] = $item->value;
-                                }
+                        $includedVals = [];
+                        foreach ($filterElem->val as $item) {
+                            if ($item->checked) {
+                                $includedVals[] = $item->value;
                             }
-                            $sql->orWhereIn($filterElem->key, $includedVals);
                         }
+                        $sql->orWhereIn($filterElem->key, $includedVals);
                     }
                 }
             } else {
@@ -92,7 +90,7 @@ class TableService {
         $respDDLs = [];
         if (isset($post->getfilters)) {
             //get columns for which filters are enabled
-            $selected_filters = DB::table('tb_settings')
+            $selected_filters = DB::connection('mysql_data')->table('tb_settings')
                 ->join('tb', 'tb.id', '=', 'tb_settings.tb_id')
                 ->select('tb_settings.field as field', 'tb_settings.name as name')
                 ->where('tb.db_tb', '=', $tableName)
@@ -101,7 +99,7 @@ class TableService {
 
             foreach ($selected_filters as $sf) {
                 //get values for each filter
-                $filter_vals = DB::table($tableName)
+                $filter_vals = DB::connection('mysql_data')->table($tableName)
                     ->select($sf->field." as value")
                     ->selectRaw("true as checked")
                     ->distinct()->get();
@@ -130,7 +128,7 @@ class TableService {
                 $respFilters[] = $filterObj;
             }
 
-            $ddls = DB::table('tb')
+            $ddls = DB::connection('mysql_data')->table('tb')
                 ->join('tb_settings as ts', 'tb.id', '=', 'ts.tb_id')
                 ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
                 ->select('ts.field', 'di.option')
@@ -155,7 +153,7 @@ class TableService {
             if(sizeof($responseArray["key"]) == 0) {
                 $responseArray["key"] = array_keys((array)$result[0]);
 
-                $key_settings = DB::table('tb_settings as ts')
+                $key_settings = DB::connection('mysql_data')->table('tb_settings as ts')
                     ->join('tb', 'tb.id', '=', 'ts.tb_id')
                     ->select('ts.*')
                     ->where('tb.db_tb', '=', $tableName)
@@ -165,7 +163,7 @@ class TableService {
                 }
             }
         } else {
-            $data = (array) DB::table($tableName)->first();
+            $data = (array) DB::connection('mysql_data')->table($tableName)->first();
             $data = array_fill_keys(array_keys($data), null);
             array_push($responseArray["data"],$data);
             $responseArray["error"] = TRUE;

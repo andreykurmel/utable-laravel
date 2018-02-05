@@ -12,7 +12,7 @@ return [
     */
 
     'social' => [
-        'providers' => ['facebook', 'twitter', 'google']
+        'providers' => ['facebook', 'linkedin', 'google']
     ],
 
    /*

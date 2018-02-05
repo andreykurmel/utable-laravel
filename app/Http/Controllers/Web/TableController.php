@@ -28,9 +28,9 @@ class TableController extends Controller
         ];
         $this->tableService->getData((object)$post);*/
         
-        $tb = DB::table('tb')->get();
-        $tb_settings = DB::table('tb_settings')->get();
-        $ddl = DB::table('tb')
+        $tb = DB::connection('mysql_data')->table('tb')->get();
+        $tb_settings = DB::connection('mysql_data')->table('tb_settings')->get();
+        $ddl = DB::connection('mysql_data')->table('tb')
             ->join('tb_settings as ts', 'tb.id', '=', 'ts.tb_id')
             ->join('ddl_items as di', 'ts.ddl_id', '=', 'di.list_id')
             ->select('ts.field', 'di.option')
