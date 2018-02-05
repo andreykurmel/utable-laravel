@@ -61,8 +61,13 @@ class TableController extends Controller
         $tableName= $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
+        foreach ($params as $key => $par) {
+            if (strpos($key,'/') !== false) {
+                unset($params[$key]);
+            }
+        }
 
-        $id = DB::table($tableName)->insert($params);
+        $id = DB::connection('mysql_data')->table($tableName)->insert($params);
 
         if ($id) {
             $responseArray['error'] = FALSE;
@@ -81,8 +86,13 @@ class TableController extends Controller
         $tableName= $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
+        foreach ($params as $key => $par) {
+            if (strpos($key, '/') !== false) {
+                unset($params[$key]);
+            }
+        }
 
-        $res = DB::table($tableName)->where('id', '=', $id)->update($params);
+        $res = DB::connection('mysql_data')->table($tableName)->where('id', '=', $id)->update($params);
 
         if ($res) {
             $responseArray['error'] = FALSE;
@@ -99,7 +109,7 @@ class TableController extends Controller
         $id = $request->id;
         $tableName= $request->tableName;
 
-        $res = DB::table($tableName)->where('id', '=', $id)->delete();
+        $res = DB::connection('mysql_data')->table($tableName)->where('id', '=', $id)->delete();
 
         if ($res) {
             $responseArray['error'] = FALSE;
