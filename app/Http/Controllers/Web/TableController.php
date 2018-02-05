@@ -62,7 +62,7 @@ class TableController extends Controller
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
-            if (strpos('/', $key) === false) {
+            if (strpos('/', $key) !== false) {
                 unset($params[$key]);
             }
         }
@@ -87,7 +87,7 @@ class TableController extends Controller
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
-            if (strpos('/', $key) === false) {
+            if (strpos('/', $key) !== false) {
                 unset($params[$key]);
             }
         }
