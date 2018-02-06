@@ -54,13 +54,15 @@ class TableService {
                 //else :
                 if ($changedFilter->val != "all") {
                     foreach ($filterData as $filterElem) {
-                        $includedVals = [];
-                        foreach ($filterElem->val as $item) {
-                            if ($item->checked) {
-                                $includedVals[] = $item->value;
+                        if ($filterElem->key == $changedFilter->name) {
+                            $includedVals = [];
+                            foreach ($filterElem->val as $item) {
+                                if ($item->checked) {
+                                    $includedVals[] = $item->value;
+                                }
                             }
+                            $sql->WhereIn($filterElem->key, $includedVals);
                         }
-                        $sql->orWhereIn($filterElem->key, $includedVals);
                     }
                 }
             } else {
@@ -90,11 +92,11 @@ class TableService {
         $respDDLs = [];
         if (isset($post->getfilters)) {
             //get columns for which filters are enabled
-            $selected_filters = DB::connection('mysql_data')->table('tb_settings')
-                ->join('tb', 'tb.id', '=', 'tb_settings.tb_id')
-                ->select('tb_settings.field as field', 'tb_settings.name as name')
+            $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
+                ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
+                ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
                 ->where('tb.db_tb', '=', $tableName)
-                ->where('tb_settings.filter', '=', 'Yes')
+                ->where('tb_settings_display.filter', '=', 'Yes')
                 ->get();
 
             foreach ($selected_filters as $sf) {
@@ -129,7 +131,7 @@ class TableService {
             }
 
             $ddls = DB::connection('mysql_data')->table('tb')
-                ->join('tb_settings as ts', 'tb.id', '=', 'ts.tb_id')
+                ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
                 ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
                 ->select('ts.field', 'di.option')
                 ->where('tb.db_tb', '=', $tableName)
@@ -153,7 +155,7 @@ class TableService {
             if(sizeof($responseArray["key"]) == 0) {
                 $responseArray["key"] = array_keys((array)$result[0]);
 
-                $key_settings = DB::connection('mysql_data')->table('tb_settings as ts')
+                $key_settings = DB::connection('mysql_data')->table('tb_settings_display as ts')
                     ->join('tb', 'tb.id', '=', 'ts.tb_id')
                     ->select('ts.*')
                     ->where('tb.db_tb', '=', $tableName)

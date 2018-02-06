@@ -29,18 +29,18 @@ class TableController extends Controller
         $this->tableService->getData((object)$post);*/
         
         $tb = DB::connection('mysql_data')->table('tb')->get();
-        $tb_settings = DB::connection('mysql_data')->table('tb_settings')->get();
+        $tb_settings_display = DB::connection('mysql_data')->table('tb_settings_display')->get();
         $ddl = DB::connection('mysql_data')->table('tb')
-            ->join('tb_settings as ts', 'tb.id', '=', 'ts.tb_id')
+            ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
             ->join('ddl_items as di', 'ts.ddl_id', '=', 'di.list_id')
             ->select('ts.field', 'di.option')
             ->whereNotNull('di.option')
-            ->where('tb.db_tb', '=', 'tb_settings')
+            ->where('tb.db_tb', '=', 'tb_settings_display')
             ->get();
 
-        if ($tb && $tb_settings) {
+        if ($tb && $tb_settings_display) {
             $responseArray["utables"] = $tb;
-            $responseArray["utablesettings"] = $tb_settings;
+            $responseArray["utablesettings"] = $tb_settings_display;
             $responseArray["ddls"] = array();
             foreach($ddl as $row) {
                 $responseArray["ddls"][$row->field][] = $row->option;

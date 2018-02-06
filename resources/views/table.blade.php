@@ -60,12 +60,6 @@
                                     @lang('app.login')
                                 </a>
                             </li>
-                            <li style="display: inline-block">
-                                <a href="javascript:void(0)" ng-click="showRegisterForm = true">
-                                    <i class="fa fa-user-plus"></i>
-                                    @lang('app.register')
-                                </a>
-                            </li>
                         @endif
                     </ul>
                 </div>
@@ -88,9 +82,10 @@
                         </select>
                     </div>
                     <div style="display: inline-block;margin-left: 8px;">
-                        <form action="download.php" method="post" id="downloader_form">
+                        <form action="{{ route('downloader') }}" method="post" id="downloader_form">
+                            {{ csrf_field() }}
                             <input type="hidden" name="tableName" id="downloader_tableName" value="">
-                            <input type="hidden" name="file" id="downloader_method" value="">
+                            <input type="hidden" name="filename" id="downloader_method" value="">
                             <input type="hidden" name="q" id="downloader_query" value="">
                             <input type="hidden" name="fields" id="downloader_fields" value="">
                             <input type="hidden" name="filterData" id="downloader_filters" value="">
@@ -606,7 +601,7 @@
         </div>
         <div ng-show="loadingfromserver" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;"></div>
 
-        <div style="position: fixed;top: 75px;bottom: 10px;z-index: 1500;" ng-style="filterMenuHide ? {'right': '570px'} : {'right': '830px'}">
+        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;" ng-style="filterMenuHide ? {'right': '570px'} : {'right': '830px'}">
             <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" ng-show="showColumnsMenu" id="accesstestscroll">
                 <div id='block-cols-list'></div>
             </div>
@@ -652,7 +647,7 @@
                                 @endif
 
                                 @if (settings('reg_enabled'))
-                                    <a href="<?= url("register") ?>" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
+                                    <a href="javascript:void(0)" ng-click="showLoginForm=false;showRegisterForm=true" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
                                 @endif
                             </div>
                             <div class="form-group">
@@ -730,7 +725,7 @@
                             </div>
 
                             <div style="margin-bottom:20px;text-align:center;">
-                                <a href="<?= url("login") ?>" style="color: #337ab7;">Already have account?</a>
+                                <a href="javascript:void(0)" ng-click="showRegisterForm=false;showLoginForm=true" style="color: #337ab7;">Already have account?</a>
                             </div>
                         </form>
 

@@ -8294,7 +8294,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams', '$route'
     $scope.showFilterTabs = [];
     $scope.uTables = [];
     $scope.uTableSettings = [];
-    $scope.uTableSettingsName = "tb_settings";
+    $scope.uTableSettingsName = "tb_settings_display";
     $scope.uTableSettingsId = 0;
     $scope.settingsData = [];
     $scope.settingsDDLs = [];

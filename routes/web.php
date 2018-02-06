@@ -8,6 +8,8 @@ Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow
 Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
 Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
 
+Route::post('/download', 'DownloadController@download')->name('downloader');
+
 Route::get('/', function () {
     $socialProviders = config('auth.social.providers');
     return view('table', compact('socialProviders'));
