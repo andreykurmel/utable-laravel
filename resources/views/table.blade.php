@@ -30,6 +30,7 @@
 </head>
 <body class="clearfix with-menu"  ng-app="myApp" ng-controller="myCtrl" style="display: none;">
     <div class="div-screen">
+        <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
@@ -78,7 +79,7 @@
                         <a href="javascript:void(0)" class="button blue-gradient glossy" ng-click="toggleColumns()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
-                        <select class="selectcustom" ng-model="selectedTableName" ng-change="selectTable(selectedTableName)" ng-options="tableObj.db_tb as tableObj.name for tableObj in uTables" style="width: 100%">
+                        <select class="selectcustom" ng-model="selectedTableName" ng-change="changeTable(selectedTableName)" ng-options="tableObj.db_tb as tableObj.name for tableObj in uTables" style="width: 100%">
                         </select>
                     </div>
                     <div style="display: inline-block;margin-left: 8px;">
@@ -108,8 +109,8 @@
 
                     <!-- Tabs -->
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
-                        <li class="active" id="li_list_view"><a href="" ng-click="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-list icon-size2"> </i> List View</a></li>
-                        <li ng-if="selectedTableName == 'st'" id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-marker icon-size2"> </i> Map View</a></li>
+                        <li class="active" id="li_list_view"><a href="" ng-click="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
+                        <li ng-if="selectedTableName == 'st'" id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                         <li id="li_settings_view"><a href="" ng-click="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
                     </ul>
 
@@ -120,7 +121,7 @@
                             <h2 style='font-size:14px;' id='main-search-wrapper' ng-if="selectedTableName == 'st'">
                                 <span class="input ">
                                    <form method="post" action="#" id='frm-search-latlng' style='padding-bottom: 2px;'>
-                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
+                                      <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
                                       <input name="dec-lat" id="frm-dec-lat" class="input-unstyled input-sep validate[required]" placeholder="Latitude" value="" maxlength="50" style='width:100px' type="text">
                                       <input name="dec-lng" id="frm-dec-lng" class="input-unstyled input-sep validate[required]" placeholder="Longitude" value="" maxlength="50" style='width:100px' type="text">
                                       <input name="dec-radius" id="frm-dec-radius" class="input-unstyled validate[required]" placeholder="Radius MI" style='width:70px' value=""  maxlength="2" type="text">
@@ -130,7 +131,7 @@
                                       <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
                                    </form>
                                    <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
-                                      <span class="info-spot on-left"><span class="icon-info-round"></span><span class="info-bubble">Click <i class="icon-page-list"></i> to show search options</span></span>
+                                      <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
                                       <input name="address" id="frm-address" class="input-unstyled input-sep" placeholder="Street Address" value="" maxlength="50" style='width:100px' type="text">
                                       <input name="city" id="frm-city" class="input-unstyled input-sep" placeholder="City" value="" maxlength="50" style='width:100px' type="text">
                                       <select id='frm-state' name="state" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px' >
@@ -199,7 +200,7 @@
                                    </form>
                                 </span>
                                 <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' ng-click="toggleSearchType()">
-                                    <i class="icon-page-list icon-size1"></i>
+                                    <i class="icon-size1"><span class="font-icon" style="margin:0;">l</span></i>
                                 </a>
                                 <div id="block-search-type" ng-show="showSearchType" style="position:relative;">
                                     <span class="selectMultiple multiple white-gradient check-list replacement" style="width: 178px;position: absolute;z-index: 1500;" ng-style="frmSearchAddresIsVisible() ? {'left': '466px'} : {'left': '356px'}" tabindex="0">
@@ -246,7 +247,7 @@
                                         <tbody style="visibility: hidden;">
                                         <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
                                             <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
-                                                <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><i class="icon-info-round"> </i>
+                                                <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
                                                     <b>[[value]]</b>
                                                 </a>
                                                 <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
@@ -275,7 +276,7 @@
                                             <tbody >
                                             <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
                                                 <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
-                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><i class="icon-info-round"> </i>
+                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
                                                         <b>[[value]]</b>
                                                     </a>
                                                     <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
@@ -405,7 +406,7 @@
                                         <tbody >
                                         <tr ng-repeat="tableObj in settingsData | orderBy:sortSettingsType:false | filter: searchSettingsKeyword" ng-if="$index >= settingsPage*selectedEntries && $index < (settingsPage+1)*selectedEntries">
                                             <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="height: 0;line-height: 0">
-                                                <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><i class="icon-info-round"> </i>
+                                                <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
                                                     <b>[[value]]</b>
                                                 </a>
                                                 <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
@@ -425,7 +426,7 @@
                                             <tbody >
                                             <tr ng-repeat="tableObj in settingsData | orderBy:sortSettingsType:false | filter: searchSettingsKeyword" ng-if="$index >= settingsPage*selectedEntries && $index < (settingsPage+1)*selectedEntries">
                                                 <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
-                                                    <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><i class="icon-info-round"> </i>
+                                                    <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
                                                         <b>[[value]]</b>
                                                     </a>
                                                     <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>

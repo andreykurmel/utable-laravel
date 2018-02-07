@@ -17,7 +17,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.settingsData = [];
     $scope.settingsDDLs = [];
     $scope.settingsPage = 0;
-    $scope.selectedTableName = "";
+    $scope.selectedTableName = $("#inpSelectedTable").val();
     $scope.selectedTableRows = 0;
     $scope.selectedTableId = 0;
     $scope.sortType = "";
@@ -101,11 +101,15 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $scope.showSearchType = !$scope.showSearchType;
     };
 
+    $scope.changeTable = function(tableName) {
+        window.location = "/" + tableName;
+    }
+
     $scope.selectTable = function(tableName) {
         $scope.loadingfromserver = true;
         $scope.selectedPage = 0;
         $scope.searchKeyword = "";
-        $location.path("/" + tableName);
+        //$location.path("/" + tableName);
         $scope.selectedTableName = tableName;
         for (var i=0; i < $scope.uTables.length; i++) {
             if ($scope.uTables[i].db_tb == tableName) {
@@ -216,8 +220,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                 }
             }
 
-            if ($location.path()) {
-                $scope.selectTable($location.path().substr(1));
+            if ($scope.selectedTableName) {
+                $scope.selectTable($scope.selectedTableName);
             }
 
             $(".table_body_viewport").mCustomScrollbar({

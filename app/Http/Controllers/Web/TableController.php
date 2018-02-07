@@ -2,6 +2,7 @@
 
 namespace Vanguard\Http\Controllers\Web;
 
+use Illuminate\Support\Facades\Auth;
 use Vanguard\Http\Controllers\Controller;
 use Vanguard\Services\TableService;
 use Illuminate\Http\Request;
@@ -28,7 +29,28 @@ class TableController extends Controller
         ];
         $this->tableService->getData((object)$post);*/
         
-        $tb = DB::connection('mysql_data')->table('tb')->get();
+        $tb = DB::connection('mysql_data')->table('tb');
+        if (!Auth::user()) {
+            //guest - get public data
+            $tb->where('access', '=', 'public');
+        } else {
+            if (Auth::user()->role_id != 1) {
+                //user - get user`s data, tables with right 'view' and public
+                $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
+                $tb->where(function ($q) {
+                    $q->where('user_id', '=', Auth::user()->id);
+                    $q->orWhereNull('user_id');
+                });
+                $tb->where(function ($q) {
+                    $q->where('owner', '=', Auth::user()->id);
+                    $q->orWhere('access', '=', 'public');
+                    $q->orWhereNotNull('rights.right');
+                });
+                $tb->select('tb.*');
+            }
+            //admin - get all data
+        }
+        $tb = $tb->get();
         $tb_settings_display = DB::connection('mysql_data')->table('tb_settings_display')->get();
         $ddl = DB::connection('mysql_data')->table('tb')
             ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')

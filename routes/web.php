@@ -1,19 +1,4 @@
 <?php
-/**
- * Utable routes
- */
-Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
-Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
-Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
-Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
-Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
-
-Route::post('/download', 'DownloadController@download')->name('downloader');
-
-Route::get('/', function () {
-    $socialProviders = config('auth.social.providers');
-    return view('table', compact('socialProviders'));
-});
 
 /**
  * Vanguard routes
@@ -387,3 +372,27 @@ Route::get('install/error', [
     'as' => 'install.error',
     'uses' => 'InstallController@error'
 ]);
+
+
+/**
+ * Utable routes
+ */
+Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
+Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
+Route::group(['middleware' => 'database.change'], function () {
+    Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
+    Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
+    Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
+});
+
+Route::post('/download', 'DownloadController@download')->name('downloader');
+
+Route::get('/', function () {
+    $socialProviders = config('auth.social.providers');
+    return view('table', compact('socialProviders'));
+});
+
+Route::get('/{tableName}', function ($tableName) {
+    $socialProviders = config('auth.social.providers');
+    return view('table', compact('socialProviders', 'tableName'));
+});

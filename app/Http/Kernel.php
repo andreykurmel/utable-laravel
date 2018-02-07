@@ -58,5 +58,6 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'database.change' => \Vanguard\Http\Middleware\DatabaseChange::class,
     ];
 }

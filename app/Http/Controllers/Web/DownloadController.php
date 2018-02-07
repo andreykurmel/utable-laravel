@@ -20,7 +20,7 @@ class DownloadController extends Controller
         $data = "";
         switch ($request->filename) {
             case 'CSV': $dwn_mode = "csv";
-                $data = $this->downloader_csv($request);
+                $data = $this->downloader_csv($request, "data_export_" . date("Y-m-d") . "." . $dwn_mode);
                 break;
             case 'XLS': $dwn_mode = "xlsx";
                 $data = $this->downloader_xlsx($request, "data_export_" . date("Y-m-d") . "." . $dwn_mode);
@@ -47,33 +47,9 @@ class DownloadController extends Controller
     }
 
     /*
-     * Create data flow for csv file
+     * Prepare Excel writer class
      */
-    private function downloader_csv($post) {
-        $respArray = $this->tableService->getData($post);
-
-        ob_start();
-        $out = fopen("php://output", "w");
-        $titles = array();
-        foreach ($respArray['data'][0] as $key => $val) {
-            if (($respArray['key_settings'][$key])->name) {
-                $titles[] = ($respArray['key_settings'][$key])->name;
-            } else {
-                $titles[] = $key;
-            }
-        }
-        fputcsv($out, $titles);
-        foreach ($respArray['data'] as $row) {
-            fputcsv($out, (array)$row);
-        }
-        fclose($out);
-        return ob_get_clean();
-    }
-
-    /*
-     * Create data flow for xlsx file
-     */
-    private function downloader_xlsx($post, $filename) {
+    private function prepare_Excel($post, $filename) {
         $respArray = $this->tableService->getData($post);
 
         $data = array();
@@ -89,11 +65,26 @@ class DownloadController extends Controller
             $data[] = (array)$row;
         }
 
-        $writer = Excel::create($filename, function($excel) use ($data) {
+        return Excel::create($filename, function($excel) use ($data) {
             $excel->sheet('Sheet1', function($sheet) use ($data) {
                 $sheet->fromArray($data, null, 'A1', true, false);
             });
         });
+    }
+
+    /*
+     * Create data flow for csv file
+     */
+    private function downloader_csv($post, $filename) {
+        $writer = $this->prepare_Excel($post, $filename);
+        return $writer->export('csv');
+    }
+
+    /*
+     * Create data flow for xlsx file
+     */
+    private function downloader_xlsx($post, $filename) {
+        $writer = $this->prepare_Excel($post, $filename);
         return $writer->export('xlsx');
     }
 
