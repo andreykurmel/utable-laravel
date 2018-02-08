@@ -19,8 +19,9 @@ class AppController extends Controller
     }
 
     public function homepage() {
+        $canEdit = false;
         $socialProviders = config('auth.social.providers');
-        return view('table', compact('socialProviders'));
+        return view('table', compact('socialProviders', 'canEdit'));
     }
 
     public function homepageTable($tableName) {
