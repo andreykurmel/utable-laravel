@@ -20,24 +20,23 @@
     <meta name="msapplication-TileColor" content="#FFFFFF" />
     <meta name="msapplication-TileImage" content="{{ url('assets/img/icons/mstile-144x144.png') }}" />
 
-    {{-- For production, it is recommended to combine following styles into one. --}}
     {!! HTML::style('css/vendor.css') !!}
-
     {!! HTML::style('assets/css/app.css') !!}
-
     {!! HTML::style('css/table.css') !!}
+
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
 <body class="clearfix with-menu"  ng-app="myApp" ng-controller="myCtrl" style="display: none;">
     <div class="div-screen">
         <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
+        <input type="hidden" id="inpSelectedTableGroup" value="{{ isset($group) ? $group : "" }}">
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
         <!-- Button to open/hide menu -->
         <a href="" id="open-menu" ng-click="showHideMenu()" style="top: 55px;"><span>Menu</span></a>
         <!-- Main content -->
-        <nav class="navbar navbar-default">
+        <nav class="navbar navbar-default" style="position: fixed;width: 100%;">
             <div class="container-fluid">
                 <div id="navbar" class="navbar-collapse">
                     <ul class="nav navbar-nav navbar-right" style="float: right;">
@@ -75,11 +74,11 @@
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
                 <div class="colvisopts with-small-padding" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; top: 54px; font-size:14px;z-index:1000">
-                    <div class="showhidemenu" style='width:150px;display:inline-block'>
+                    <div class="showhidemenu" style='width:150px;display:inline-block' ng-show="showedColumns()">
                         <a href="javascript:void(0)" class="button blue-gradient glossy" ng-click="toggleColumns()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
-                        <select class="selectcustom" ng-model="selectedTableName" ng-change="changeTable(selectedTableName)" ng-options="tableObj.db_tb as tableObj.name for tableObj in uTables" style="width: 100%">
+                        <select class="selectcustom" ng-model="selectedTableWWW" ng-change="changeTable(selectedTableWWW)" ng-options="tableObj.www_add as tableObj.name for tableObj in uTables" style="width: 100%">
                         </select>
                     </div>
                     <div style="display: inline-block;margin-left: 8px;">
@@ -111,7 +110,9 @@
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
                         <li class="active" id="li_list_view"><a href="" ng-click="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                         <li ng-if="selectedTableName == 'st'" id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
-                        <li id="li_settings_view"><a href="" ng-click="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
+                        @if(Auth::user())
+                            <li id="li_settings_view"><a href="" ng-click="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
+                        @endif
                     </ul>
 
                     <!-- Content -->
@@ -232,8 +233,10 @@
                                             entries
                                         </label>
                                     </div>
-                                    <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" ng-click="addData()">Add</a>
-                                    <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow">
+                                    @if(Auth::user() && $canEdit)
+                                        <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" ng-click="addData()">Add</a>
+                                        <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow">
+                                    @endif
                                     <div class="dataTables_filter"><label>Search by Keyword:<input ng-model="searchKeyword" ng-change="changedKeyword=true;changePage(1, '')" ng-model-options="{debounce:1000}" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
@@ -247,21 +250,27 @@
                                         <tbody style="visibility: hidden;">
                                         <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
                                             <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
-                                                <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                    <b>[[value]]</b>
-                                                </a>
-                                                <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                @if(Auth::user() && $canEdit)
+                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                        <b>[[value]]</b>
+                                                    </a>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                @else
+                                                    <span>[[value]]</span>
+                                                @endif
                                             </td>
                                         </tr>
 
-                                        <tr ng-if="selectedTableData && showAddRow">
-                                            <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="height: 0;line-height: 0">
-                                                <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success">
-                                                    Save
-                                                </button>
-                                                <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                            </td>
-                                        </tr>
+                                        @if(Auth::user() && $canEdit)
+                                            <tr ng-if="selectedTableData && showAddRow">
+                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="height: 0;line-height: 0">
+                                                    <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success">
+                                                        Save
+                                                    </button>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                </td>
+                                            </tr>
+                                        @endif
 
                                         </tbody>
                                     </table>
@@ -275,76 +284,84 @@
 
                                             <tbody >
                                             <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
-                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
-                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                        <b>[[value]]</b>
-                                                    </a>
-                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                    <input
-                                                            ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateRow(tableObj,true)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <input
-                                                            ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateRow(tableObj,true)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            data-date-time-picker
-                                                            id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <select
-                                                            ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateRow(tableObj,true)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                            class="form-control"
-                                                            ng-options="Option as Option for Option in tableDDLs[key]"
-                                                    ></select>
-                                                </td>
+                                                @if(Auth::user() && $canEdit)
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
+                                                        <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                            <b>[[value]]</b>
+                                                        </a>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                data-date-time-picker
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <select
+                                                                ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                                class="form-control"
+                                                                ng-options="Option as Option for Option in tableDDLs[key]"
+                                                        ></select>
+                                                    </td>
+                                                @else
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;">
+                                                        <span>[[value]]</span>
+                                                    </td>
+                                                @endif
                                             </tr>
 
-                                            <tr ng-if="selectedTableData && showAddRow">
-                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+addObj.id, key)">
-                                                    <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success" ng-click="addRowInline(addObj)">
-                                                        Save
-                                                    </button>
-                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                    <input
-                                                            ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
-                                                            ng-model="addObj[key]"
-                                                            id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <input
-                                                            ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
-                                                            ng-model="addObj[key]"
-                                                            data-date-time-picker
-                                                            id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <select
-                                                            ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
-                                                            ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
-                                                            ng-model="addObj[key]"
-                                                            id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                            class="form-control"
-                                                            ng-options="Option as Option for Option in tableDDLs[key]"
-                                                    ></select>
-                                                </td>
-                                            </tr>
+                                            @if(Auth::user() && $canEdit)
+                                                <tr ng-if="selectedTableData && showAddRow">
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+addObj.id, key)">
+                                                        <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success" ng-click="addRowInline(addObj)">
+                                                            Save
+                                                        </button>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
+                                                                ng-model="addObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
+                                                                ng-model="addObj[key]"
+                                                                data-date-time-picker
+                                                                id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <select
+                                                                ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(addObj, key, selectedTableName+'_'+key+'_'+addObj.id)"
+                                                                ng-model="addObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+addObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                                class="form-control"
+                                                                ng-options="Option as Option for Option in tableDDLs[key]"
+                                                        ></select>
+                                                    </td>
+                                                </tr>
+                                            @endif
 
 
                                             <tr ng-show="$index == 0" ng-if="sumArr.length > 0" ng-repeat="tableObj in selectedTableData">
@@ -375,6 +392,7 @@
                             <div id="map-google" style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;"></div>
                         </div>
 
+                        @if(Auth::user())
                         <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
                             <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 20px;">
@@ -406,10 +424,14 @@
                                         <tbody >
                                         <tr ng-repeat="tableObj in settingsData | orderBy:sortSettingsType:false | filter: searchSettingsKeyword" ng-if="$index >= settingsPage*selectedEntries && $index < (settingsPage+1)*selectedEntries">
                                             <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="height: 0;line-height: 0">
-                                                <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                    <b>[[value]]</b>
-                                                </a>
-                                                <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
+                                                @if($canEdit)
+                                                    <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                        <b>[[value]]</b>
+                                                    </a>
+                                                    <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
+                                                @else
+                                                    <span>[[value]]</span>
+                                                @endif
                                             </td>
                                         </tr>
 
@@ -425,42 +447,48 @@
 
                                             <tbody >
                                             <tr ng-repeat="tableObj in settingsData | orderBy:sortSettingsType:false | filter: searchSettingsKeyword" ng-if="$index >= settingsPage*selectedEntries && $index < (settingsPage+1)*selectedEntries">
-                                                <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
-                                                    <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                        <b>[[value]]</b>
-                                                    </a>
-                                                    <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
-                                                    <input
-                                                            ng-if="getSettingsInputType(key) == 'input' && isEditable(key,uTableSettingsName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateSettingsRow(tableObj)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <input
-                                                            ng-if="getSettingsInputType(key) == 'date' && isEditable(key,uTableSettingsName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateSettingsRow(tableObj)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            data-date-time-picker
-                                                            id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                    >
-                                                    <select
-                                                            ng-if="getSettingsInputType(key) == 'ddl' && isEditable(key,uTableSettingsName)"
-                                                            ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                            ng-change="updateSettingsRow(tableObj)"
-                                                            ng-model-options="{debounce:1000}"
-                                                            ng-model="tableObj[key]"
-                                                            id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                            style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                            class="form-control"
-                                                            ng-options="Option as Option for Option in settingsDDLs[key]"
-                                                    ></select>
-                                                </td>
+                                                @if($canEdit)
+                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
+                                                        <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                            <b>[[value]]</b>
+                                                        </a>
+                                                        <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
+                                                        <input
+                                                                ng-if="getSettingsInputType(key) == 'input' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRow(tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <input
+                                                                ng-if="getSettingsInputType(key) == 'date' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRow(tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                data-date-time-picker
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <select
+                                                                ng-if="getSettingsInputType(key) == 'ddl' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRow(tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                                class="form-control"
+                                                                ng-options="Option as Option for Option in settingsDDLs[key]"
+                                                        ></select>
+                                                    </td>
+                                                @else
+                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;">
+                                                        <span>[[value]]</span>
+                                                    </td>
+                                                @endif
                                             </tr>
                                             </tbody>
                                         </table>
@@ -480,6 +508,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
 
@@ -746,7 +775,6 @@
 
     <div class="div-print" id="div-print"></div>
 
-    {{-- For production, it is recommended to combine following scripts into one. --}}
     {!! HTML::script('assets/js/lib/modernizr.custom.js') !!}
     {!! HTML::script('assets/js/jquery-3.2.1.min.js') !!}
     {!! HTML::script('assets/js/moment.min.js') !!}

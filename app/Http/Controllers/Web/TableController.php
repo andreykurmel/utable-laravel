@@ -29,7 +29,7 @@ class TableController extends Controller
         ];
         $this->tableService->getData((object)$post);*/
         
-        $tb = DB::connection('mysql_data')->table('tb');
+        $tb = DB::connection('mysql_data')->table('tb')->leftJoin('group as g', 'g.id', '=', 'tb.group_id');
         if (!Auth::user()) {
             //guest - get public data
             $tb->where('access', '=', 'public');
@@ -46,12 +46,17 @@ class TableController extends Controller
                     $q->orWhere('access', '=', 'public');
                     $q->orWhereNotNull('rights.right');
                 });
-                $tb->select('tb.*');
             }
             //admin - get all data
         }
+        $tb->select('tb.*', 'www_add');
         $tb = $tb->get();
+        foreach ($tb as &$item) {
+            $item->www_add = ($item->www_add ? $item->www_add . "/" . $item->db_tb : $item->db_tb);
+        }
+
         $tb_settings_display = DB::connection('mysql_data')->table('tb_settings_display')->get();
+
         $ddl = DB::connection('mysql_data')->table('tb')
             ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
             ->join('ddl_items as di', 'ts.ddl_id', '=', 'di.list_id')

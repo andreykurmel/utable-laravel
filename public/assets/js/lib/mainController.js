@@ -7,17 +7,20 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             obj[k] = null;
         });
     };
+    $scope.userCanEditTable = $scope.userCanEditSettingsTable = false;
     $scope.changedFilter = false;
     $scope.changedKeyword = false;
     $scope.showFilterTabs = [];
     $scope.uTables = [];
     $scope.uTableSettings = [];
     $scope.uTableSettingsName = "tb_settings_display";
-    $scope.uTableSettingsId = 0;
+    $scope.uTableSettingsId = 2;/* !important from DB 'tb' */
     $scope.settingsData = [];
     $scope.settingsDDLs = [];
     $scope.settingsPage = 0;
     $scope.selectedTableName = $("#inpSelectedTable").val();
+    $scope.selectedTableGroup = $("#inpSelectedTableGroup").val();
+    $scope.selectedTableWWW = ($scope.selectedTableGroup ? $scope.selectedTableGroup + "/" : "") + $scope.selectedTableName;
     $scope.selectedTableRows = 0;
     $scope.selectedTableId = 0;
     $scope.sortType = "";
@@ -53,7 +56,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $scope.mapapp = new google.maps.Map(document.getElementById('map-google'), optionsMap);
 
         $scope.markers = [];
-        var iconbasepath = "assets/img/tables/", icon_path;
+        var iconbasepath = "/assets/img/tables/", icon_path;
         for (var i=0; i<$scope.selectedTableData.length; i++) {
             if ($scope.selectedTableData[i].lat_dec && $scope.selectedTableData[i].long_dec) {
                 if ($scope.selectedTableData[i].twr_type && tower_types[$scope.selectedTableData[i].twr_type]) {
@@ -102,7 +105,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     };
 
     $scope.changeTable = function(tableName) {
-        window.location = "/" + tableName;
+        window.location = "/data/" + tableName;
     }
 
     $scope.selectTable = function(tableName) {
@@ -110,7 +113,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $scope.selectedPage = 0;
         $scope.searchKeyword = "";
         //$location.path("/" + tableName);
-        $scope.selectedTableName = tableName;
+        //$scope.selectedTableWWW = tableName;
         for (var i=0; i < $scope.uTables.length; i++) {
             if ($scope.uTables[i].db_tb == tableName) {
                 $scope.selectedTableId = $scope.uTables[i].id;
@@ -216,7 +219,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
 
             for (var l = 0; l < $scope.uTables.length; l++) {
                 if ($scope.uTables[l].db_tb == $scope.uTableSettingsName) {
-                    $scope.uTableSettingsId = $scope.uTables[l].id
+                    $scope.uTableSettingsId = $scope.uTables[l].id;
+                    $scope.userCanEditSettingsTable = true;
                 }
             }
 
@@ -870,6 +874,10 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
 
     $scope.frmSearchAddresIsVisible = function () {
         return $('#frm-search-address').is(':visible');
+    }
+
+    $scope.showedColumns = function () {
+        return $('#li_list_view').hasClass('active');
     }
 
 

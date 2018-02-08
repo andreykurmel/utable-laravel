@@ -387,12 +387,7 @@ Route::group(['middleware' => 'database.change'], function () {
 
 Route::post('/download', 'DownloadController@download')->name('downloader');
 
-Route::get('/', function () {
-    $socialProviders = config('auth.social.providers');
-    return view('table', compact('socialProviders'));
-});
-
-Route::get('/{tableName}', function ($tableName) {
-    $socialProviders = config('auth.social.providers');
-    return view('table', compact('socialProviders', 'tableName'));
-});
+Route::get('/', 'AppController@landing')->name('landing');
+Route::get('/data', 'AppController@homepage')->name('homepage');
+Route::get('/data/{tableName}', 'AppController@homepageTable')->name('homepage.table');
+Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('homepage.table');

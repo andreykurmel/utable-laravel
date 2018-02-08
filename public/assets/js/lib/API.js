@@ -1,6 +1,6 @@
 
 app.factory('API', ['$http', '$q', function ($http, $q) {
-    var callAPI = {}, baseHttpUrl = "./api";
+    var callAPI = {}, baseHttpUrl = "/api";
     
     callAPI.getUtables = function () {
         return $http({

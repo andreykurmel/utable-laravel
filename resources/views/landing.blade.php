@@ -5,13 +5,26 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
-    
-    <link href="home/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="home/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
-    <title>Utable</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('page-title') | {{ settings('app_name') }}</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
+
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ url('assets/img/icons/apple-touch-icon-144x144.png') }}" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ url('assets/img/icons/apple-touch-icon-152x152.png') }}" />
+    <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-32x32.png') }}" sizes="32x32" />
+    <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-16x16.png') }}" sizes="16x16" />
+    <meta name="application-name" content="{{ settings('app_name') }}"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="{{ url('assets/img/icons/mstile-144x144.png') }}" />
+
+    {!! HTML::style('css/vendor.css') !!}
+    {!! HTML::style('assets/css/app.css') !!}
+    {!! HTML::style('css/table.css') !!}
+
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
 <body style="position:relative;height: 100%;width: 100%;">
     <nav class="navbar navbar-default">
@@ -19,7 +32,7 @@
             <div id="navbar" class="navbar-collapse">
                 <ul class="nav navbar-nav navbar-right" style="float: right;">
                     <li style="display: inline-block">
-                        <a href="home/login">
+                        <a href="javascript:void(0)" onclick="$('.showLoginForm').show()">
                             <i class="fa fa-sign-in"></i>
                             Login
                         </a>
@@ -30,16 +43,16 @@
     </nav>
     
     <div style="position: absolute;top: 40%;text-align: center;width: 100%;">
-        <h1>UTable - your table data in one place</h1>
+        <a href="{{ route('homepage') }}"><h1>UTable - your table data in one place</h1></a>
     </div>
 
     <!-- Login form -->
-    <div ng-show="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+    <div class="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px); display: none;">
         <div class="auth" style="font-size: 14px;">
             <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                 <div class="form-wrap" id="login">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <img src="home/assets/img/vanguard-logo.png" alt="Utable">
+                        <img src="assets/img/vanguard-logo.png" alt="Utable">
                     </div>
                     <form role="form" action="<?= url('login') ?>" method="POST" id="login-form" autocomplete="off">
                         <input type="hidden" value="<?= csrf_token() ?>" name="_token">
@@ -69,7 +82,7 @@
                             @endif
 
                             @if (settings('reg_enabled'))
-                            <a href="javascript:void(0)" ng-click="showLoginForm=false;showRegisterForm=true" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
+                            <a href="javascript:void(0)" onclick="$('.showLoginForm').hide();$('.showRegisterForm').show()" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
                             @endif
                         </div>
                         <div class="form-group">
@@ -91,10 +104,10 @@
             </div>
         </div>
     </div>
-    <div ng-show="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showLoginForm = false"></div>
+    <div class="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000; display: none;" onclick="$('.showLoginForm').hide()"></div>
 
     <!-- Register form -->
-    <div ng-show="showRegisterForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+    <div class="showRegisterForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px); display: none;">
         <div class="auth" style="font-size: 14px;">
             <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                 <div class="form-wrap">
@@ -147,7 +160,7 @@
                         </div>
 
                         <div style="margin-bottom:20px;text-align:center;">
-                            <a href="javascript:void(0)" ng-click="showRegisterForm=false;showLoginForm=true" style="color: #337ab7;">Already have account?</a>
+                            <a href="javascript:void(0)" onclick="$('.showRegisterForm').hide();$('.showLoginForm').show()" style="color: #337ab7;">Already have account?</a>
                         </div>
                     </form>
 
@@ -162,8 +175,30 @@
             </div>
         </div>
     </div>
-    <div ng-show="showRegisterForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showRegisterForm = false"></div>
+    <div class="showRegisterForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000; display: none;" onclick="showRegisterForm = false"></div>
 
-    <script></script>
+
+    {!! HTML::script('assets/js/lib/modernizr.custom.js') !!}
+    {!! HTML::script('assets/js/jquery-3.2.1.min.js') !!}
+    {!! HTML::script('assets/js/moment.min.js') !!}
+    {!! HTML::script('assets/js/bootstrap.min.js') !!}
+    {!! HTML::script('assets/js/bootstrap-datetimepicker.min.js') !!}
+    {!! HTML::script('assets/js/metisMenu.min.js') !!}
+    {!! HTML::script('assets/js/sweetalert.min.js') !!}
+    {!! HTML::script('assets/js/delete.handler.js') !!}
+    {!! HTML::script('assets/plugins/js-cookie/js.cookie.js') !!}
+    {!! HTML::script('vendor/jsvalidation/js/jsvalidation.js') !!}
+    <script type="text/javascript">
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+        });
+    </script>
+
+    {{-- Login scripts --}}
+    {!! HTML::script('assets/js/as/login.js') !!}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\LoginRequest', '#login-form') !!}
+
+    {{-- Register scripts --}}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
 </body>
 </html>
