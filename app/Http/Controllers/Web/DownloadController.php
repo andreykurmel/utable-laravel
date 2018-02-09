@@ -99,12 +99,16 @@ class DownloadController extends Controller
         $html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
         $titles = array();
         foreach ($respArray['data'][0] as $key => $val) {
-            $titles[$key] = ($respArray['key_settings'][$key])->name;
+            if (($respArray['key_settings'][$key])->name && $key != "id") {
+                $titles[$key] = ($respArray['key_settings'][$key])->name;
+            } else {
+                $titles[$key] = $key;
+            }
         }
 
         $html .= "<thead><tr>";
         foreach ($titles as $key => $title) {
-            if ($visibleColumns[$key]) {
+            if (!empty($visibleColumns[$key])) {
                 $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".$title."</th>";
             }
         }
@@ -114,7 +118,7 @@ class DownloadController extends Controller
         foreach ($respArray['data'] as $row) {
             $html .= "<tr>";
             foreach ((array)$row as $key => $item) {
-                if ($visibleColumns[$key]) {
+                if (!empty($visibleColumns[$key])) {
                     $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>".$item."</td>";
                 }
             }
