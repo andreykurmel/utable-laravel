@@ -36,7 +36,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.showLoginForm = $scope.showRegisterForm = false;
     $scope.sumArr = [];
     $scope.visibleColumns = {};
-    $scope.showEntries = [10, 20, 50, 100];
+    $scope.showEntries = [0, 10, 20, 50, 100];
     $scope.selectedEntries = 10;
     $scope.selectedPage = 0;
     $scope.paginateBtns = [];
@@ -157,6 +157,8 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                 }
 
                 for (var k = 0; k < $scope.selectedTableData.length;k++) {
+                    //$scope.selectedTableData[k].autoinc_id = k+1 + $scope.selectedPage*$scope.showEntries;
+
                     if ($scope.selectedTableData[k].lat_dec) {
                         if ($scope.markerBounds.top == 0 || $scope.markerBounds.top < $scope.selectedTableData[k].lat_dec) {
                             $scope.markerBounds.top = $scope.selectedTableData[k].lat_dec
@@ -173,6 +175,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                             $scope.markerBounds.right = $scope.selectedTableData[k].long_dec
                         }
                     }
+
                     $scope.selectedTableData[k].isFilter = true;
                     for (var m = 0; m < $scope.sumArr.length;m++) {
                         if ($scope.selectedTableData[k][$scope.sumArr[m].key] && !isNaN($scope.selectedTableData[k][$scope.sumArr[m].key])) {
@@ -221,6 +224,9 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                 if ($scope.uTables[l].db_tb == $scope.uTableSettingsName) {
                     $scope.uTableSettingsId = $scope.uTables[l].id;
                     $scope.userCanEditSettingsTable = true;
+                }
+                if ($scope.uTables[l].db_tb == $scope.selectedTableName) {
+                    $scope.selectedEntries = $scope.uTables[l].nbr_entry_listing;
                 }
             }
 
@@ -878,6 +884,38 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
 
     $scope.showedColumns = function () {
         return $('#li_list_view').hasClass('active');
+    }
+
+    $scope.updateSettingsRowLocal = function (key, tableObj) {
+        if (key == "sum") {
+            $scope.sumArr = [];
+            for (var l = 0; l < $scope.uTableSettings.length; l++) {
+                if ($scope.uTableSettings[l].tb_id == $scope.selectedTableId && $scope.uTableSettings[l].sum == 'Yes') {
+                    $scope.sumArr.push({ "key": $scope.uTableSettings[l].field, "total": 0 });
+                }
+            }
+            for (var k = 0; k < $scope.selectedTableData.length;k++) {
+                for (var m = 0; m < $scope.sumArr.length;m++) {
+                    if ($scope.selectedTableData[k][$scope.sumArr[m].key] && !isNaN($scope.selectedTableData[k][$scope.sumArr[m].key])) {
+                        $scope.sumArr[m].total += Number($scope.selectedTableData[k][$scope.sumArr[m].key]);
+                    }
+                }
+            }
+        } else if (key == "filter") {
+            if (tableObj.filter == "Yes") {
+                API.loadFilter($scope.selectedTableName, tableObj).then(function (response) {
+                    console.log(response);
+                    $scope.filterData.push(response.data);
+                })
+            } else {
+                for (var l = 0; l < $scope.filterData.length; l++) {
+                    if ($scope.filterData[l].key == tableObj.field) {
+                        $scope.filterData = $scope.filterData.splice(l,1);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
 

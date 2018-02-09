@@ -34,11 +34,18 @@
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
         <!-- Button to open/hide menu -->
-        <a href="" id="open-menu" ng-click="showHideMenu()" style="top: 55px;"><span>Menu</span></a>
+        <a href="" id="open-menu" ng-click="showHideMenu()" style="top: 15px;"><span>Menu</span></a>
         <!-- Main content -->
-        <nav class="navbar navbar-default" style="position: fixed;width: 100%;">
+        <nav class="navbar navbar-default" style="position: fixed;width: 100%;z-index: 999">
             <div class="container-fluid">
                 <div id="navbar" class="navbar-collapse">
+                    <ul class="nav navbar-nav navbar-left" style="float: left;">
+                        <li style="display: inline-block">
+                            <a href="{{ route("landing") }}" style="padding: 10px 0;height: 30px;">
+                                <img src="{{ url('assets/img/vanguard-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
+                            </a>
+                        </li>
+                    </ul>
                     <ul class="nav navbar-nav navbar-right" style="float: right;">
                         @if(Auth::user())
                             <li style="display: inline-block">
@@ -252,11 +259,12 @@
                                             <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
                                                 @if(Auth::user() && $canEdit)
                                                     <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                        <b>[[value]]</b>
+                                                        <b>[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</b>
                                                     </a>
                                                     <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
                                                 @else
-                                                    <span>[[value]]</span>
+                                                    <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</span>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -287,7 +295,7 @@
                                                 @if(Auth::user() && $canEdit)
                                                     <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
                                                         <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                            <b>[[value]]</b>
+                                                            <b>[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</b>
                                                         </a>
                                                         <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
                                                         <input
@@ -323,7 +331,8 @@
                                                     </td>
                                                 @else
                                                     <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;">
-                                                        <span>[[value]]</span>
+                                                        <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</span>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
                                                     </td>
                                                 @endif
                                             </tr>
@@ -485,8 +494,38 @@
                                                         ></select>
                                                     </td>
                                                 @else
-                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;">
+                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
                                                         <span>[[value]]</span>
+                                                        <input
+                                                                ng-if="getSettingsInputType(key) == 'input' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <input
+                                                                ng-if="getSettingsInputType(key) == 'date' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                data-date-time-picker
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <select
+                                                                ng-if="getSettingsInputType(key) == 'ddl' && isEditable(key,uTableSettingsName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                                class="form-control"
+                                                                ng-options="Option as Option for Option in settingsDDLs[key]"
+                                                        ></select>
                                                     </td>
                                                 @endif
                                             </tr>
@@ -519,7 +558,7 @@
         </section>
         <!-- End main content -->
         <!-- Sidebar/drop-down menu -->
-        <section id="menu" role="complementary" class="" style="position:fixed;top: 99px;bottom: 0;right: 0;width: 260px;">
+        <section id="menu" role="complementary" class="" style="position:fixed;top: 59px;bottom: 0;right: 0;width: 260px;">
             <!-- This wrapper is used by several responsive layouts -->
             <div id="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
 
@@ -527,7 +566,7 @@
                     Filter Results
                 </header>
                 <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
-                    <div ng-repeat="filterObj in filterData" >
+                    <div ng-repeat="filterObj in filterData" ng-if="filterObj">
                         <dt ng-click="showTabToggle($index)">[[filterObj.name]]</dt>
                         <dd class="acd-filter-elem" ng-show="showFilterTabs[$index] == true" style="position:relative;max-height: [[filterMaxHeight]]px;overflow: auto;">
                             <div class="with-small-padding">

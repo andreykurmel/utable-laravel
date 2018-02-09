@@ -67,6 +67,13 @@ app.factory('API', ['$http', '$q', function ($http, $q) {
         })
     }
 
+    callAPI.loadFilter = function(tableName, filterObj) {
+        return $http({
+            method: 'GET',
+            url: baseHttpUrl + '/loadFilter?tableName=' + tableName + '&filterObj=' + JSON.stringify(filterObj)
+        })
+    }
+
     return callAPI;
 
  }]);

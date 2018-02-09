@@ -27,16 +27,38 @@
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
 <body style="position:relative;height: 100%;width: 100%;">
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default" style="position: fixed;width: 100%;">
         <div class="container-fluid">
             <div id="navbar" class="navbar-collapse">
-                <ul class="nav navbar-nav navbar-right" style="float: right;">
+                <ul class="nav navbar-nav navbar-left" style="float: left;">
                     <li style="display: inline-block">
-                        <a href="javascript:void(0)" onclick="$('.showLoginForm').show()">
-                            <i class="fa fa-sign-in"></i>
-                            Login
+                        <a href="{{ route("homepage") }}" style="padding: 10px 0;height: 30px;">
+                            <img src="{{ url('assets/img/vanguard-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                         </a>
                     </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right" style="float: right;">
+                    @if(Auth::user())
+                        <li style="display: inline-block">
+                            <a href="{{ route('profile') }}">
+                                <i class="fa fa-user"></i>
+                                {{ Auth::user()->username }}
+                            </a>
+                        </li>
+                        <li style="display: inline-block">
+                            <a href="{{ route('auth.logout') }}">
+                                <i class="fa fa-sign-out"></i>
+                                @lang('app.logout')
+                            </a>
+                        </li>
+                    @else
+                        <li style="display: inline-block">
+                            <a href="javascript:void(0)" onclick="$('.showLoginForm').show()">
+                                <i class="fa fa-sign-in"></i>
+                                @lang('app.login')
+                            </a>
+                        </li>
+                    @endif
                 </ul>
             </div>
         </div>

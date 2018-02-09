@@ -379,6 +379,7 @@ Route::get('install/error', [
  */
 Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
 Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
+Route::get('/api/loadFilter', 'TableController@loadFilter')->name('loadFilter');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');

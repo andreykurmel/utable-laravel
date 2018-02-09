@@ -10,7 +10,11 @@ use Illuminate\Http\Request;
 class AppController extends Controller
 {
     public function landing() {
-        if (Auth::guest()) {
+        if (empty($_SERVER['HTTP_REFERER'])) {
+            $_SERVER['HTTP_REFERER'] = "";
+        }
+
+        if (Auth::guest() || ($_SERVER['HTTP_REFERER'] != config('app.url')."/")) {
             $socialProviders = config('auth.social.providers');
             return view('landing', compact('socialProviders'));
         } else {

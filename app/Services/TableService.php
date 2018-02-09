@@ -91,25 +91,31 @@ class TableService {
         $respFilters = [];
         $respDDLs = [];
         if (isset($post->getfilters)) {
+
             //get columns for which filters are enabled
-            $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
-                ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
-                ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
-                ->where('tb.db_tb', '=', $tableName)
-                ->where('tb_settings_display.filter', '=', 'Yes')
-                ->get();
+            if (!empty($filterData)) {
+                $selected_filters = $filterData;
+            } else {
+                $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
+                    ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
+                    ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
+                    ->where('tb.db_tb', '=', $tableName)
+                    ->where('tb_settings_display.filter', '=', 'Yes')
+                    ->select('tb_settings_display.field as key', 'tb_settings_display.name')
+                    ->get();
+            }
 
             foreach ($selected_filters as $sf) {
                 //get values for each filter
                 $filter_vals = DB::connection('mysql_data')->table($tableName)
-                    ->select($sf->field." as value")
+                    ->select($sf->key." as value")
                     ->selectRaw("true as checked")
                     ->distinct()->get();
-                $data_items = (clone $resultSQL)->select($sf->field." as value")->distinct()->get();
+                $data_items = (clone $resultSQL)->select($sf->key." as value")->distinct()->get();
                 //if user switched off some filters -> then display it in the result data
                 if ($filter_vals->count() == $data_items->count()) {
                     $filterObj = [
-                        'key' => $sf->field,
+                        'key' => $sf->key,
                         'name' => $sf->name,
                         'val' => $filter_vals ? $filter_vals : [],
                         'checkAll' => true
@@ -121,7 +127,7 @@ class TableService {
                         }
                     }
                     $filterObj = [
-                        'key' => $sf->field,
+                        'key' => $sf->key,
                         'name' => $sf->name,
                         'val' => $filter_vals ? $filter_vals : [],
                         'checkAll' => false
