@@ -26,7 +26,7 @@
     <div class="row">
         <div class="col-md-6 col-md-push-3">
             <div class="text-center">
-                    <img src="{{ url('assets/img/vanguard-logo-no-text.png') }}" alt="Vanguard" class="logo">
+                    <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="Vanguard" class="logo">
                 <h1>Oops, 404!</h1>
                 <br />
                 <p>

@@ -20,7 +20,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6 col-md-offset-3 logo-wrapper">
-                    <img src="{{ url('assets/img/vanguard-logo.png') }}" alt="Vanguard" class="logo">
+                    <img src="{{ url('assets/img/tdp-logo.png') }}" alt="Vanguard" class="logo">
                 </div>
             </div>
             <div class="wizard col-md-6 col-md-offset-3">

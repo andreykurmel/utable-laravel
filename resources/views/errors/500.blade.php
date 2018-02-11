@@ -27,7 +27,7 @@
     <div class="row">
         <div class="col-md-6 col-md-push-3">
             <div class="text-center">
-                    <img src="{{ url('assets/img/vanguard-logo-no-text.png') }}" alt="{{ settings('app_name') }}" class="logo">
+                    <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" class="logo">
                 <h1>Whoops, something went wrong! :(</h1>
                 <br />
                 <p>

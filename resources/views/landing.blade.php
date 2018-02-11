@@ -33,7 +33,7 @@
                 <ul class="nav navbar-nav navbar-left" style="float: left;">
                     <li style="display: inline-block">
                         <a href="{{ route("homepage") }}" style="padding: 10px 0;height: 30px;">
-                            <img src="{{ url('assets/img/vanguard-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
+                            <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                         </a>
                     </li>
                 </ul>
@@ -74,7 +74,7 @@
             <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                 <div class="form-wrap" id="login">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <img src="assets/img/vanguard-logo.png" alt="Utable">
+                        <img src="assets/img/tdp-logo.png" alt="Utable">
                     </div>
                     <form role="form" action="<?= url('login') ?>" method="POST" id="login-form" autocomplete="off">
                         <input type="hidden" value="<?= csrf_token() ?>" name="_token">
@@ -134,7 +134,7 @@
             <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                 <div class="form-wrap">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <img src="{{ url('assets/img/vanguard-logo.png') }}" alt="{{ settings('app_name') }}">
+                        <img src="{{ url('assets/img/tdp-logo.png') }}" alt="{{ settings('app_name') }}">
                     </div>
 
                     @include('partials/messages')

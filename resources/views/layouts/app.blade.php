@@ -35,7 +35,7 @@
         <div class="container-fluid">
             <div class="navbar-header">
                 <a class="navbar-brand" href="{{ route('dashboard') }}" style="padding: 7px 0 0 0;">
-                    <img src="{{ url('assets/img/vanguard-logo.png') }}" height="40" alt="{{ settings('app_name') }}">
+                    <img src="{{ url('assets/img/tdp-logo.png') }}" height="40" alt="{{ settings('app_name') }}">
                 </a>
             </div>
             <div id="navbar" class="navbar-collapse">
