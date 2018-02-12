@@ -227,6 +227,9 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                 }
                 if ($scope.uTables[l].db_tb == $scope.selectedTableName) {
                     $scope.selectedEntries = $scope.uTables[l].nbr_entry_listing;
+                    if ($scope.selectedEntries === 0) {
+                        $scope.selectedEntries = "All";
+                    }
                 }
             }
 
