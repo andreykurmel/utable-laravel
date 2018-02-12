@@ -93,7 +93,11 @@ class TableService {
         if (isset($post->getfilters)) {
 
             //get columns for which filters are enabled
-            if (!empty($filterData)) {
+            if (
+                !empty($filterData)
+                &&
+                (!empty($query['changedKeyword']) || !empty($changedFilter))
+            ) {
                 $selected_filters = $filterData;
             } else {
                 $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')

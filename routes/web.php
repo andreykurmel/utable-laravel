@@ -380,6 +380,7 @@ Route::get('install/error', [
 Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
 Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
 Route::get('/api/loadFilter', 'TableController@loadFilter')->name('loadFilter');
+Route::get('/api/favouriteToggle', 'TableController@favouriteToggle')->name('favouriteToggle');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
@@ -390,5 +391,6 @@ Route::post('/download', 'DownloadController@download')->name('downloader');
 
 Route::get('/', 'AppController@landing')->name('landing');
 Route::get('/data', 'AppController@homepage')->name('homepage');
+Route::get('/data/crown', 'AppController@crown')->name('crown');
 Route::get('/data/{tableName}', 'AppController@homepageTable')->name('homepage.table');
 Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('homepage.table');

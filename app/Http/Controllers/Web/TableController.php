@@ -16,7 +16,7 @@ class TableController extends Controller
         $this->tableService = $ts;
     }
 
-    public function getUTable() {
+    public function getUTable(Request $request) {
         /*$post = [
             'tableName' => 'st',
             'c' => 10,
@@ -33,18 +33,22 @@ class TableController extends Controller
         if (!Auth::user()) {
             //guest - get public data
             $tb->where('access', '=', 'public');
+            $tb->where('www_add', '=', $request->tableGroup ? $request->tableGroup : null);
         } else {
             if (Auth::user()->role_id != 1) {
-                //user - get user`s data, tables with right 'view' and public
+                //user - get user`s data, favourites and public data in the current folder
                 $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $tb->where(function ($q) {
-                    $q->where('user_id', '=', Auth::user()->id);
-                    $q->orWhereNull('user_id');
-                });
-                $tb->where(function ($q) {
-                    $q->where('owner', '=', Auth::user()->id);
-                    $q->orWhere('access', '=', 'public');
-                    $q->orWhereNotNull('rights.right');
+                $tb->where('www_add', '=', $request->tableGroup ? $request->tableGroup : null);
+                $tb->where('access', '=', 'public');
+                $tb->orWhere(function ($qt) {
+                    $qt->where(function ($q) {
+                        $q->where('rights.user_id', '=', Auth::user()->id);
+                        $q->orWhereNull('rights.user_id');
+                    });
+                    $qt->where(function ($q) {
+                        $q->where('owner', '=', Auth::user()->id);
+                        $q->orWhereNotNull('rights.right');
+                    });
                 });
             }
             //admin - get all data
@@ -162,5 +166,37 @@ class TableController extends Controller
             'val' => $filter_vals ? $filter_vals : [],
             'checkAll' => true
         ];
+    }
+
+    public function favouriteToggle(Request $request) {
+        if (Auth::user()) {
+            $table_id = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->select('id')->first();
+            //if need to activate favourite -> then add row into 'rights' table
+            if ($request->status == "Active") {
+                //add row only if it doesn`t exist
+                if (!DB::connection('mysql_data')
+                    ->table('rights')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('table_id', '=', $table_id->id)
+                    ->where('right', '=', 'View')
+                    ->count()
+                ) {
+                    DB::connection('mysql_data')
+                        ->table('rights')
+                        ->insert([
+                            'user_id' => Auth::user()->id,
+                            'table_id' => $table_id->id,
+                            'right' => 'View'
+                        ]);
+                }
+            //if need to inactive favourite -> then delete from 'rights' table
+            } else {
+                DB::connection('mysql_data')->table('rights')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('table_id', '=', $table_id->id)
+                    ->where('right', '=', 'View')
+                    ->delete();
+            }
+        }
     }
 }

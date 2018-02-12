@@ -36,7 +36,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.showLoginForm = $scope.showRegisterForm = false;
     $scope.sumArr = [];
     $scope.visibleColumns = {};
-    $scope.showEntries = [0, 10, 20, 50, 100];
+    $scope.showEntries = [10, 20, 50, 100, 'All'];
     $scope.selectedEntries = 10;
     $scope.selectedPage = 0;
     $scope.paginateBtns = [];
@@ -214,7 +214,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         })
     }
 
-    API.getUtables().then(function(response){
+    API.getUtables($('#inpSelectedTableGroup').val()).then(function(response){
         if(response.status == 200) {
             $scope.uTables = response.data.utables;
             $scope.uTableSettings = response.data.utablesettings;
@@ -704,7 +704,14 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         }
         $scope.editItemIndex = -1;
         $scope.editData = emptyDataObject;
-        $scope.showModal = true;
+
+        if ($scope.showAddRow) {
+            $('#tbAddRow').show();
+            $('#tbHeaders').css('top', '53px');
+            $('#divTbData').css('top', '90px');
+        } else {
+            $scope.showModal = true;
+        }
     }
 
     $scope.showInlineEdit = function (inp_id, key) {
@@ -854,6 +861,10 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.addRowInline = function (addObj) {
         $scope.showAddRow = false;
 
+        $('#tbAddRow').hide();
+        $('#tbHeaders').css('top', '0');
+        $('#divTbData').css('top', '37px');
+
         var selectedTableObj = {};
         angular.copy($scope.addObj,selectedTableObj);
         selectedTableObj.tableName = $scope.selectedTableName;
@@ -915,6 +926,24 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                     }
                 }
             }
+        }
+    }
+
+    $scope.changeShowAddRow = function () {
+        if (!$scope.showAddRow) {
+            $('#tbAddRow').hide();
+            $('#tbHeaders').css('top', '0');
+            $('#divTbData').css('top', '37px');
+        }
+    }
+
+    $scope.favouriteToggle = function () {
+        if ($('#favourite_star').hasClass('fa-star')) {
+            API.favouriteToggle($scope.selectedTableName, "Inactive");
+            $('#favourite_star').removeClass('fa-star').addClass('fa-star-o');
+        } else {
+            API.favouriteToggle($scope.selectedTableName, "Active");
+            $('#favourite_star').removeClass('fa-star-o').addClass('fa-star');
         }
     }
 

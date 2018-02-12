@@ -2,10 +2,10 @@
 app.factory('API', ['$http', '$q', function ($http, $q) {
     var callAPI = {}, baseHttpUrl = "/api";
     
-    callAPI.getUtables = function () {
+    callAPI.getUtables = function (tableGroup) {
         return $http({
             method: 'GET',
-            url: baseHttpUrl + '/getUTable'
+            url: baseHttpUrl + '/getUTable?tableGroup=' + tableGroup
         })
     }
 
@@ -71,6 +71,13 @@ app.factory('API', ['$http', '$q', function ($http, $q) {
         return $http({
             method: 'GET',
             url: baseHttpUrl + '/loadFilter?tableName=' + tableName + '&filterObj=' + JSON.stringify(filterObj)
+        })
+    }
+
+    callAPI.favouriteToggle = function(tableName, status) {
+        return $http({
+            method: 'GET',
+            url: baseHttpUrl + '/favouriteToggle?tableName=' + tableName + '&status=' + status
         })
     }
 

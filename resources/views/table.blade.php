@@ -47,6 +47,17 @@
                         </li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right" style="float: right;">
+                        @if($favourite)
+                            <li style="display: inline-block; margin-right: 50px;">
+                                <a href="javascript:void(0)" style="padding: 16px 12px 12px 12px;" ng-click="favouriteToggle()" title="Favourite">
+                                    @if($favourite == "Active")
+                                        <i id="favourite_star" class="fa fa-star" style="font-size: 1.5em;"></i>
+                                    @else
+                                        <i id="favourite_star" class="fa fa-star-o" style="font-size: 1.5em;"></i>
+                                    @endif
+                                </a>
+                            </li>
+                        @endif
                         @if(Auth::user())
                             <li style="display: inline-block">
                                 <a href="{{ route('profile') }}">
@@ -242,101 +253,19 @@
                                     </div>
                                     @if(Auth::user() && $canEdit)
                                         <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" ng-click="addData()">Add</a>
-                                        <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow">
+                                        <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow" ng-click="changeShowAddRow()">
                                     @endif
                                     <div class="dataTables_filter"><label>Search by Keyword:<input ng-model="searchKeyword" ng-change="changedKeyword=true;changePage(1, '')" ng-model-options="{debounce:1000}" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
-                                    <table class="table dataTable" style="margin-bottom: 0;">
+                                    <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-37px;z-index: 25;display: none;">
                                         <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
                                         <tr>
-                                            <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                            <th class="sorting nowrap" ng-repeat="(key,value) in tableObj" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
                                         </tr>
                                         </thead>
 
-                                        <tbody style="visibility: hidden;">
-                                        <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
-                                            <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
-                                                @if(Auth::user() && $canEdit)
-                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                        <b>[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</b>
-                                                    </a>
-                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                @else
-                                                    <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</span>
-                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-
-                                        @if(Auth::user() && $canEdit)
-                                            <tr ng-if="selectedTableData && showAddRow">
-                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="height: 0;line-height: 0">
-                                                    <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success">
-                                                        Save
-                                                    </button>
-                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                </td>
-                                            </tr>
-                                        @endif
-
-                                        </tbody>
-                                    </table>
-                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
-                                            <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
-                                            <tr>
-                                                <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
-                                            </tr>
-                                            </thead>
-
-                                            <tbody >
-                                            <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
-                                                @if(Auth::user() && $canEdit)
-                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
-                                                        <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                            <b>[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</b>
-                                                        </a>
-                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                        <input
-                                                                ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateRow(tableObj,true)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <input
-                                                                ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateRow(tableObj,true)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                data-date-time-picker
-                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <select
-                                                                ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateRow(tableObj,true)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                                class="form-control"
-                                                                ng-options="Option as Option for Option in tableDDLs[key]"
-                                                        ></select>
-                                                    </td>
-                                                @else
-                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;">
-                                                        <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + selectedPage*selectedEntries]]</span>
-                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
-                                                    </td>
-                                                @endif
-                                            </tr>
-
+                                        <tbody>
                                             @if(Auth::user() && $canEdit)
                                                 <tr ng-if="selectedTableData && showAddRow">
                                                     <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+addObj.id, key)">
@@ -372,10 +301,125 @@
                                                 </tr>
                                             @endif
 
+                                            <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
+                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
+                                                    @if(Auth::user() && $canEdit)
+                                                        <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                            <b>[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</b>
+                                                        </a>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                    @else
+                                                        <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</span>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <table class="table dataTable" id="tbHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
+                                        <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
+                                        <tr>
+                                            <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody style="visibility: hidden;">
+                                        <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
+                                            <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
+                                                @if(Auth::user() && $canEdit)
+                                                    <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                        <b>[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</b>
+                                                    </a>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                @else
+                                                    <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</span>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+
+                                        @if(Auth::user() && $canEdit)
+                                            <tr ng-if="selectedTableData && showAddRow">
+                                                <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="height: 0;line-height: 0">
+                                                    <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success">
+                                                        Save
+                                                    </button>
+                                                    <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                </td>
+                                            </tr>
+                                        @endif
+
+                                        </tbody>
+                                    </table>
+                                    <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:37px;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                            <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
+                                            <tr>
+                                                <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody >
+                                            <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
+                                                @if(Auth::user() && $canEdit)
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
+                                                        <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
+                                                            <b>[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</b>
+                                                        </a>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'input' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <input
+                                                                ng-if="getColumnInputType(key) == 'date' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                data-date-time-picker
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                        >
+                                                        <select
+                                                                ng-if="getColumnInputType(key) == 'ddl' && isEditable(key,selectedTableName)"
+                                                                ng-blur="inlineUpdate(tableObj, key, selectedTableName+'_'+key+'_'+tableObj.id)"
+                                                                ng-change="updateRow(tableObj,true)"
+                                                                ng-model-options="{debounce:1000}"
+                                                                ng-model="tableObj[key]"
+                                                                id="[[selectedTableName+'_'+key+'_'+tableObj.id]]"
+                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
+                                                                class="form-control"
+                                                                ng-options="Option as Option for Option in tableDDLs[key]"
+                                                        ></select>
+                                                    </td>
+                                                @else
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;">
+                                                        <span ng-if="!isEditable(key,selectedTableName)">[[$parent.$parent.$parent.$index+1 + Number(selectedPage*selectedEntries)]]</span>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                    </td>
+                                                @endif
+                                            </tr>
 
                                             <tr ng-show="$index == 0" ng-if="sumArr.length > 0" ng-repeat="tableObj in selectedTableData">
                                                 <td ng-repeat="(key,value) in tableObj" ng-if="checkWeb(key) && checkVisible(key)"><span ng-if="ifSum(key)" >[[getSum(key)]]</span></td>
                                             </tr>
+
+                                            @if(Auth::user() && $canEdit)
+                                                <tr ng-if="selectedTableData && showAddRow" style="visibility: hidden;">
+                                                    <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="height: 0;line-height: 0">
+                                                        <button ng-if="!isEditable(key,selectedTableName)" class="btn btn-success">
+                                                            Save
+                                                        </button>
+                                                        <span ng-if="isEditable(key,selectedTableName)">[[value]]</span>
+                                                    </td>
+                                                </tr>
+                                            @endif
 
                                             </tbody>
                                         </table>
@@ -383,7 +427,7 @@
                                 </div>
                                 <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
                                     <div class="dataTables_info" role="status" aria-live="polite">
-                                        Showing [[selectedPage*selectedEntries + 1 < selectedTableRows ? selectedPage*selectedEntries + 1 : selectedTableRows]]
+                                        Showing [[Number(selectedPage*selectedEntries) + 1 < selectedTableRows ? Number(selectedPage*selectedEntries) + 1 : selectedTableRows]]
                                         to [[(selectedPage+1)*selectedEntries < selectedTableRows ? (selectedPage+1)*selectedEntries : selectedTableRows]]
                                         of [[ selectedTableRows ]] entries</div>
                                     <div class="dataTables_paginate paging_full_numbers">
@@ -535,7 +579,7 @@
                                 </div>
                                 <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
                                     <div class="dataTables_info" role="status" aria-live="polite">
-                                        Showing [[settingsPage*selectedEntries + 1 < settingsData.length ? settingsPage*selectedEntries + 1 : settingsData.length]]
+                                        Showing [[Number(settingsPage*selectedEntries) + 1 < settingsData.length ? settingsPage*selectedEntries + 1 : settingsData.length]]
                                         to [[(settingsPage+1)*selectedEntries < settingsData.length ? (settingsPage+1)*selectedEntries : settingsData.length]]
                                         of [[ settingsData.length ]] entries</div>
                                     <div class="dataTables_paginate paging_full_numbers">
