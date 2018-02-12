@@ -47,17 +47,6 @@
                         </li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right" style="float: right;">
-                        @if($favourite)
-                            <li style="display: inline-block; margin-right: 50px;">
-                                <a href="javascript:void(0)" style="padding: 16px 12px 12px 12px;" ng-click="favouriteToggle()" title="Favourite">
-                                    @if($favourite == "Active")
-                                        <i id="favourite_star" class="fa fa-star" style="font-size: 1.5em;"></i>
-                                    @else
-                                        <i id="favourite_star" class="fa fa-star-o" style="font-size: 1.5em;"></i>
-                                    @endif
-                                </a>
-                            </li>
-                        @endif
                         @if(Auth::user())
                             <li style="display: inline-block">
                                 <a href="{{ route('profile') }}">
@@ -91,7 +80,18 @@
 
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
-                <div class="colvisopts with-small-padding" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; top: 54px; font-size:14px;z-index:1000">
+                <div class="colvisopts with-small-padding" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;">
+                    @if($favourite)
+                        <div style="display: inline-block;">
+                            <a href="javascript:void(0)" style="padding: 15px;" ng-click="favouriteToggle()" title="Favourite">
+                                @if($favourite == "Active")
+                                    <i id="favourite_star" class="fa fa-star" style="font-size: 1.5em;"></i>
+                                @else
+                                    <i id="favourite_star" class="fa fa-star-o" style="font-size: 1.5em;"></i>
+                                @endif
+                            </a>
+                        </div>
+                    @endif
                     <div class="showhidemenu" style='width:150px;display:inline-block' ng-show="showedColumns()">
                         <a href="javascript:void(0)" class="button blue-gradient glossy" ng-click="toggleColumns()">Show/Hide Columns</a>
                     </div>
