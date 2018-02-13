@@ -26,15 +26,16 @@
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
-<body class="clearfix with-menu"  ng-app="myApp" ng-controller="myCtrl" style="display: none;">
+<body class="clearfix with-menu" style="display: none;">
     <div class="div-screen">
         <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
         <input type="hidden" id="inpSelectedTableGroup" value="{{ isset($group) ? $group : "" }}">
+        <input type="hidden" id="inpSelectedEntries" value="{{ $selectedEntries ? $selectedEntries : 10 }}">
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
         <!-- Button to open/hide menu -->
-        <a href="" id="open-menu" ng-click="showHideMenu()" style="top: 15px;"><span>Menu</span></a>
+        <a href="" id="open-menu" onclick="showHideMenu()" style="top: 15px;"><span>Menu</span></a>
         <!-- Main content -->
         <nav class="navbar navbar-default" style="position: fixed;width: 100%;z-index: 999">
             <div class="container-fluid">
@@ -62,7 +63,7 @@
                             </li>
                         @else
                             <li style="display: inline-block">
-                                <a href="javascript:void(0)" ng-click="showLoginForm = true">
+                                <a href="javascript:void(0)" onclick="$('.loginForm').show()">
                                     <i class="fa fa-sign-in"></i>
                                     @lang('app.login')
                                 </a>
@@ -80,7 +81,7 @@
 
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
-                <div class="colvisopts with-small-padding" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;">
+                <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
                     @if($favourite)
                         <div style="display: inline-block;">
                             <a href="javascript:void(0)" style="padding: 15px;" ng-click="favouriteToggle()" title="Favourite">
@@ -93,10 +94,14 @@
                         </div>
                     @endif
                     <div class="showhidemenu" style='width:150px;display:inline-block' ng-show="showedColumns()">
-                        <a href="javascript:void(0)" class="button blue-gradient glossy" ng-click="toggleColumns()">Show/Hide Columns</a>
+                        <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
-                        <select class="selectcustom" ng-model="selectedTableWWW" ng-change="changeTable(selectedTableWWW)" ng-options="tableObj.www_add as tableObj.name for tableObj in uTables" style="width: 100%">
+                        <select id="tableChanger" class="selectcustom" onchange="window.location = '/data/' + $('#tableChanger').val();" style="width: 100%">
+                            <option value=""></option>
+                            @foreach($listTables as $tb)
+                                <option value="{{ $tb->www_add }}">{{ $tb->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div style="display: inline-block;margin-left: 8px;">
@@ -127,125 +132,133 @@
                     <!-- Tabs -->
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
                         <li class="active" id="li_list_view"><a href="" ng-click="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
-                        <li ng-if="selectedTableName == 'st'" id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
+                        @if($tableName == 'st')
+                            <li id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
+                        @endif
                         @if(Auth::user())
                             <li id="li_settings_view"><a href="" ng-click="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
                         @endif
                     </ul>
 
                     <!-- Content -->
-                    <div class="tabs-content" ng-style="filterMenuHide ? {'right': '20px'} : {'right': '280px'}" style="position: fixed; left: 20px; bottom: 10px; top: 100px;">
+                    <div class="tabs-content js-filterMenuHide" style="position: fixed; left: 20px; bottom: 10px; top: 100px;right: 280px;">
 
                         <div id="list_view" style='padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
-                            <h2 style='font-size:14px;' id='main-search-wrapper' ng-if="selectedTableName == 'st'">
-                                <span class="input ">
-                                   <form method="post" action="#" id='frm-search-latlng' style='padding-bottom: 2px;'>
-                                      <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
-                                      <input name="dec-lat" id="frm-dec-lat" class="input-unstyled input-sep validate[required]" placeholder="Latitude" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="dec-lng" id="frm-dec-lng" class="input-unstyled input-sep validate[required]" placeholder="Longitude" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="dec-radius" id="frm-dec-radius" class="input-unstyled validate[required]" placeholder="Radius MI" style='width:70px' value=""  maxlength="2" type="text">
-                                      <select id='tower-owners-latlng' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
-                                            <option value="all">Owner:All</option>
-                                                                  </select>
-                                      <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
-                                   </form>
-                                   <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
-                                      <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
-                                      <input name="address" id="frm-address" class="input-unstyled input-sep" placeholder="Street Address" value="" maxlength="50" style='width:100px' type="text">
-                                      <input name="city" id="frm-city" class="input-unstyled input-sep" placeholder="City" value="" maxlength="50" style='width:100px' type="text">
-                                      <select id='frm-state' name="state" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px' >
-                                        <option value="">State</option>
-                                        <option value="AK">Alaska</option>
-                                        <option value="AL">Alabama</option>
-                                        <option value="AR">Arkansas</option>
-                                        <option value="AZ">Arizona</option>
-                                        <option value="CA">California</option>
-                                        <option value="CO">Colorado</option>
-                                        <option value="CT">Connecticut</option>
-                                        <option value="DC">District of Columbia</option>
-                                        <option value="DE">Delaware</option>
-                                        <option value="FL">Florida</option>
-                                        <option value="GA">Georgia</option>
-                                        <option value="HI">Hawaii</option>
-                                        <option value="IA">Iowa</option>
-                                        <option value="ID">Idaho</option>
-                                        <option value="IL">Illinois</option>
-                                        <option value="IN">Indiana</option>
-                                        <option value="KS">Kansas</option>
-                                        <option value="KY">Kentucky</option>
-                                        <option value="LA">Louisiana</option>
-                                        <option value="MA">Massachusetts</option>
-                                        <option value="MD">Maryland</option>
-                                        <option value="ME">Maine</option>
-                                        <option value="MI">Michigan</option>
-                                        <option value="MN">Minnesota</option>
-                                        <option value="MO">Missouri</option>
-                                        <option value="MS">Mississippi</option>
-                                        <option value="MT">Montana</option>
-                                        <option value="NC">North Carolina</option>
-                                        <option value="ND">North Dakota</option>
-                                        <option value="NE">Nebraska</option>
-                                        <option value="NH">New Hampshire</option>
-                                        <option value="NJ">New Jersey</option>
-                                        <option value="NM">New Mexico</option>
-                                        <option value="NV">Nevada</option>
-                                        <option value="NY">New York</option>
-                                        <option value="OH">Ohio</option>
-                                        <option value="OK">Oklahoma</option>
-                                        <option value="OR">Oregon</option>
-                                        <option value="PA">Pennsylvania</option>
-                                        <option value="RI">Rhode Island</option>
-                                        <option value="SC">South Carolina</option>
-                                        <option value="SD">South Dakota</option>
-                                        <option value="TN">Tennessee</option>
-                                        <option value="TX">Texas</option>
-                                        <option value="UT">Utah</option>
-                                        <option value="VA">Virginia</option>
-                                        <option value="VT">Vermont</option>
-                                        <option value="WA">Washington</option>
-                                        <option value="WI">Wisconsin</option>
-                                        <option value="WV">West Virginia</option>
-                                        <option value="WY">Wyoming</option>
-                                        <option value="PR">Puerto Rico</option>
-                                        <option value="VI">Virgin Islands</option>
-                                      </select>
+                            @if($tableName == 'st')
+                                <h2 style='font-size:14px;' id='main-search-wrapper'>
+                                    <span class="input ">
+                                       <form method="post" action="#" id='frm-search-latlng' style='padding-bottom: 2px;'>
+                                          <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
+                                          <input name="dec-lat" id="frm-dec-lat" class="input-unstyled input-sep validate[required]" placeholder="Latitude" value="" maxlength="50" style='width:100px' type="text">
+                                          <input name="dec-lng" id="frm-dec-lng" class="input-unstyled input-sep validate[required]" placeholder="Longitude" value="" maxlength="50" style='width:100px' type="text">
+                                          <input name="dec-radius" id="frm-dec-radius" class="input-unstyled validate[required]" placeholder="Radius MI" style='width:70px' value=""  maxlength="2" type="text">
+                                          <select id='tower-owners-latlng' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
+                                                <option value="all">Owner:All</option>
+                                                                      </select>
+                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
+                                       </form>
+                                       <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
+                                          <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
+                                          <input name="address" id="frm-address" class="input-unstyled input-sep" placeholder="Street Address" value="" maxlength="50" style='width:100px' type="text">
+                                          <input name="city" id="frm-city" class="input-unstyled input-sep" placeholder="City" value="" maxlength="50" style='width:100px' type="text">
+                                          <select id='frm-state' name="state" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px' >
+                                            <option value="">State</option>
+                                            <option value="AK">Alaska</option>
+                                            <option value="AL">Alabama</option>
+                                            <option value="AR">Arkansas</option>
+                                            <option value="AZ">Arizona</option>
+                                            <option value="CA">California</option>
+                                            <option value="CO">Colorado</option>
+                                            <option value="CT">Connecticut</option>
+                                            <option value="DC">District of Columbia</option>
+                                            <option value="DE">Delaware</option>
+                                            <option value="FL">Florida</option>
+                                            <option value="GA">Georgia</option>
+                                            <option value="HI">Hawaii</option>
+                                            <option value="IA">Iowa</option>
+                                            <option value="ID">Idaho</option>
+                                            <option value="IL">Illinois</option>
+                                            <option value="IN">Indiana</option>
+                                            <option value="KS">Kansas</option>
+                                            <option value="KY">Kentucky</option>
+                                            <option value="LA">Louisiana</option>
+                                            <option value="MA">Massachusetts</option>
+                                            <option value="MD">Maryland</option>
+                                            <option value="ME">Maine</option>
+                                            <option value="MI">Michigan</option>
+                                            <option value="MN">Minnesota</option>
+                                            <option value="MO">Missouri</option>
+                                            <option value="MS">Mississippi</option>
+                                            <option value="MT">Montana</option>
+                                            <option value="NC">North Carolina</option>
+                                            <option value="ND">North Dakota</option>
+                                            <option value="NE">Nebraska</option>
+                                            <option value="NH">New Hampshire</option>
+                                            <option value="NJ">New Jersey</option>
+                                            <option value="NM">New Mexico</option>
+                                            <option value="NV">Nevada</option>
+                                            <option value="NY">New York</option>
+                                            <option value="OH">Ohio</option>
+                                            <option value="OK">Oklahoma</option>
+                                            <option value="OR">Oregon</option>
+                                            <option value="PA">Pennsylvania</option>
+                                            <option value="RI">Rhode Island</option>
+                                            <option value="SC">South Carolina</option>
+                                            <option value="SD">South Dakota</option>
+                                            <option value="TN">Tennessee</option>
+                                            <option value="TX">Texas</option>
+                                            <option value="UT">Utah</option>
+                                            <option value="VA">Virginia</option>
+                                            <option value="VT">Vermont</option>
+                                            <option value="WA">Washington</option>
+                                            <option value="WI">Wisconsin</option>
+                                            <option value="WV">West Virginia</option>
+                                            <option value="WY">Wyoming</option>
+                                            <option value="PR">Puerto Rico</option>
+                                            <option value="VI">Virgin Islands</option>
+                                          </select>
 
-                                      <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
-                                      <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
-                                      <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
-                                            <option value="all">Owner:All</option>
-                                                            </select>
-                                      <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
-                                   </form>
-                                </span>
-                                <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' ng-click="toggleSearchType()">
-                                    <i class="icon-size1"><span class="font-icon" style="margin:0;">l</span></i>
-                                </a>
-                                <div id="block-search-type" ng-show="showSearchType" style="position:relative;">
-                                    <span class="selectMultiple multiple white-gradient check-list replacement" style="width: 178px;position: absolute;z-index: 1500;" ng-style="frmSearchAddresIsVisible() ? {'left': '466px'} : {'left': '356px'}" tabindex="0">
-                                        <span class="drop-down">
-                                            <span class="selected" ng-click="showLatSearch()" id="search_type_lat">
-                                                <span class="check"></span>Latitude/Longitude
-                                            </span>
-                                            <span ng-click="showAddressSearch()" id="search_type_address">
-                                                <span class="check"></span>Address/Location
+                                          <input name="county" id="frm-county" class="input-unstyled input-sep" placeholder="County" value="" maxlength="50" style='width:50px' type="text">
+                                          <input name="dec-radius" id="addr-dec-radius" class="input-unstyled" placeholder="Radius MI" value="" maxlength="10" style='width:70px'  type="hidden">
+                                          <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
+                                                <option value="all">Owner:All</option>
+                                                                </select>
+                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
+                                       </form>
+                                    </span>
+                                    <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' onclick="toggleSearchType()">
+                                        <i class="icon-size1"><span class="font-icon" style="margin:0;">l</span></i>
+                                    </a>
+                                    <div id="block-search-type" class="js-showSearchType" style="position:relative;display: none;">
+                                        <span class="selectMultiple multiple white-gradient check-list replacement js-showSearchType_list" style="width: 178px;position: absolute;z-index: 1500;left: 356px;" tabindex="0">
+                                            <span class="drop-down">
+                                                <span class="selected" onclick="showLatSearch()" id="search_type_lat">
+                                                    <span class="check"></span>Latitude/Longitude
+                                                </span>
+                                                <span onclick="showAddressSearch()" id="search_type_address">
+                                                    <span class="check"></span>Address/Location
+                                                </span>
                                             </span>
                                         </span>
-                                    </span>
-                                </div>
-                            </h2>
+                                    </div>
+                                </h2>
+                            @endif
 
-                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 20px; left: 20px;" ng-style="selectedTableName == 'st' ? {'top': '50px'} : {'top': '10px'}">
+                            <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
 
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value" style="height: inherit">[[ selectedEntries ]]</span>
+                                            <span class="select-value" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
                                                 <span class="select-arrow"></span>
                                                 <span class="drop-down custom-scroll">
-                                                    <span ng-class="selectedEntries == val ? 'selected' : ''" ng-repeat="val in showEntries" ng-click="changeEntries(val)">[[ val ]]</span>
+                                                    <span class="entry-elem entry10" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">10</span>
+                                                    <span class="entry-elem entry20" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">20</span>
+                                                    <span class="entry-elem entry50" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">50</span>
+                                                    <span class="entry-elem entry100" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">100</span>
+                                                    <span class="entry-elem entryAll" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">All</span>
                                                 </span>
                                             </span>
                                             entries
@@ -259,13 +272,15 @@
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-37px;z-index: 25;display: none;">
-                                        <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
+                                        <thead>
                                         <tr>
-                                            <th class="sorting nowrap" ng-repeat="(key,value) in tableObj" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                            @foreach($headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
                                         </tr>
                                         </thead>
 
-                                        <tbody>
+                                        <tbody id="tbAddRow_body">
                                             @if(Auth::user() && $canEdit)
                                                 <tr ng-if="selectedTableData && showAddRow">
                                                     <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in addObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+addObj.id, key)">
@@ -317,13 +332,15 @@
                                         </tbody>
                                     </table>
                                     <table class="table dataTable" id="tbHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
-                                        <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
+                                        <thead>
                                         <tr>
-                                            <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                            @foreach($headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
                                         </tr>
                                         </thead>
 
-                                        <tbody style="visibility: hidden;">
+                                        <tbody style="visibility: hidden;" id="tbHeaders_body">
                                         <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false ">
                                             <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="height: 0;line-height: 0;">
                                                 @if(Auth::user() && $canEdit)
@@ -352,15 +369,17 @@
                                         </tbody>
                                     </table>
                                     <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:37px;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
-                                            <thead ng-if="$index == 0" ng-repeat="tableObj in selectedTableData">
+                                        <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -37px;">
+                                            <thead>
                                             <tr>
-                                                <th class="sorting nowrap" ng-repeat="(key,value) in tableObj"  ng-click="sort(key)" ng-if="checkWeb(key) && checkVisible(key)">[[getColumnName(key)]]</th>
+                                                @foreach($headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                @endforeach
                                             </tr>
                                             </thead>
 
-                                            <tbody >
-                                            <tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
+                                            <tbody id="tbData_body">
+                                            <!--<tr ng-repeat="tableObj in selectedTableData | orderBy:sortType:false | filter: searchKeyword ">
                                                 @if(Auth::user() && $canEdit)
                                                     <td ng-if="checkWeb(key) && checkVisible(key)" ng-repeat="(key,value) in tableObj" style="position:relative;" ng-click="showInlineEdit(selectedTableName+'_'+key+'_'+tableObj.id, key)">
                                                         <a ng-click="editSelectedData(tableObj,$parent.$parent.$parent.$index)" ng-if="!isEditable(key,selectedTableName)" class="btn-tower-id" ><span class="font-icon">`</span>
@@ -420,6 +439,7 @@
                                                     </td>
                                                 </tr>
                                             @endif
+                                            -->
 
                                             </tbody>
                                         </table>
@@ -610,6 +630,7 @@
                     Filter Results
                 </header>
                 <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
+
                     <div ng-repeat="filterObj in filterData" ng-if="filterObj">
                         <dt ng-click="showTabToggle($index)">[[filterObj.name]]</dt>
                         <dd class="acd-filter-elem" ng-show="showFilterTabs[$index] == true" style="position:relative;max-height: [[filterMaxHeight]]px;overflow: auto;">
@@ -634,6 +655,7 @@
                             </div>
                         </dd>
                     </div>
+
                 </dl>
             </div>
             <!-- End content wrapper -->
@@ -646,7 +668,7 @@
         </section>
 
         <!-- Pop Up Modal -->
-        <div id="modals " class="with-blocker editable-modal" ng-if="showModal">
+        <div id="modals " class="with-blocker editable-modal" class="showModal" style="display: none;">
 
             <div class="modal-blocker visible"></div>
             <div class="modal" style="display:block;left: 20%;right: 30%; top: 23px; bottom: 23px; opacity: 1; margin-top: 0; max-height: 650px;">
@@ -660,7 +682,9 @@
                             <!-- Tabs -->
                             <ul class="tabs same-height" style="margin-top: 10px">
                                 <li class="active" id="details_li_list_view"><a href="" class="with-small-padding" ng-click="detailsShowList()"> Details</a></li>
-                                <li ng-if="selectedTableName == 'st' && editItemIndex > -1" id="details_li_map_view"><a href="" class="with-small-padding" ng-click="detailsShowMap()"> Google Map</a></li>
+                                @if($tableName == 'st')
+                                    <li ng-if="editItemIndex > -1" id="details_li_map_view"><a href="" class="with-small-padding" ng-click="detailsShowMap()"> Google Map</a></li>
+                                @endif
                             </ul>
                             <!-- Content -->
                             <div class="tabs-content" id="details-tabs-content" style="position: absolute;top: 33px;left: 0;right: 0;bottom: 0;overflow: auto;">
@@ -709,19 +733,27 @@
 
         <!-- Pop Up Modal -->
 
-        <div ng-show="loadingfromserver" style="position: fixed; top: 10px; left: 10px;z-index: 1500; padding: 10px; background: #fff; border-radius: 10px;">
+        <div class="loadingFromServer" style="position: fixed; top: 10px; left: 10px;z-index: 1500; padding: 10px; background: #fff; border-radius: 10px;display: none;">
             <span class="loader working"></span> <span id="modal-status" style="color: #333;">Contacting server.. :)</span>
         </div>
-        <div ng-show="loadingfromserver" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;"></div>
+        <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;" ng-style="filterMenuHide ? {'right': '570px'} : {'right': '830px'}">
+        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 830px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
             <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" ng-show="showColumnsMenu" id="accesstestscroll">
-                <div id='block-cols-list'></div>
+                <div id='block-cols-list'>
+                    <ul class='list' id='ul-cols-list'>
+                        @foreach($headers as $hdr)
+                            <li style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
+                                <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->name }} </label>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         </div>
 
         {{-- Login form --}}
-        <div ng-show="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+        <div class="loginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);display: none;">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                     <div class="form-wrap" id="login">
@@ -782,10 +814,10 @@
                 </div>
             </div>
         </div>
-        <div ng-show="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showLoginForm = false"></div>
+        <div class="loginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.loginForm').hide()"></div>
 
         {{-- Register form --}}
-        <div ng-show="showRegisterForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);">
+        <div class="registerForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);display: none;">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                     <div class="form-wrap">
@@ -853,7 +885,7 @@
                 </div>
             </div>
         </div>
-        <div ng-show="showRegisterForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;" ng-click="showRegisterForm = false"></div>
+        <div class="registerForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.registerForm').hide()"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>
@@ -888,6 +920,7 @@
     {!! HTML::script('assets/js/lib/route.js') !!}
     {!! HTML::script('assets/js/lib/API.js') !!}
     {!! HTML::script('assets/js/lib/mainController.js') !!}
+    {!! HTML::script('assets/js/lib/table.js') !!}
 
     {{-- Login scripts --}}
     {!! HTML::script('assets/js/as/login.js') !!}

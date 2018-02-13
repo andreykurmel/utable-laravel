@@ -28,36 +28,6 @@ class TableController extends Controller
             'q' => '{"opt":"lat","lat_dec":"","long_dec":"","distance":""}'
         ];
         $this->tableService->getData((object)$post);*/
-        
-        $tb = DB::connection('mysql_data')->table('tb')->leftJoin('group as g', 'g.id', '=', 'tb.group_id');
-        if (!Auth::user()) {
-            //guest - get public data
-            $tb->where('access', '=', 'public');
-            $tb->where('www_add', '=', $request->tableGroup ? $request->tableGroup : null);
-        } else {
-            if (Auth::user()->role_id != 1) {
-                //user - get user`s data, favourites and public data in the current folder
-                $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $tb->where('www_add', '=', $request->tableGroup ? $request->tableGroup : null);
-                $tb->where('access', '=', 'public');
-                $tb->orWhere(function ($qt) {
-                    $qt->where(function ($q) {
-                        $q->where('rights.user_id', '=', Auth::user()->id);
-                        $q->orWhereNull('rights.user_id');
-                    });
-                    $qt->where(function ($q) {
-                        $q->where('owner', '=', Auth::user()->id);
-                        $q->orWhereNotNull('rights.right');
-                    });
-                });
-            }
-            //admin - get all data
-        }
-        $tb->select('tb.*', 'www_add');
-        $tb = $tb->get();
-        foreach ($tb as &$item) {
-            $item->www_add = ($item->www_add ? $item->www_add . "/" . $item->db_tb : $item->db_tb);
-        }
 
         $tb_settings_display = DB::connection('mysql_data')->table('tb_settings_display')->get();
 
@@ -69,8 +39,8 @@ class TableController extends Controller
             ->where('tb.db_tb', '=', 'tb_settings_display')
             ->get();
 
-        if ($tb && $tb_settings_display) {
-            $responseArray["utables"] = $tb;
+        if (/*$tb && */$tb_settings_display) {
+            //$responseArray["utables"] = $tb;
             $responseArray["utablesettings"] = $tb_settings_display;
             $responseArray["ddls"] = array();
             foreach($ddl as $row) {

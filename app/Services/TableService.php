@@ -153,16 +153,30 @@ class TableService {
             }
         }
 
+        $header_data = DB::connection('mysql_data')
+            ->table('tb')
+            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
+            ->where('db_tb', '=', $tableName)
+            ->select('tsd.*')
+            ->get();
+
+        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
+        $headers = [];
+        foreach ($tb as $key => $val) {
+            $headers[$key] = $header_data->where('field', '=', $key)->first();
+        }
+
         $responseArray["data"] = array();
-        $responseArray["key"] = array();
+        //$responseArray["key"] = array();
         $responseArray["key_settings"] = array();
         $responseArray["filters"] = $respFilters;
-        $responseArray["ddls"] = $respDDLs;
+        //$responseArray["ddls"] = $respDDLs;
         $responseArray["rows"] = $rowsCount;
+        $responseArray["headers"] = $headers;
         if (count($result)) {
             $responseArray["data"] = $result;
             // output data of each row
-            if(sizeof($responseArray["key"]) == 0) {
+            /*if(sizeof($responseArray["key"]) == 0) {
                 $responseArray["key"] = array_keys((array)$result[0]);
 
                 $key_settings = DB::connection('mysql_data')->table('tb_settings_display as ts')
@@ -173,7 +187,7 @@ class TableService {
                 foreach ($key_settings as $setting) {
                     $responseArray["key_settings"][$setting->field] = $setting;
                 }
-            }
+            }*/
         } else {
             $data = (array) DB::connection('mysql_data')->table($tableName)->first();
             $data = array_fill_keys(array_keys($data), null);

@@ -52,24 +52,42 @@ class AppController extends Controller
     }
 
     public function homepage() {
-        $canEdit = false;
-        $favourite = false;
-        $socialProviders = config('auth.social.providers');
-        return view('table', compact('socialProviders', 'canEdit', 'favourite'));
+        return view('table', [
+            'socialProviders' => config('auth.social.providers'),
+            'listTables' => $this->getListTables(),
+            'tableName' => "",
+            'headers' => [],
+            'selectedEntries' => 10,
+            'group' => "",
+            'canEdit' => false,
+            'favourite' => false
+        ]);
     }
 
     public function homepageTable($tableName) {
-        $canEdit = $this->getCanEdit($tableName);
-        $favourite = $this->getFavourite($tableName);
-        $socialProviders = config('auth.social.providers');
-        return view('table', compact('socialProviders', 'tableName', 'canEdit', 'favourite'));
+        return view('table', [
+            'socialProviders' => config('auth.social.providers'),
+            'listTables' => $this->getListTables(),
+            'tableName' => $tableName,
+            'headers' => $this->getHeaders($tableName),
+            'selectedEntries' => $this->getSelectedEntries($tableName),
+            'group' => "",
+            'canEdit' => $this->getCanEdit($tableName),
+            'favourite' => $this->getFavourite($tableName)
+        ]);
     }
 
     public function homepageGroupedTable($group, $tableName) {
-        $canEdit = $this->getCanEdit($tableName);
-        $favourite = $this->getFavourite($tableName);
-        $socialProviders = config('auth.social.providers');
-        return view('table', compact('socialProviders', 'tableName', 'group', 'canEdit', 'favourite'));
+        return view('table', [
+            'socialProviders' => config('auth.social.providers'),
+            'listTables' => $this->getListTables($group),
+            'tableName' => $tableName,
+            'headers' => $this->getHeaders($tableName),
+            'selectedEntries' => $this->getSelectedEntries($tableName),
+            'group' => $group,
+            'canEdit' => $this->getCanEdit($tableName),
+            'favourite' => $this->getFavourite($tableName)
+        ]);
     }
 
     private function getCanEdit($tableName) {
@@ -117,5 +135,60 @@ class AppController extends Controller
             }
         }
         return $status;
+    }
+    
+    private function getListTables($tableGroup = "") {
+        $tb = DB::connection('mysql_data')->table('tb')->leftJoin('group as g', 'g.id', '=', 'tb.group_id');
+        if (!Auth::user()) {
+            //guest - get public data
+            $tb->where('access', '=', 'public');
+            $tb->where('www_add', '=', $tableGroup ? $tableGroup : null);
+        } else {
+            if (Auth::user()->role_id != 1) {
+                //user - get user`s data, favourites and public data in the current folder
+                $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
+                $tb->where('www_add', '=', $tableGroup ? $tableGroup : null);
+                $tb->where('access', '=', 'public');
+                $tb->orWhere(function ($qt) {
+                    $qt->where(function ($q) {
+                        $q->where('rights.user_id', '=', Auth::user()->id);
+                        $q->orWhereNull('rights.user_id');
+                    });
+                    $qt->where(function ($q) {
+                        $q->where('owner', '=', Auth::user()->id);
+                        $q->orWhereNotNull('rights.right');
+                    });
+                });
+            }
+            //admin - get all data
+        }
+        $tb->select('tb.*', 'www_add');
+        $tb = $tb->get();
+        foreach ($tb as &$item) {
+            $item->www_add = ($item->www_add ? $item->www_add . "/" . $item->db_tb : $item->db_tb);
+        }
+
+        return $tb;
+    }
+
+    private function getSelectedEntries($tableName) {
+        $tb = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+        return $tb->nbr_entry_listing;
+    }
+
+    private function getHeaders($tableName) {
+        $header_data = DB::connection('mysql_data')
+            ->table('tb')
+            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
+            ->where('db_tb', '=', $tableName)
+            ->select('tsd.*')
+            ->get();
+
+        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
+        $headers = [];
+        foreach ($tb as $key => $val) {
+            $headers[$key] = $header_data->where('field', '=', $key)->first();
+        }
+        return $headers;
     }
 }
