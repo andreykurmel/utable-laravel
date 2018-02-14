@@ -168,7 +168,7 @@ class TableService {
 
         $responseArray["data"] = array();
         //$responseArray["key"] = array();
-        $responseArray["key_settings"] = array();
+        //$responseArray["key_settings"] = array();
         $responseArray["filters"] = $respFilters;
         //$responseArray["ddls"] = $respDDLs;
         $responseArray["rows"] = $rowsCount;

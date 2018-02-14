@@ -84,7 +84,7 @@
                 <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
                     @if($favourite)
                         <div style="display: inline-block;">
-                            <a href="javascript:void(0)" style="padding: 15px;" ng-click="favouriteToggle()" title="Favourite">
+                            <a href="javascript:void(0)" style="padding: 15px;" onclick="favouriteToggle()" title="Favourite">
                                 @if($favourite == "Active")
                                     <i id="favourite_star" class="fa fa-star" style="font-size: 1.5em;"></i>
                                 @else
@@ -93,7 +93,7 @@
                             </a>
                         </div>
                     @endif
-                    <div class="showhidemenu" style='width:150px;display:inline-block' ng-show="showedColumns()">
+                    <div class="showhidemenu" style='width:150px;display:inline-block'>
                         <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
@@ -112,11 +112,10 @@
                             <input type="hidden" name="q" id="downloader_query" value="">
                             <input type="hidden" name="fields" id="downloader_fields" value="">
                             <input type="hidden" name="filterData" id="downloader_filters" value="">
-                            <input type="hidden" name="visibleColumns" id="downloader_visibleColumns" value="">
-                            <button type="button" class="btn btn-default" ng-click="openPrintDialog()">Print</button>
-                            <button type="button" class="btn btn-default" ng-click="downloaderGo('CSV')">CSV</button>
-                            <button type="button" class="btn btn-default" ng-click="downloaderGo('PDF')">PDF</button>
-                            <button type="button" class="btn btn-default" ng-click="downloaderGo('XLS')">Excel</button>
+                            <button type="button" class="btn btn-default" onclick="openPrintDialog()">Print</button>
+                            <button type="button" class="btn btn-default" onclick="downloaderGo('CSV')">CSV</button>
+                            <button type="button" class="btn btn-default" onclick="downloaderGo('PDF')">PDF</button>
+                            <button type="button" class="btn btn-default" onclick="downloaderGo('XLS')">Excel</button>
                         </form>
                     </div>
                 </div>
@@ -131,12 +130,12 @@
 
                     <!-- Tabs -->
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
-                        <li class="active" id="li_list_view"><a href="" ng-click="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
+                        <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                         @if($tableName == 'st')
-                            <li id="li_map_view"><a href="" ng-click="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
+                            <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                         @endif
                         @if(Auth::user())
-                            <li id="li_settings_view"><a href="" ng-click="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
+                            <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
                         @endif
                     </ul>
 
@@ -155,7 +154,7 @@
                                           <select id='tower-owners-latlng' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
                                                 <option value="all">Owner:All</option>
                                                                       </select>
-                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' ng-click="changePage(1, 'lat')">Search </a>
+                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-latlng' onclick="changePage(1)">Search </a>
                                        </form>
                                        <form method="post" action="#" id='frm-search-address' style='padding-bottom: 2px;display:none'>
                                           <span class="info-spot on-left"><span class="font-icon">`</span><span class="info-bubble">Click <span class="font-icon">`</span> to show search options</span></span>
@@ -223,7 +222,7 @@
                                           <select id='tower-owners-address' name="tower-owners" class="selectcustom   auto-open mid-margin-left mid-margin-right " style='width:100px'>
                                                 <option value="all">Owner:All</option>
                                                                 </select>
-                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' ng-click="changePage(1, 'address')">Search </a>
+                                          <a href="javascript:void(0)" class="button blue-gradient glossy" id='btn-search-address' onclick="changePage(1)">Search </a>
                                        </form>
                                     </span>
                                     <a href="javascript:void(0)" id='btn-search-type' class='button blue-gradient' onclick="toggleSearchType()">
@@ -251,14 +250,14 @@
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
+                                            <span class="select-value" style="height: inherit" id="selected_entries_span">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
                                                 <span class="select-arrow"></span>
                                                 <span class="drop-down custom-scroll">
-                                                    <span class="entry-elem entry10" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">10</span>
-                                                    <span class="entry-elem entry20" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">20</span>
-                                                    <span class="entry-elem entry50" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">50</span>
-                                                    <span class="entry-elem entry100" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">100</span>
-                                                    <span class="entry-elem entryAll" ng-class="selectedEntries == val ? 'selected' : ''" ng-click="changeEntries(val)">All</span>
+                                                    <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
+                                                    <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
+                                                    <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
+                                                    <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
+                                                    <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
                                                 </span>
                                             </span>
                                             entries
@@ -268,7 +267,7 @@
                                         <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" ng-click="addData()">Add</a>
                                         <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" ng-model="showAddRow" ng-click="changeShowAddRow()">
                                     @endif
-                                    <div class="dataTables_filter"><label>Search by Keyword:<input ng-model="searchKeyword" ng-change="changedKeyword=true;changePage(1, '')" ng-model-options="{debounce:1000}" type="search" class="" placeholder="Within listed entries"></label></div>
+                                    <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-37px;z-index: 25;display: none;">
@@ -446,16 +445,16 @@
                                     </div>
                                 </div>
                                 <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
-                                    <div class="dataTables_info" role="status" aria-live="polite">
-                                        Showing [[Number(selectedPage*selectedEntries) + 1 < selectedTableRows ? Number(selectedPage*selectedEntries) + 1 : selectedTableRows]]
-                                        to [[(selectedPage+1)*selectedEntries < selectedTableRows ? (selectedPage+1)*selectedEntries : selectedTableRows]]
-                                        of [[ selectedTableRows ]] entries</div>
+                                    <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                                        Showing <span id="showing_from_span"></span>
+                                        to <span id="showing_to_span"></span>
+                                        of <span id="showing_all_span"></span> entries</div>
                                     <div class="dataTables_paginate paging_full_numbers">
-                                        <a class="paginate_button first" data-dt-idx="0" tabindex="0" ng-click="changePage(1, '')">First
-                                        </a><a class="paginate_button previous" data-dt-idx="1" tabindex="0" ng-click="changePage(selectedPage>1 ? selectedPage : 1, '')">Previous
-                                        </a><span ng-repeat="btn in paginateBtns"><span ng-show="btn == '...' || btn == '....'">...</span><a ng-show="btn != '...' && btn != '....'" class="paginate_button" tabindex="0" ng-click="changePage(btn, '')">[[btn]]
-                                        </a></span><a class="paginate_button next" data-dt-idx="2" tabindex="0" ng-click="changePage((selectedPage+1)<(selectedTableRows/selectedEntries) ? selectedPage+2 : (selectedTableRows/selectedEntries), '')">Next
-                                        </a><a class="paginate_button last" data-dt-idx="3" tabindex="0" ng-click="changePage(selectedTableRows/selectedEntries, '')">Last</a>
+                                        <a class="paginate_button first" onclick="changePage(1)">First
+                                        </a><a class="paginate_button previous" onclick="changePage(selectedPage>1 ? selectedPage : 1)">Previous
+                                        </a><span id="paginate_btns_span">
+                                        </span><a class="paginate_button next" onclick="changePage((selectedPage+1)<(rowsCount/selectedEntries) ? selectedPage+2 : (rowsCount/selectedEntries))">Next
+                                        </a><a class="paginate_button last" onclick="changePage(Math.ceil(rowsCount/selectedEntries))">Last</a>
                                     </div>
                                 </div>
                             </div>
@@ -598,15 +597,16 @@
                                     </div>
                                 </div>
                                 <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
-                                    <div class="dataTables_info" role="status" aria-live="polite">
-                                        Showing [[Number(settingsPage*selectedEntries) + 1 < settingsData.length ? settingsPage*selectedEntries + 1 : settingsData.length]]
-                                        to [[(settingsPage+1)*selectedEntries < settingsData.length ? (settingsPage+1)*selectedEntries : settingsData.length]]
-                                        of [[ settingsData.length ]] entries</div>
+                                    <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                                        Showing <span id="showing_settings_from_span"></span>
+                                        to <span id="showing_settings_to_span"></span>
+                                        of <span id="showing_settings_all_span"></span> entries</div>
                                     <div class="dataTables_paginate paging_full_numbers">
-                                        <a class="paginate_button first" data-dt-idx="0" tabindex="0" ng-click="changeSettingsPage(1)">First
-                                        </a><a class="paginate_button previous" data-dt-idx="1" tabindex="0" ng-click="changeSettingsPage(settingsPage>1 ? settingsPage : 1)">Previous
-                                        </a></span><a class="paginate_button next" data-dt-idx="2" tabindex="0" ng-click="changeSettingsPage((settingsPage+1)<(settingsData.length/selectedEntries) ? settingsPage+2 : (settingsData.length/selectedEntries))">Next
-                                        </a><a class="paginate_button last" data-dt-idx="3" tabindex="0" ng-click="changeSettingsPage(settingsData.length/selectedEntries)">Last</a>
+                                        <a class="paginate_button first" onclick="changePage(1)">First
+                                        </a><a class="paginate_button previous" onclick="changePage(selectedPage+1>1 ? selectedPage+1 : 1)">Previous
+                                        </a><span id="paginate_settings_btns_span">
+                                        </span><a class="paginate_button next" onclick="changePage((selectedPage+2)<(selectedTableRows/selectedEntries) ? selectedPage+3 : (selectedTableRows/selectedEntries))">Next
+                                        </a><a class="paginate_button last" onclick="changePage(selectedTableRows/selectedEntries)">Last</a>
                                     </div>
                                 </div>
                             </div>
@@ -630,32 +630,6 @@
                     Filter Results
                 </header>
                 <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
-
-                    <div ng-repeat="filterObj in filterData" ng-if="filterObj">
-                        <dt ng-click="showTabToggle($index)">[[filterObj.name]]</dt>
-                        <dd class="acd-filter-elem" ng-show="showFilterTabs[$index] == true" style="position:relative;max-height: [[filterMaxHeight]]px;overflow: auto;">
-                            <div class="with-small-padding">
-                                <div class="blue-bg with-small-padding filterheader">
-                                    <span class="checkbox  replacement" tabindex="0" ng-class="{'checked':filterObj.checkAll}" ng-click="filterObj.checkAll=!filterObj.checkAll;filterCheckAll(filterObj)">
-                                        <span class="check-knob"></span>
-                                        <input id="" checked="" class="" name="County" type="checkbox" value="County" tabindex="-1">
-                                    </span>
-                                    Check/Uncheck All
-                                </div>
-                                <ul class="list">
-                                    <li ng-repeat="names in filterObj.val | unique: names" >
-                                        <!-- addValuesToFilters(filterObj.key,names.value,names.checked) -->
-                                        <span class="checkbox replacement mr5" ng-class="{'checked':names.checked}"  ng-click="names.checked=!names.checked;filterTable(filterObj,names.value,names.checked)">
-                                                <span class="check-knob"></span>
-                                                <input type="checkbox"  />
-                                            </span>
-                                        <span>[[names.value]]</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </dd>
-                    </div>
-
                 </dl>
             </div>
             <!-- End content wrapper -->
@@ -668,12 +642,12 @@
         </section>
 
         <!-- Pop Up Modal -->
-        <div id="modals " class="with-blocker editable-modal" class="showModal" style="display: none;">
+        <div id="modals" class="with-blocker editable-modal js-editmodal" style="display: none;">
 
             <div class="modal-blocker visible"></div>
             <div class="modal" style="display:block;left: 20%;right: 30%; top: 23px; bottom: 23px; opacity: 1; margin-top: 0; max-height: 650px;">
                 <ul class="modal-actions children-tooltip">
-                    <li class="red-hover"><a href="" title="Close" ng-click="closeModal()">Close</a></li>
+                    <li class="red-hover"><a href="javascript:void(0)" title="Close" onclick="$('.js-editmodal').show();">Close</a></li>
                 </ul>
                 <div class="modal-bg" style="height: 100%; position:relative;">
                     <div class="modal-content custom-scroll" style="box-shadow: none;border: none;position: absolute;top: 20px;left: 20px;right: 20px;bottom: 50px;">
@@ -717,7 +691,7 @@
                         <button ng-if="editItemIndex > -1" class="btn btn-danger" ng-click="deleteRow(editData)" style="float: left;">Delete</button>
                         <button ng-if="editItemIndex == -1" class="btn btn-success" ng-click="addRow(editData)" style="float: left;">Add</button>
                         <button ng-if="editItemIndex > -1" class="btn btn-info" ng-click="updateRow(editData,false)" style="float: left; margin-left: 40px;">Update</button>
-                        <button type="button" ng-click="closeModal()" class="button small" style="float: right;">Close</button>
+                        <button type="button" onclick="$('.js-editmodal').show();" class="button small" style="float: right;">Close</button>
                     </div>
                 </div>
                 <div class="modal-resize-nw"></div>
@@ -928,5 +902,8 @@
 
     {{-- Register scripts --}}
     {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
+    <script>
+        canEdit = {{ (int)$canEdit }};
+    </script>
 </body>
 </html>

@@ -53,12 +53,8 @@ class DownloadController extends Controller
         $respArray = $this->tableService->getData($post);
 
         $data = array();
-        foreach ($respArray['data'][0] as $key => $val) {
-            if (($respArray['key_settings'][$key])->name && $key != "id") {
-                $data[0][$key] = ($respArray['key_settings'][$key])->name;
-            } else {
-                $data[0][$key] = $key;
-            }
+        foreach ($respArray['headers'] as $key => $val) {
+            $data[0][$key] = $val->name;
         }
 
         foreach ($respArray['data'] as $row) {
@@ -92,23 +88,17 @@ class DownloadController extends Controller
      * Create data flow for pdf file
      */
     private function downloader_pdf($post) {
-        $visibleColumns = (array)json_decode($post->visibleColumns);
-
         $respArray = $this->tableService->getData($post);
 
         $html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
         $titles = array();
-        foreach ($respArray['data'][0] as $key => $val) {
-            if (($respArray['key_settings'][$key])->name && $key != "id") {
-                $titles[$key] = ($respArray['key_settings'][$key])->name;
-            } else {
-                $titles[$key] = $key;
-            }
+        foreach ($respArray['headers'] as $key => $val) {
+            $titles[$key] = $val->name;
         }
 
         $html .= "<thead><tr>";
         foreach ($titles as $key => $title) {
-            if (!empty($visibleColumns[$key])) {
+            if (($respArray['headers'][$key])->web == 'Yes') {
                 $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".$title."</th>";
             }
         }
@@ -118,7 +108,7 @@ class DownloadController extends Controller
         foreach ($respArray['data'] as $row) {
             $html .= "<tr>";
             foreach ((array)$row as $key => $item) {
-                if (!empty($visibleColumns[$key])) {
+                if (($respArray['headers'][$key])->web == 'Yes') {
                     $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>".$item."</td>";
                 }
             }
