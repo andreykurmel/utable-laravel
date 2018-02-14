@@ -647,7 +647,7 @@
             <div class="modal-blocker visible"></div>
             <div class="modal" style="display:block;left: 20%;right: 30%; top: 23px; bottom: 23px; opacity: 1; margin-top: 0; max-height: 650px;">
                 <ul class="modal-actions children-tooltip">
-                    <li class="red-hover"><a href="javascript:void(0)" title="Close" onclick="$('.js-editmodal').show();">Close</a></li>
+                    <li class="red-hover"><a href="javascript:void(0)" title="Close" onclick="$('.js-editmodal').hide();">Close</a></li>
                 </ul>
                 <div class="modal-bg" style="height: 100%; position:relative;">
                     <div class="modal-content custom-scroll" style="box-shadow: none;border: none;position: absolute;top: 20px;left: 20px;right: 20px;bottom: 50px;">
@@ -666,7 +666,7 @@
                                 <div id="details_lview" class="tab-active">
                                     <div class="with-padding">
                                         <table align="center" border="1" cellspacing="0" style="background:white;color:black;width:80%;">
-                                            <tbody>
+                                            <tbody id="modals_rows">
                                             <tr ng-repeat="(key,value) in editData" ng-if="checkIfVisible(key)">
                                                 <td><label>[[getColumnName(key)]]</label></td>
                                                 <td>
@@ -688,10 +688,10 @@
                         </div>
                     </div>
                     <div style="position:absolute; bottom: 10px; right: 20px; left: 20px;">
-                        <button ng-if="editItemIndex > -1" class="btn btn-danger" ng-click="deleteRow(editData)" style="float: left;">Delete</button>
-                        <button ng-if="editItemIndex == -1" class="btn btn-success" ng-click="addRow(editData)" style="float: left;">Add</button>
-                        <button ng-if="editItemIndex > -1" class="btn btn-info" ng-click="updateRow(editData,false)" style="float: left; margin-left: 40px;">Update</button>
-                        <button type="button" onclick="$('.js-editmodal').show();" class="button small" style="float: right;">Close</button>
+                        <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
+                        <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
+                        <button id="modal_btn_update" class="btn btn-info" onclick="updateRowModal()" style="float: left; margin-left: 40px;">Update</button>
+                        <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;">Close</button>
                     </div>
                 </div>
                 <div class="modal-resize-nw"></div>

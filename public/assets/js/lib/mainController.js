@@ -45,7 +45,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
     $scope.searchKeyword = "";
     $scope.searchSettingsKeyword = "";
 
-    $scope.initMap = function () {
+    /*$scope.initMap = function () {
         var avg_lat = (Number($scope.markerBounds.top) + Number($scope.markerBounds.bottom)) / 2;
         var avg_lng = (Number($scope.markerBounds.left) + Number($scope.markerBounds.right)) / 2;
         var optionsMap = {
@@ -94,19 +94,19 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             map: $scope.mapapp,
             icon: icon_path
         });
-    };
+    };*/
 
-    $scope.toggleColumns = function () {
+    /*$scope.toggleColumns = function () {
         $scope.showColumnsMenu = !$scope.showColumnsMenu;
-    };
+    };*/
 
-    $scope.toggleSearchType = function () {
+    /*$scope.toggleSearchType = function () {
         $scope.showSearchType = !$scope.showSearchType;
-    };
+    };*/
 
-    $scope.changeTable = function(tableName) {
+    /*$scope.changeTable = function(tableName) {
         window.location = "/data/" + tableName;
-    }
+    }*/
 
     $scope.selectTable = function(tableName) {
         $scope.loadingfromserver = true;
@@ -214,7 +214,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         })
     }
 
-    API.getUtables($('#inpSelectedTableGroup').val()).then(function(response){
+    /*API.getUtables($('#inpSelectedTableGroup').val()).then(function(response){
         if(response.status == 200) {
             $scope.uTables = response.data.utables;
             $scope.uTableSettings = response.data.utablesettings;
@@ -248,7 +248,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             alert("Please Try again Later "+ response.statusText);
         }
 
-    })
+    })*/
 
     $scope.checkWeb = function(params){
         if (_.find) {
@@ -619,7 +619,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $scope.settingsPage = page-1;
     }
 
-    $scope.showMap = function () {
+    /*$scope.showMap = function () {
         $("#li_list_view").removeClass("active");
         $("#li_settings_view").removeClass("active");
         $("#li_map_view").addClass("active");
@@ -645,7 +645,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $("#settings_view").show();
         $("#list_view").hide();
         $("#map_view").hide();
-    }
+    }*/
 
     $scope.detailsShowMap = function () {
         $("#details_li_list_view").removeClass("active");
@@ -662,7 +662,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $("#details_gmap").hide();
     }
 
-    $scope.showLatSearch = function () {
+    /*$scope.showLatSearch = function () {
         $("#search_type_address").removeClass("selected");
         $("#search_type_lat").addClass("selected");
         $("#frm-search-address").hide();
@@ -676,13 +676,13 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $("#frm-search-address").show();
         $("#frm-search-latlng").hide();
         $scope.showSearchType = false;
-    }
+    }*/
 
-    $scope.showHideMenu = function () {
+    /*$scope.showHideMenu = function () {
         $scope.filterMenuHide = !$scope.filterMenuHide;
         var right = $scope.filterMenuHide ? "26px" : "286px";
         $(".table_body_viewport > .mCSB_scrollTools").css("right", right);
-    }
+    }*/
 
     $scope.openLoadingModal = function () {
         $scope.loadingmodal = $.modal({
@@ -735,13 +735,13 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         $(inp).hide();
     }
 
-    $scope.showTabToggle = function (idx) {
+    /*$scope.showTabToggle = function (idx) {
         var tmpShowTab = !$scope.showFilterTabs[idx];
         $scope.showFilterTabs = [];
         $scope.showFilterTabs[idx] = tmpShowTab;
-    }
+    }*/
 
-    $scope.downloaderGo = function (method) {
+    /*$scope.downloaderGo = function (method) {
         var TableKeysObj = {};
         var query = {};
         angular.copy($scope.selectedTableData[0],TableKeysObj);
@@ -859,7 +859,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
                 $scope.loadingfromserver = false;
             }
         })
-    }
+    }*/
 
     $scope.addRowInline = function (addObj) {
         $scope.showAddRow = false;
@@ -892,9 +892,9 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         })
     }
 
-    $scope.frmSearchAddresIsVisible = function () {
+    /*$scope.frmSearchAddresIsVisible = function () {
         return $('#frm-search-address').is(':visible');
-    }
+    }*/
 
     $scope.showedColumns = function () {
         return $('#li_list_view').hasClass('active');
@@ -940,7 +940,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
         }
     }
 
-    $scope.favouriteToggle = function () {
+    /*$scope.favouriteToggle = function () {
         if ($('#favourite_star').hasClass('fa-star')) {
             API.favouriteToggle($scope.selectedTableName, "Inactive");
             $('#favourite_star').removeClass('fa-star').addClass('fa-star-o');
@@ -948,7 +948,7 @@ app.controller('myCtrl', ['$scope', 'API', '$location', '$routeParams','$route',
             API.favouriteToggle($scope.selectedTableName, "Active");
             $('#favourite_star').removeClass('fa-star-o').addClass('fa-star');
         }
-    }
+    }*/
 
 
     $('body').css('display', 'block');

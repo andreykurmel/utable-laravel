@@ -644,6 +644,45 @@ function hideInlineEdit(id) {
         .data('innerHTML', '');
 }
 
+function deleteRow(params) {
+    $('.loadingFromServer').show();
+
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/deleteTableRow?tableName=' + selectedTableName + '&id=' + params.id,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+            alert(response.data.msg);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
+
+function addRow(params) {
+    $('.loadingFromServer').show();
+
+    var strParams = "";
+    for (var key in params) {
+        strParams += key + '=' + params[key] + '&';
+    }
+
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/addTableRow?tableName=' + selectedTableName + '&' + strParams,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+            alert(response.msg);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
+
 function updateRow(params) {
     $('.loadingFromServer').show();
 
@@ -657,7 +696,7 @@ function updateRow(params) {
         url: baseHttpUrl + '/updateTableRow?tableName=' + selectedTableName + '&' + strParams,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.data.msg);
+            alert(response.msg);
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -675,6 +714,66 @@ function updateRowData(idx, key, id) {
     updateRow(tableData[idx]);
 }
 
+function updateRowModal() {
+    $('.js-editmodal').hide();
+
+    var idx = $('.js-editmodal').data('idx');
+    for(var key in tableData[idx]) {
+        tableData[idx][key] = $('#modals_inp_'+key).val();
+    }
+
+    showDataTable(tableHeaders, tableData);
+    updateRow(tableData[idx]);
+}
+
+function addRowModal() {
+    $('.js-editmodal').hide();
+
+    var idx = $('.js-editmodal').data('idx');
+    for(var key in tableData[idx]) {
+        tableData[idx][key] = $('#modals_inp_'+key).val();
+    }
+
+    showDataTable(tableHeaders, tableData);
+    addRow(tableData[idx]);
+}
+
+function deleteRowModal() {
+    $('.js-editmodal').hide();
+    var idx = $('.js-editmodal').data('idx');
+    showDataTable(tableHeaders, tableData);
+    deleteRow(tableData[idx]);
+}
+
 function editSelectedData(idx) {
+    if (idx > -1) {
+        $('#modal_btn_delete, #modal_btn_update').show();
+        $('#modal_btn_add').hide();
+    } else {
+        $('#modal_btn_delete, #modal_btn_update').hide();
+        $('#modal_btn_add').show();
+    }
+
+    var html = "";
+    for(var key in tableData[idx]) {
+        html += "<tr>";
+        html +=
+            '<td><label>' + tableHeaders[key].name + '</label></td>' +
+            '<td>';
+        if (tableHeaders[key].input_type == 'input') {
+            html += '<input id="modals_inp_'+key+'" type="text" class="form-control" value="'+tableData[idx][key]+'"/>';
+        } else
+        if (tableHeaders[key].input_type == 'date') {
+            html += '<input id="modals_inp_'+key+'" type="text" class="form-control" value="'+tableData[idx][key]+'" data-date-time-picker/>';
+        }
+        else {
+            html += '<input id="modals_inp_'+key+'" type="text" class="form-control" value="'+tableData[idx][key]+'" readonly/>';
+        }
+        html += '</td>';
+        html += "</tr>";
+    }
+    $('#modals_rows').html(html);
+
+    $('.js-editmodal').data('idx', idx);
     $('.js-editmodal').show();
 }
