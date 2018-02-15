@@ -96,7 +96,7 @@ function showTableFooter() {
     $('#showing_all_span').html(rowsCount);
 
 
-    var maxPage = lsettingsEntries ? Math.ceil(settingsRowsCount/lsettingsEntries) : 1;
+    var maxPage = lselectedEntries ? Math.ceil(settingsRowsCount/lselectedEntries) : 1;
     var paginateBtns = [], pbtn;
     if (selectedPage+1 < 5) {
         var idx = 1;
@@ -323,8 +323,12 @@ function showFiltersList(filters) {
 }
 
 function showFilterTabs(idx) {
-    $('.acd-filter-elem').hide();
-    $('.acd-filter-elem[data-idx='+idx+']').show();
+    if ($('.acd-filter-elem[data-idx='+idx+']').is(':visible')) {
+        $('.acd-filter-elem').hide();
+    } else {
+        $('.acd-filter-elem').hide();
+        $('.acd-filter-elem[data-idx='+idx+']').show();
+    }
 }
 
 function filterTable(idx, name, status) {
