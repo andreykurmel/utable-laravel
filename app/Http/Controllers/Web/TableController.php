@@ -124,15 +124,14 @@ class TableController extends Controller
     }
 
     public function loadFilter(Request $request) {
-        $filterObj = json_decode($request->filterObj);
         $filter_vals = DB::connection('mysql_data')->table($request->tableName)
-            ->select($filterObj->field." as value")
+            ->select($request->field." as value")
             ->selectRaw("true as checked")
             ->distinct()->get();
 
         return [
-            'key' => $filterObj->field,
-            'name' => $filterObj->name,
+            'key' => $request->field,
+            'name' => $request->name,
             'val' => $filter_vals ? $filter_vals : [],
             'checkAll' => true
         ];

@@ -38,6 +38,8 @@ class TableService {
             $sql->where('lat_dec', '<', ($query['lat_dec'] + $dist_lat));
             $sql->where('long_dec', '>', ($query['long_dec'] - $dist_long));
             $sql->where('long_dec', '<', ($query['long_dec'] + $dist_long));
+        } elseif ($query['opt'] == 'settings' && $query['tb_id']) {
+            $sql->where('tb_id', '=', $query['tb_id']);
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
@@ -170,7 +172,7 @@ class TableService {
         //$responseArray["key"] = array();
         //$responseArray["key_settings"] = array();
         $responseArray["filters"] = $respFilters;
-        //$responseArray["ddls"] = $respDDLs;
+        $responseArray["ddls"] = $respDDLs;
         $responseArray["rows"] = $rowsCount;
         $responseArray["headers"] = $headers;
         if (count($result)) {

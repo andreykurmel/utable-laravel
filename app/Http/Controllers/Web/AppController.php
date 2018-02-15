@@ -23,7 +23,7 @@ class AppController extends Controller
     }
 
     public function crown() {
-        $canEdit = false;
+        /*$canEdit = false;
         $public_tables = DB::connection('mysql_data')->table('tb')->join('group as g', 'g.id', '=', 'tb.group_id')->where('group_id', '=', 1);
         if (!Auth::user()) {
             //guest - get public data
@@ -48,46 +48,47 @@ class AppController extends Controller
         $public_tables = $public_tables->get();
         //$public_tables = DB::connection('mysql_data')->table('tb')->where('group_id', '=', 1)->get();
         $socialProviders = config('auth.social.providers');
-        return view('crown', compact('socialProviders', 'canEdit', 'public_tables'));
+        return view('crown', compact('socialProviders', 'canEdit', 'public_tables'));*/
+        return view('table', $this->getVariables("", "crown"));
     }
 
     public function homepage() {
-        return view('table', [
-            'socialProviders' => config('auth.social.providers'),
-            'listTables' => $this->getListTables(),
-            'tableName' => "",
-            'headers' => [],
-            'selectedEntries' => 10,
-            'group' => "",
-            'canEdit' => false,
-            'favourite' => false
-        ]);
+        return view('table', $this->getVariables());
     }
 
     public function homepageTable($tableName) {
-        return view('table', [
-            'socialProviders' => config('auth.social.providers'),
-            'listTables' => $this->getListTables(),
-            'tableName' => $tableName,
-            'headers' => $this->getHeaders($tableName),
-            'selectedEntries' => $this->getSelectedEntries($tableName),
-            'group' => "",
-            'canEdit' => $this->getCanEdit($tableName),
-            'favourite' => $this->getFavourite($tableName)
-        ]);
+        if ($this->tableExist($tableName)) {
+            return view('table', $this->getVariables($tableName));
+        } else {
+            return redirect( route('homepage') );
+        }
     }
 
     public function homepageGroupedTable($group, $tableName) {
-        return view('table', [
+        if ($this->tableExist($tableName)) {
+            return view('table', $this->getVariables($tableName, $group));
+        } else {
+            return redirect( route('homepage') );
+        }
+    }
+
+    private function getVariables($tableName = "", $group = "") {
+
+        $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
+        $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
+        return [
             'socialProviders' => config('auth.social.providers'),
             'listTables' => $this->getListTables($group),
             'tableName' => $tableName,
-            'headers' => $this->getHeaders($tableName),
-            'selectedEntries' => $this->getSelectedEntries($tableName),
+            'headers' => $tableName ? $this->getHeaders($tableName) : [],
+            'settingsHeaders' => $tableName ? $this->getHeaders('tb_settings_display') : [],
+            'selectedEntries' => $selEntries ? $selEntries : 'All',
+            'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
-            'canEdit' => $this->getCanEdit($tableName),
-            'favourite' => $this->getFavourite($tableName)
-        ]);
+            'canEdit' => $tableName ? $this->getCanEdit($tableName) : "",
+            'canEditSettings' => $tableName ? $this->getCanEdit('tb_settings_display') : "",
+            'favourite' => $tableName ? $this->getFavourite($tableName) : ""
+        ];
     }
 
     private function getCanEdit($tableName) {
@@ -97,14 +98,9 @@ class AppController extends Controller
                 $tb = DB::connection('mysql_data')
                     ->table('tb')
                     ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $tb->where(function ($q) {
-                    $q->where('user_id', '=', Auth::user()->id);
-                    $q->orWhereNull('user_id');
-                });
-                $tb->where(function ($q) {
-                    $q->where('owner', '=', Auth::user()->id);
-                    $q->orWhere('rights.right', '=', 'All');
-                });
+                $tb->where('user_id', '=', Auth::user()->id);
+                $tb->where('owner', '=', Auth::user()->id);
+                $tb->where('rights.right', '=', 'All');
                 $tb->where('tb.db', '=', $tableName);
                 //if user have rights for edit table (owner or right='All')
                 if ($tb->count() > 0) {
@@ -190,5 +186,9 @@ class AppController extends Controller
             $headers[$key] = $header_data->where('field', '=', $key)->first();
         }
         return $headers;
+    }
+
+    private function tableExist($tableName) {
+        return DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
     }
 }
