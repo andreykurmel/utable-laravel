@@ -47,6 +47,11 @@
                                 <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                             </a>
                         </li>
+                        <li style="display: inline-block">
+                            <a href="{{ route("homepage") }}" class="btn btn-default" style="margin: 10px;padding: 4px 7px;font-size: 1.5em;">
+                                <i class="fa fa-home"></i>
+                            </a>
+                        </li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right" style="float: right;">
                         @if(Auth::user())
@@ -251,7 +256,7 @@
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value" style="height: inherit" id="selected_entries_span">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
+                                                <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
                                                 <span class="select-arrow"></span>
                                                 <span class="drop-down custom-scroll">
                                                     <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
@@ -266,7 +271,7 @@
                                     </div>
                                     @if(Auth::user() && $canEdit)
                                         <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
-                                        <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="$('#tbAddRow').hide();$('#tbHeaders').css('top', '0');$('#divTbData').css('top', '37px');">
+                                        <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
                                     @endif
                                     <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
@@ -333,13 +338,22 @@
                         @if(Auth::user())
                         <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
-                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 20px;">
+                            <!-- Tabs -->
+                            <div class="standard-tabs" style="margin: 15px 10px;">
+                                <ul class="tabs">
+                                    <li class="active" id="li_settings_display"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Display</a></li>
+                                    <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">DDL</a></li>
+                                </ul>
+                            </div>
+
+                            <!-- Content -->
+                            <div id="div_settings_display" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 50px; right: 20px; left: 20px;">
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
                                         <label>
                                             Show
                                             <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value" style="height: inherit" id="selected_settings_entries_span">{{ $settingsEntries ? $settingsEntries : 10 }}</span>
+                                            <span class="select-value js-selected_settings_entries_span" style="height: inherit">{{ $settingsEntries ? $settingsEntries : 10 }}</span>
                                                 <span class="select-arrow"></span>
                                                 <span class="drop-down custom-scroll">
                                                     <span class="entry-elem-s entry-s-10 {{ $settingsEntries == 10 ? 'selected' : '' }}" onclick="changeSettingsEntries(10)">10</span>
@@ -378,80 +392,6 @@
                                             </thead>
 
                                             <tbody id="tbSettingsData_body">
-                                            <!--<tr ng-repeat="tableObj in settingsData | orderBy:sortSettingsType:false | filter: searchSettingsKeyword" ng-if="$index >= settingsPage*selectedEntries && $index < (settingsPage+1)*selectedEntries">
-                                                @if($canEdit)
-                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
-                                                        <a ng-if="!isEditable(key,uTableSettingsName)" class="btn-tower-id" ><span class="font-icon">`</span>
-                                                            <b>[[value]]</b>
-                                                        </a>
-                                                        <span ng-if="isEditable(key,uTableSettingsName)">[[value]]</span>
-                                                        <input
-                                                                ng-if="getSettingsInputType(key) == 'input' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRow(tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <input
-                                                                ng-if="getSettingsInputType(key) == 'date' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRow(tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                data-date-time-picker
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <select
-                                                                ng-if="getSettingsInputType(key) == 'ddl' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRow(tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                                class="form-control"
-                                                                ng-options="Option as Option for Option in settingsDDLs[key]"
-                                                        ></select>
-                                                    </td>
-                                                @else
-                                                    <td ng-repeat="(key,value) in tableObj" ng-if="checkSettingsWeb(key)" style="position:relative;" ng-click="showInlineEdit(uTableSettingsName+'_'+key+'_'+tableObj.id, key)">
-                                                        <span>[[value]]</span>
-                                                        <input
-                                                                ng-if="getSettingsInputType(key) == 'input' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <input
-                                                                ng-if="getSettingsInputType(key) == 'date' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                data-date-time-picker
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                        >
-                                                        <select
-                                                                ng-if="getSettingsInputType(key) == 'ddl' && isEditable(key,uTableSettingsName)"
-                                                                ng-blur="inlineUpdate(tableObj, key, uTableSettingsName+'_'+key+'_'+tableObj.id)"
-                                                                ng-change="updateSettingsRowLocal(key, tableObj)"
-                                                                ng-model-options="{debounce:1000}"
-                                                                ng-model="tableObj[key]"
-                                                                id="[[uTableSettingsName+'_'+key+'_'+tableObj.id]]"
-                                                                style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;display: none;"
-                                                                class="form-control"
-                                                                ng-options="Option as Option for Option in settingsDDLs[key]"
-                                                        ></select>
-                                                    </td>
-                                                @endif
-                                            </tr>-->
                                             </tbody>
                                         </table>
                                     </div>
@@ -470,6 +410,10 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 50px; right: 20px; left: 20px;display: none;">
+                            </div>
+
                         </div>
                         @endif
 
@@ -740,8 +684,6 @@
         });
     </script>
 
-    {!! HTML::script('https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js') !!}
-    {!! HTML::script('https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js') !!}
     {!! HTML::script('https://maps.googleapis.com/maps/api/js?key=AIzaSyAGaaPdBTpcf_z_lLmhwxNwHESJhFQ4MGM&hl=en&language=en') !!}
     {!! HTML::script('assets/js/lib/jquery.mCustomScrollbar.concat.min.js') !!}
     {!! HTML::script('assets/js/lib/lodash.min.js') !!}
@@ -750,10 +692,6 @@
     {!! HTML::script('assets/js/lib/developr.modal.js') !!}
     {!! HTML::script('assets/js/lib/developr.input.js') !!}
     {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
-    {!! HTML::script('assets/js/lib/angular-filter.min.js') !!}
-    {!! HTML::script('assets/js/lib/route.js') !!}
-    {!! HTML::script('assets/js/lib/API.js') !!}
-    {!! HTML::script('assets/js/lib/mainController.js') !!}
     {!! HTML::script('assets/js/lib/table.js') !!}
 
     {{-- Login scripts --}}

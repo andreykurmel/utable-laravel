@@ -96,7 +96,7 @@ function showTableFooter() {
     $('#showing_all_span').html(rowsCount);
 
 
-    var maxPage = lselectedEntries ? Math.ceil(settingsRowsCount/lselectedEntries) : 1;
+    var maxPage = lselectedEntries ? Math.ceil(rowsCount/lselectedEntries) : 1;
     var paginateBtns = [], pbtn;
     if (selectedPage+1 < 5) {
         var idx = 1;
@@ -227,7 +227,7 @@ function showDataTable(headers, data) {
             tableData += "</tr>";
 
             if (i == 0) {
-                tbAddRow += "<tr>";
+                tbAddRow += "<tr style='height: 53px;'>";
                 for(key in data[i]) {
                     tbAddRow +=
                         '<td ' +
@@ -236,18 +236,18 @@ function showDataTable(headers, data) {
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
                         (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
-                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                    if (key == 'id') {
+                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
+                    /*if (key == 'id') {
                         tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
                     } else {
                         tbAddRow += '</td>';
-                    }
+                    }*/
                 }
                 tbAddRow += "</tr>";
 
-                tbAddRow_h += "<tr style='visibility: hidden;'>";
+                tbAddRow_h += "<tr style='visibility: hidden;height: 53px'>";
                 for(key in data[i]) {
-                    tbAddRow_h += '<td>'+(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')+'</td>';
+                    tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
                 }
                 tbAddRow_h += "</tr>";
             }
@@ -268,8 +268,8 @@ function showDataTable(headers, data) {
         tbHiddenData += "</tr>";
     }
     $('#tbAddRow_body').html(tbAddRow + tbHiddenData);
-    $('#tbHeaders_body').html(tbHiddenData + tbAddRow_h);
-    $('#tbData_body').html((canEdit ? tableData : tbHiddenData) + tbAddRow_h);
+    $('#tbHeaders_body').html(tbHiddenData);
+    $('#tbData_body').html(canEdit ? tableData : tbHiddenData);
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -298,26 +298,28 @@ function showFiltersList(filters) {
     filterMaxHeight = $("#acd-filter-menu").height() - filtersData.length * 40;
     var filtersHTML = '';
     for (var i = 0; i < filtersData.length; i++) {
-        filtersHTML += '<div>' +
-            '<dt onclick="showFilterTabs('+i+')">'+filtersData[i].name+'</dt>' +
-            '<dd class="acd-filter-elem" data-idx="'+i+'" style="position:relative;max-height: '+filterMaxHeight+'px;overflow: auto;'+(filtersData[i].name != curFilter ? 'display: none;' : '')+'">' +
-                '<div class="with-small-padding">' +
-                    '<div class="blue-bg with-small-padding filterheader">' +
-                        '<span class="checkbox replacement '+(filtersData[i].checkAll ? 'checked' : '')+'" tabindex="0" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].checkAll=!filtersData['+i+'].checkAll;filterCheckAll('+i+', filtersData['+i+'].checkAll)">' +
-                            '<span class="check-knob"></span>' +
-                            '<input id="" checked="" class="" name="County" type="checkbox" value="County" tabindex="-1">' +
-                        '</span>Check/Uncheck All' +
-                    '</div>' +
-                    '<ul class="list">';
-        for (var j = 0; j < filtersData[i].val.length; j++) {
-            filtersHTML += '<li>' +
-                            '<span class="checkbox replacement mr5 '+(filtersData[i].val[j].checked ? 'checked' : '')+'" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].val['+j+'].checked=!filtersData['+i+'].val['+j+'].checked;filterTable('+i+', filtersData['+i+'].val['+j+'].value, filtersData['+i+'].val['+j+'].checked)">' +
-                                '<span class="check-knob"></span><input type="checkbox" />' +
-                            '</span>' +
-                            '<span>' + filtersData[i].val[j].value + '</span>' +
-                        '</li>';
+        if (filtersData[i]) {
+            filtersHTML += '<div>' +
+                '<dt onclick="showFilterTabs('+i+')">'+filtersData[i].name+'</dt>' +
+                '<dd class="acd-filter-elem" data-idx="'+i+'" style="position:relative;max-height: '+filterMaxHeight+'px;overflow: auto;'+(filtersData[i].name != curFilter ? 'display: none;' : '')+'">' +
+                    '<div class="with-small-padding">' +
+                        '<div class="blue-bg with-small-padding filterheader">' +
+                            '<span class="checkbox replacement '+(filtersData[i].checkAll ? 'checked' : '')+'" tabindex="0" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].checkAll=!filtersData['+i+'].checkAll;filterCheckAll('+i+', filtersData['+i+'].checkAll)">' +
+                                '<span class="check-knob"></span>' +
+                                '<input id="" checked="" class="" name="County" type="checkbox" value="County" tabindex="-1">' +
+                            '</span>Check/Uncheck All' +
+                        '</div>' +
+                        '<ul class="list">';
+            for (var j = 0; j < filtersData[i].val.length; j++) {
+                filtersHTML += '<li>' +
+                                '<span class="checkbox replacement mr5 '+(filtersData[i].val[j].checked ? 'checked' : '')+'" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].val['+j+'].checked=!filtersData['+i+'].val['+j+'].checked;filterTable('+i+', filtersData['+i+'].val['+j+'].value, filtersData['+i+'].val['+j+'].checked)">' +
+                                    '<span class="check-knob"></span><input type="checkbox" />' +
+                                '</span>' +
+                                '<span>' + filtersData[i].val[j].value + '</span>' +
+                            '</li>';
+            }
+            filtersHTML += '</ul></div></dd></div>';
         }
-        filtersHTML += '</ul></div></dd></div>';
     }
     $('#acd-filter-menu').html(filtersHTML);
 }
@@ -643,8 +645,8 @@ function openPrintDialog() {
 
 function changeEntries(val) {
     selectedEntries = val;
+    $('.js-selected_entries_span').html(val);
     changePage(1);
-    $('#selected_entries_span').html(val);
     $('.entry-elem').removeClass('selected');
     $('.entry'+val).addClass('selected');
 }
@@ -905,32 +907,22 @@ function editSelectedData(idx) {
 }
 
 function addData() {
-    var lv = $('#list_view').is(':visible'),
-        ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
-
-    emptyDataObject = {};
-    for (var key in ltableHeaders) {
-        emptyDataObject[key] = "";
-    }
-
     if ($('#addingIsInline').is(':checked')) {
-        $('#tbAddRow').show();
-        $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', '90px');
+        addRowInline();
     } else {
-        $('#tbAddRow').hide();
-        $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', '37px');
-    }
+        var lv = $('#list_view').is(':visible'),
+            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
 
-    editSelectedData(-1);
+        emptyDataObject = {};
+        for (var key in ltableHeaders) {
+            emptyDataObject[key] = "";
+        }
+
+        editSelectedData(-1);
+    }
 }
 
 function addRowInline() {
-    $('#tbAddRow').hide();
-    $('#tbHeaders').css('top', '0');
-    $('#divTbData').css('top', '37px');
-
     emptyDataObject = {};
     for(var key in tableHeaders) {
         emptyDataObject[key] = $('#' + tableHeaders[key].field + 0 + tableHeaders[key].input_type + '_addrow').html();
@@ -938,6 +930,29 @@ function addRowInline() {
     tableData.push(emptyDataObject);
 
     addRow(emptyDataObject);
+    editSelectedData(-1);
+}
+
+function checkboxAddToggle() {
+    if ($('#addingIsInline').is(':checked')) {
+        var lv = $('#list_view').is(':visible'),
+            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
+
+        emptyDataObject = {};
+        for (var key in ltableHeaders) {
+            emptyDataObject[key] = "";
+        }
+
+        $('#tbAddRow').show();
+        $('#tbHeaders').css('top', '53px');
+        $('#divTbData').css('top', '90px');
+
+        editSelectedData(-1);
+    } else {
+        $('#tbAddRow').hide();
+        $('#tbHeaders').css('top', '0');
+        $('#divTbData').css('top', '37px');
+    }
 }
 
 
@@ -1141,13 +1156,17 @@ function searchSettingsKeywordChanged() {
 
 function changeSettingsEntries(val) {
     settingsEntries = val;
+    $('.js-selected_settings_entries_span').html(val);
     changeSettingsPage(1);
-    $('#selected_settings_entries_span').html(val);
     $('.entry-elem-s').removeClass('selected');
     $('.entry-s-'+val).addClass('selected');
 }
 
 function updateSettingsRowLocal(idx, key, id) {
+    //update val in settings table
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
     var val = $('#'+id).val();
     var header_key = settingsTableData[idx]['field'];
     if (key == "sum") {
@@ -1170,19 +1189,32 @@ function updateSettingsRowLocal(idx, key, id) {
                 method: 'GET',
                 url: baseHttpUrl + '/loadFilter?tableName=' + selectedTableName + '&field='+ tableHeaders[header_key].field +'&name='+ tableHeaders[header_key].name,
                 success: function (response) {
-                    console.log(response);
-                    filtersData.push(response.data);
+                    filtersData.push(response);
                     showFiltersList(filtersData);
                 }
             });
         } else {
             for (var l = 0; l < filtersData.length; l++) {
-                if (filtersData.key == tableHeaders[header_key].field) {
-                    filtersData = filtersData.splice(l,1);
+                if (filtersData[l].key == header_key) {
+                    delete filtersData[l];
                     break;
                 }
             }
             showFiltersList(filtersData);
         }
     }
+}
+
+function settingsTabShowDDL() {
+    $('#div_settings_display').hide();
+    $('#div_settings_ddl').show();
+    $('#li_settings_display').removeClass('active');
+    $('#li_settings_ddl').addClass('active');
+}
+
+function settingsTabShowDisplay() {
+    $('#div_settings_ddl').hide();
+    $('#div_settings_display').show();
+    $('#li_settings_ddl').removeClass('active');
+    $('#li_settings_display').addClass('active');
 }

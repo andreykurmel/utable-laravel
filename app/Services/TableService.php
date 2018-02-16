@@ -24,28 +24,29 @@ class TableService {
             return $responseArray;
         }
 
+        $forFiltersQuery = "SELECT * FROM $tableName WHERE";
         $sql = DB::connection('mysql_data')->table($tableName);
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
                 if (!in_array($key, ['opt', 'searchKeyword', 'changedKeyword']) && $val) {
-                    $sql->where($key, '=', $val);
+                    $sql->where($tableName.'.'.$key, '=', $val);
                 }
             }
         } elseif ($query['opt'] == 'lat' && $query['lat_dec'] && $query['long_dec']) {
             $dist_lat = $query['distance']/(111/1.6);
             $dist_long = $query['distance']/(85/1.6);
-            $sql->where('lat_dec', '>', ($query['lat_dec'] - $dist_lat));
-            $sql->where('lat_dec', '<', ($query['lat_dec'] + $dist_lat));
-            $sql->where('long_dec', '>', ($query['long_dec'] - $dist_long));
-            $sql->where('long_dec', '<', ($query['long_dec'] + $dist_long));
+            $sql->where($tableName.'.'.'lat_dec', '>', ($query['lat_dec'] - $dist_lat));
+            $sql->where($tableName.'.'.'lat_dec', '<', ($query['lat_dec'] + $dist_lat));
+            $sql->where($tableName.'.'.'long_dec', '>', ($query['long_dec'] - $dist_long));
+            $sql->where($tableName.'.'.'long_dec', '<', ($query['long_dec'] + $dist_long));
         } elseif ($query['opt'] == 'settings' && $query['tb_id']) {
-            $sql->where('tb_id', '=', $query['tb_id']);
+            $sql->where($tableName.'.'.'tb_id', '=', $query['tb_id']);
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
-            $sql->where(function ($q) use ($fields, $query) {
+            $sql->where(function ($q) use ($fields, $query, $tableName) {
                 foreach ($fields as $field => $val) {
-                    $q->orWhere($field, 'LIKE', "%".$query['searchKeyword']."%");
+                    $q->orWhere($tableName.'.'.$field, 'LIKE', "%".$query['searchKeyword']."%");
                 }
             });
         }
@@ -63,7 +64,7 @@ class TableService {
                                     $includedVals[] = $item->value;
                                 }
                             }
-                            $sql->WhereIn($filterElem->key, $includedVals);
+                            $sql->WhereIn($tableName.'.'.$filterElem->key, $includedVals);
                         }
                     }
                 }
@@ -76,12 +77,17 @@ class TableService {
                                 $excludedVals[] = $item->value;
                             }
                         }
-                        $sql->whereNotIn($filterElem->key, $excludedVals);
+                        $sql->whereNotIn($tableName.'.'.$filterElem->key, $excludedVals);
                     }
                 }
             }
         }
         $resultSQL = clone $sql;
+        $rawResultSQL = $resultSQL->toSql();
+        foreach($resultSQL->getBindings() as $binding) {
+            $value = is_numeric($binding) ? $binding : "'".$binding."'";
+            $rawResultSQL = preg_replace('/\?/', $value, $rawResultSQL, 1);
+        }
 
         $rowsCount = $sql->count();
         if ($count) {
@@ -115,11 +121,16 @@ class TableService {
                 //get values for each filter
                 $filter_vals = DB::connection('mysql_data')->table($tableName)
                     ->select($sf->key." as value")
-                    ->selectRaw("true as checked")
-                    ->distinct()->get();
-                $data_items = (clone $resultSQL)->select($sf->key." as value")->distinct()->get();
+                    ->distinct();
+                $data_items = (clone $resultSQL)
+                    ->select($sf->key." as value")
+                    ->distinct();
                 //if user switched off some filters -> then display it in the result data
                 if ($filter_vals->count() == $data_items->count()) {
+                    $filter_vals = DB::connection('mysql_data')->table($tableName)
+                        ->select($sf->key." as value")
+                        ->selectRaw("true as checked")
+                        ->distinct()->get();
                     $filterObj = [
                         'key' => $sf->key,
                         'name' => $sf->name,
@@ -127,11 +138,11 @@ class TableService {
                         'checkAll' => true
                     ];
                 } else {
-                    for ($i = 0; $i < $filter_vals->count(); $i++) {
-                        if (!$data_items->where('value', $filter_vals[$i]->value)->all()) {
-                            $filter_vals[$i]->checked = false;
-                        }
-                    }
+                    $filter_vals = DB::connection('mysql_data')->select("
+                        SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
+                        FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
+                        GROUP BY `$tableName`.`".$sf->key."`
+                    ");
                     $filterObj = [
                         'key' => $sf->key,
                         'name' => $sf->name,

@@ -98,10 +98,14 @@ class AppController extends Controller
                 $tb = DB::connection('mysql_data')
                     ->table('tb')
                     ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $tb->where('user_id', '=', Auth::user()->id);
-                $tb->where('owner', '=', Auth::user()->id);
-                $tb->where('rights.right', '=', 'All');
-                $tb->where('tb.db', '=', $tableName);
+                $tb->where('tb.db_tb', '=', $tableName);
+                $tb->where(function ($q) {
+                    $q->where('tb.owner', '=', Auth::user()->id);
+                    $q->orWhere(function ($q_in) {
+                        $q_in->where('rights.user_id', '=', Auth::user()->id);
+                        $q_in->where('rights.right', '=', 'All');
+                    });
+                });
                 //if user have rights for edit table (owner or right='All')
                 if ($tb->count() > 0) {
                     $canEdit = true;
@@ -135,28 +139,34 @@ class AppController extends Controller
     
     private function getListTables($tableGroup = "") {
         $tb = DB::connection('mysql_data')->table('tb')->leftJoin('group as g', 'g.id', '=', 'tb.group_id');
-        if (!Auth::user()) {
-            //guest - get public data
+        if ($tableGroup) {
+            //get tables only for current group
             $tb->where('access', '=', 'public');
-            $tb->where('www_add', '=', $tableGroup ? $tableGroup : null);
+            $tb->where('www_add', '=', $tableGroup);
         } else {
-            if (Auth::user()->role_id != 1) {
-                //user - get user`s data, favourites and public data in the current folder
-                $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $tb->where('www_add', '=', $tableGroup ? $tableGroup : null);
+            if (!Auth::user()) {
+                //guest - get public data
                 $tb->where('access', '=', 'public');
-                $tb->orWhere(function ($qt) {
-                    $qt->where(function ($q) {
-                        $q->where('rights.user_id', '=', Auth::user()->id);
-                        $q->orWhereNull('rights.user_id');
+                $tb->where('www_add', '=', null);
+            } else {
+                if (Auth::user()->role_id != 1) {
+                    //user - get user`s data, favourites and public data in the current folder
+                    $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
+                    $tb->where('www_add', '=', null);
+                    $tb->where('access', '=', 'public');
+                    $tb->orWhere(function ($qt) {
+                        $qt->where(function ($q) {
+                            $q->where('rights.user_id', '=', Auth::user()->id);
+                            $q->orWhereNull('rights.user_id');
+                        });
+                        $qt->where(function ($q) {
+                            $q->where('owner', '=', Auth::user()->id);
+                            $q->orWhereNotNull('rights.right');
+                        });
                     });
-                    $qt->where(function ($q) {
-                        $q->where('owner', '=', Auth::user()->id);
-                        $q->orWhereNotNull('rights.right');
-                    });
-                });
+                }
+                //admin - get all data
             }
-            //admin - get all data
         }
         $tb->select('tb.*', 'www_add');
         $tb = $tb->get();
