@@ -168,4 +168,26 @@ class TableController extends Controller
             }
         }
     }
+
+    public function getDDLdatas(Request $request)
+    {
+        $DDLdatas = [];
+        if (Auth::user()) {
+            $DDLdatas = DB::connection('mysql_data')
+                ->table('ddl')
+                ->join('tb', 'tb.id', '=', 'ddl.tb_id')
+                ->where('tb.db_tb', '=', $request->tableName)
+                ->select('ddl.*')
+                ->get();
+
+            foreach ($DDLdatas as &$DDL) {
+                $DDL->items = DB::connection('mysql_data')
+                    ->table('ddl_items')
+                    ->where('list_id', '=', $DDL->id)
+                    ->whereNotNull('option')
+                    ->get();
+            }
+        }
+        return $DDLdatas;
+    }
 }

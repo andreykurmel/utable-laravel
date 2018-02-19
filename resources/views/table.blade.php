@@ -103,10 +103,15 @@
                         <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
-                        <select id="tableChanger" class="selectcustom" onchange="window.location = '/data/' + $('#tableChanger').val();" style="width: 100%">
+                        <select id="tableChanger" class="selectcustom" onchange="window.location = '/data/' + $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
                             <option value=""></option>
                             @foreach($listTables as $tb)
-                                <option value="{{ $tb->www_add }}">{{ $tb->name }}</option>
+                                <option value="{{ $tb->www_add }}">
+                                    @if(Auth::user())
+                                        {{ (Auth::user()->id == $tb->owner ? '&#xf10c; ' : ($tb->right ? '&#xf006; ' : '&#x2003; ')) }}
+                                    @endif
+                                    {{ $tb->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -342,7 +347,9 @@
                             <div class="standard-tabs" style="margin: 15px 10px;">
                                 <ul class="tabs">
                                     <li class="active" id="li_settings_display"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Display</a></li>
-                                    <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">DDL</a></li>
+                                    @if($canEditSettings)
+                                        <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">DDL</a></li>
+                                    @endif
                                 </ul>
                             </div>
 
@@ -412,6 +419,88 @@
                             </div>
 
                             <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 50px; right: 20px; left: 20px;display: none;">
+                                <div class="dataTables_header">
+                                    <div class="dataTables_length">
+                                        <label>
+                                            Show
+                                            <span class="select blue-gradient glossy replacement" tabindex="0">
+                                            <span class="select-value js-selected_settings_entries_span" style="height: inherit">{{ $settingsEntries ? $settingsEntries : 10 }}</span>
+                                                <span class="select-arrow"></span>
+                                                <span class="drop-down custom-scroll">
+                                                    <span class="entry-elem-s entry-s-10 {{ $settingsEntries == 10 ? 'selected' : '' }}" onclick="changeSettingsEntries(10)">10</span>
+                                                    <span class="entry-elem-s entry-s-20 {{ $settingsEntries == 20 ? 'selected' : '' }}" onclick="changeSettingsEntries(20)">20</span>
+                                                    <span class="entry-elem-s entry-s-50 {{ $settingsEntries == 50 ? 'selected' : '' }}" onclick="changeSettingsEntries(50)">50</span>
+                                                    <span class="entry-elem-s entry-s-100 {{ $settingsEntries == 100 ? 'selected' : '' }}" onclick="changeSettingsEntries(100)">100</span>
+                                                    <span class="entry-elem-s entry-s-All {{ $settingsEntries == 'All' ? 'selected' : '' }}" onclick="changeSettingsEntries('All')">All</span>
+                                                </span>
+                                            </span>
+                                            entries
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;">
+                                        <thead>
+                                        <tr>
+                                            @foreach($settingsDDL_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsDDL_headers">
+                                        </tbody>
+                                    </table>
+                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                            <thead>
+                                            <tr>
+                                                @foreach($settingsDDL_Headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                @endforeach
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="tbSettingsDDL_data">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;">
+                                        <thead>
+                                        <tr>
+                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsDDL_Items_headers">
+                                        </tbody>
+                                    </table>
+                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                            <thead>
+                                            <tr>
+                                                @foreach($settingsDDL_Items_Headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                @endforeach
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="tbSettingsDDL_Items_data">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="dataTables_footer" style="position: absolute; bottom: 50px; right: 0; left: 0">
+                                    <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                                        Showing all entries</div>
+                                </div>
                             </div>
 
                         </div>

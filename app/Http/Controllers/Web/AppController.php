@@ -82,6 +82,8 @@ class AppController extends Controller
             'tableName' => $tableName,
             'headers' => $tableName ? $this->getHeaders($tableName) : [],
             'settingsHeaders' => $tableName ? $this->getHeaders('tb_settings_display') : [],
+            'settingsDDL_Headers' => $tableName ? $this->getHeaders('ddl') : [],
+            'settingsDDL_Items_Headers' => $tableName ? $this->getHeaders('ddl_items') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
@@ -138,29 +140,31 @@ class AppController extends Controller
     }
     
     private function getListTables($tableGroup = "") {
-        $tb = DB::connection('mysql_data')->table('tb')->leftJoin('group as g', 'g.id', '=', 'tb.group_id');
+        $tb = DB::connection('mysql_data')
+            ->table('tb')
+            ->leftJoin('group as g', 'g.id', '=', 'tb.group_id')
+            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
         if ($tableGroup) {
             //get tables only for current group
-            $tb->where('access', '=', 'public');
-            $tb->where('www_add', '=', $tableGroup);
+            $tb->where('tb.access', '=', 'public');
+            $tb->where('g.www_add', '=', $tableGroup);
         } else {
             if (!Auth::user()) {
                 //guest - get public data
-                $tb->where('access', '=', 'public');
-                $tb->where('www_add', '=', null);
+                $tb->where('tb.access', '=', 'public');
+                $tb->where('g.www_add', '=', null);
             } else {
                 if (Auth::user()->role_id != 1) {
                     //user - get user`s data, favourites and public data in the current folder
-                    $tb->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                    $tb->where('www_add', '=', null);
-                    $tb->where('access', '=', 'public');
+                    $tb->where('g.www_add', '=', null);
+                    $tb->where('tb.access', '=', 'public');
                     $tb->orWhere(function ($qt) {
                         $qt->where(function ($q) {
                             $q->where('rights.user_id', '=', Auth::user()->id);
                             $q->orWhereNull('rights.user_id');
                         });
                         $qt->where(function ($q) {
-                            $q->where('owner', '=', Auth::user()->id);
+                            $q->where('tb.owner', '=', Auth::user()->id);
                             $q->orWhereNotNull('rights.right');
                         });
                     });
@@ -168,7 +172,7 @@ class AppController extends Controller
                 //admin - get all data
             }
         }
-        $tb->select('tb.*', 'www_add');
+        $tb->select('tb.*', 'g.www_add', 'rights.right')->groupBy('tb.id');
         $tb = $tb->get();
         foreach ($tb as &$item) {
             $item->www_add = ($item->www_add ? $item->www_add . "/" . $item->db_tb : $item->db_tb);

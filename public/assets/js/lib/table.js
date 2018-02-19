@@ -8,6 +8,9 @@ $(document).ready(function () {
 
     if (selectedTableName) {
         selectTable(selectedTableName);
+        if (canEditSettings) {
+            getDDLdatas(selectedTableName);
+        }
     }
 
     $(".table_body_viewport").mCustomScrollbar({
@@ -1217,4 +1220,153 @@ function settingsTabShowDisplay() {
     $('#div_settings_display').show();
     $('#li_settings_ddl').removeClass('active');
     $('#li_settings_display').addClass('active');
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ------------------------ Settings / tab 'DDL' ----------------------------*/
+
+var settingsDDLs;
+
+function getDDLdatas(tableName) {
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/getDDLdatas?tableName=' + tableName,
+        success: function(response) {
+            if (response.msg) {
+                alert(response.msg);
+            }
+
+            console.log(response);
+            settingsDDLs = response;
+            showSettingsDDLDataTable(settingsDDLs, -1);
+        },
+        error: function () {
+            alert("Server error");
+            $('.loadingFromServer').hide();
+        }
+    });
+}
+
+function showSettingsDDLDataTable(data, idx) {
+    var tableData = "", tbHiddenData = "", key;
+    if (idx > -1) {
+        data = settingsDDLs[idx].items;
+        $('.settings_ddl_rows').css('background-color', '#FFF');
+        $('#row_' + idx + '_settings_ddl').css('background-color', '#FFA');
+    }
+
+    for(var i = 0; i < data.length; i++) {
+        tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
+        for(key in data[i]) {
+            if (key != 'items') {
+                tableData +=
+                    '<td ' +
+                    'id="' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
+                    'data-key="' + key + '"' +
+                    'data-idx="' + i + '"' +
+                    'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
+                    'data-table_idx="' + idx + '"' +
+                    (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\')"' : '') +
+                    'style="position:relative;">';
+                if (key == 'id') {
+                    tableData += '<a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(\'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
+                } else {
+                    tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+                }
+            }
+        }
+        tableData += "</tr>";
+
+        tbHiddenData += "<tr>";
+        for(key in data[i]) {
+            if (key != 'items') {
+                tbHiddenData += '<td>' + (data[i][key] !== null ? data[i][key] : '') + '</td>';
+            }
+        }
+        tbHiddenData += "</tr>";
+    }
+
+    if (idx > -1) {
+        $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
+        $('#tbSettingsDDL_Items_data').html(tableData);
+    } else {
+        $('#tbSettingsDDL_headers').html(tbHiddenData);
+        $('#tbSettingsDDL_data').html(tableData);
+    }
+}
+
+function showInlineEdit_SDDL(id) {
+    if ($('#'+id).data('innerHTML')) {
+        return;
+    }
+
+    $('#'+id).data('innerHTML', $('#'+id).html());
+    var inp_t = $('#'+id).data('input'),
+        idx = $('#'+id).data('idx'),
+        key = $('#'+id).data('key');
+
+    var html = '<input ' +
+        'id="'+id+'_inp" ' +
+        'data-key="' + $('#'+id).data('key') + '"' +
+        'data-idx="' + $('#'+id).data('idx') + '"' +
+        'data-table="' + $('#'+id).data('table') + '"' +
+        'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+        'onblur="hideInlineEdit(\''+id+'\')" ' +
+        'onchange="updateSettingsDDL(\''+id+'_inp\')" ' +
+        'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+
+    $('#'+id).html(html);
+    $('#'+id+'_inp').val( $('#'+id).data('innerHTML') );
+    $('#'+id+'_inp').focus();
+}
+
+function updateSettingsDDL(id) {
+    //update in the table view
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
+    var table = $('#'+id).data('table'),
+        idx = $('#'+id).data('idx'),
+        table_idx = $('#'+id).data('table_idx'),
+        key_name = $('#'+id).data('key'),
+        tableName, params;
+    if (table === 'ddl') {
+        settingsDDLs[idx][key_name] = $('#'+id).val();
+        tableName = 'ddl';
+        params = settingsDDLs[idx];
+    } else {
+        settingsDDLs[table_idx].items[idx][key_name] = $('#'+id).val();
+        tableName = 'ddl_items';
+        params = settingsDDLs[table_idx].items[idx];
+    }
+
+    var strParams = "";
+    for (var key in params) {
+        if (key != 'items') {
+            strParams += key + '=' + params[key] + '&';
+        }
+    }
+
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/updateTableRow?tableName=' + tableName + '&' + strParams,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+            alert(response.msg);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
 }
