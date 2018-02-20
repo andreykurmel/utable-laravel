@@ -285,7 +285,7 @@
                                         <thead>
                                         <tr>
                                             @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -297,7 +297,7 @@
                                         <thead>
                                         <tr>
                                             @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -310,7 +310,7 @@
                                             <thead>
                                             <tr>
                                                 @foreach($headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -344,17 +344,17 @@
                         <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
                             <!-- Tabs -->
-                            <div class="standard-tabs" style="margin: 15px 10px;">
+                            <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 150px;transform: rotate(-90deg);left: -50px;top: 35px;">
                                 <ul class="tabs">
-                                    <li class="active" id="li_settings_display"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Display</a></li>
                                     @if($canEditSettings)
-                                        <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">DDL</a></li>
+                                        <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding'>DDL</a></li>
                                     @endif
+                                    <li class="active" id="li_settings_display"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding'>Display</a></li>
                                 </ul>
                             </div>
 
                             <!-- Content -->
-                            <div id="div_settings_display" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 50px; right: 20px; left: 20px;">
+                            <div id="div_settings_display" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;">
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
                                         <label>
@@ -380,7 +380,7 @@
                                         <thead>
                                         <tr>
                                             @foreach($settingsHeaders as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -393,7 +393,7 @@
                                             <thead>
                                             <tr>
                                                 @foreach($settingsHeaders as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -418,33 +418,27 @@
                                 </div>
                             </div>
 
-                            <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 50px; right: 20px; left: 20px;display: none;">
-                                <div class="dataTables_header">
-                                    <div class="dataTables_length">
-                                        <label>
-                                            Show
-                                            <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value js-selected_settings_entries_span" style="height: inherit">{{ $settingsEntries ? $settingsEntries : 10 }}</span>
-                                                <span class="select-arrow"></span>
-                                                <span class="drop-down custom-scroll">
-                                                    <span class="entry-elem-s entry-s-10 {{ $settingsEntries == 10 ? 'selected' : '' }}" onclick="changeSettingsEntries(10)">10</span>
-                                                    <span class="entry-elem-s entry-s-20 {{ $settingsEntries == 20 ? 'selected' : '' }}" onclick="changeSettingsEntries(20)">20</span>
-                                                    <span class="entry-elem-s entry-s-50 {{ $settingsEntries == 50 ? 'selected' : '' }}" onclick="changeSettingsEntries(50)">50</span>
-                                                    <span class="entry-elem-s entry-s-100 {{ $settingsEntries == 100 ? 'selected' : '' }}" onclick="changeSettingsEntries(100)">100</span>
-                                                    <span class="entry-elem-s entry-s-All {{ $settingsEntries == 'All' ? 'selected' : '' }}" onclick="changeSettingsEntries('All')">All</span>
-                                                </span>
-                                            </span>
-                                            entries
-                                        </label>
-                                    </div>
-                                </div>
+                            <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
 
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <table class="table dataTable" style="margin-bottom: 0;">
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 12px; bottom: 52px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsDDL_addrow">
+                                        </tbody>
+                                    </table>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
+                                        <thead>
+                                        <tr>
+                                            @foreach($settingsDDL_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -452,12 +446,12 @@
                                         <tbody id="tbSettingsDDL_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <div style="top: 74px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
                                                 @foreach($settingsDDL_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -468,12 +462,30 @@
                                     </div>
                                 </div>
 
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <table class="table dataTable" style="margin-bottom: 0;">
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 12px; bottom: 52px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsDDL_Items_addrow">
+                                            <tr style="height: 37px;">
+                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                                <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
+                                            @endforeach
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
+                                        <thead>
+                                        <tr>
+                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -481,12 +493,12 @@
                                         <tbody id="tbSettingsDDL_Items_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <div style="top: 74px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
                                                 @foreach($settingsDDL_Items_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -550,7 +562,7 @@
                             <ul class="tabs same-height" style="margin-top: 10px">
                                 <li class="active" id="details_li_list_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowList()"> Details</a></li>
                                 @if($tableName == 'st')
-                                    <li ng-if="editItemIndex > -1" id="details_li_map_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowMap()"> Google Map</a></li>
+                                    <li id="details_li_map_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowMap()"> Google Map</a></li>
                                 @endif
                             </ul>
                             <!-- Content -->
@@ -560,16 +572,6 @@
                                     <div class="with-padding">
                                         <table align="center" border="1" cellspacing="0" style="background:white;color:black;width:80%;">
                                             <tbody id="modals_rows">
-                                            <tr ng-repeat="(key,value) in editData" ng-if="checkIfVisible(key)">
-                                                <td><label>[[getColumnName(key)]]</label></td>
-                                                <td>
-                                                    <input ng-if="getColumnInputType(key) == 'auto'" type="text" class="form-control" value="[[getColumnValue(key)]]" readonly/>
-                                                    <input ng-if="getColumnInputType(key) == 'input'" type="text" class="form-control" value="[[value]]" ng-model="editData[key]"/>
-                                                    <input ng-if="getColumnInputType(key) == 'date'" type="text" class="form-control" ng-model="editData[key]" data-date-time-picker/>
-                                                    <select ng-if="getColumnInputType(key) == 'ddl'" class="form-control" ng-model="editData[key]" ng-options="Option as Option for Option in tableDDLs[key]" style="margin-bottom: 5px;">
-                                                    </select>
-                                                </td>
-                                            </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -606,12 +608,12 @@
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
         <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 830px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
-            <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" ng-show="showColumnsMenu" id="accesstestscroll">
+            <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
                         @foreach($headers as $hdr)
                             <li style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
-                                <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->name }} </label>
+                                <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->field == 'id' ? '#' : $hdr->name }} </label>
                             </li>
                         @endforeach
                     </ul>
@@ -659,7 +661,7 @@
                                 @endif
 
                                 @if (settings('reg_enabled'))
-                                    <a href="javascript:void(0)" ng-click="showLoginForm=false;showRegisterForm=true" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
+                                    <a href="javascript:void(0)" onclick="$('.loginForm').hide();$('.registerForm').show();" style="float: right;color: #337ab7;">@lang('app.dont_have_an_account')</a>
                                 @endif
                             </div>
                             <div class="form-group">
@@ -737,7 +739,7 @@
                             </div>
 
                             <div style="margin-bottom:20px;text-align:center;">
-                                <a href="javascript:void(0)" ng-click="showRegisterForm=false;showLoginForm=true" style="color: #337ab7;">Already have account?</a>
+                                <a href="javascript:void(0)" onclick="$('.registerForm').hide();$('.loginForm').show();" style="color: #337ab7;">Already have account?</a>
                             </div>
                         </form>
 

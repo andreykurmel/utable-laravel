@@ -72,7 +72,7 @@ class TableController extends Controller
 
         if ($id) {
             $responseArray['error'] = FALSE;
-            $responseArray['last_id'] = $id;
+            $responseArray['last_id'] = DB::connection('mysql_data')->getPdo()->lastInsertId();
             $responseArray['msg'] = "Data Inserted Successfully";
 
         } else {
@@ -173,14 +173,18 @@ class TableController extends Controller
     {
         $DDLdatas = [];
         if (Auth::user()) {
-            $DDLdatas = DB::connection('mysql_data')
+            $DDLdatas['DDL_hdr'] = $this->tableService->getHeaders('ddl');
+            $DDLdatas['DDL_items_hdr'] = $this->tableService->getHeaders('ddl_items');
+            $DDLdatas['table_meta'] = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+
+            $DDLdatas['data'] = DB::connection('mysql_data')
                 ->table('ddl')
                 ->join('tb', 'tb.id', '=', 'ddl.tb_id')
                 ->where('tb.db_tb', '=', $request->tableName)
                 ->select('ddl.*')
                 ->get();
 
-            foreach ($DDLdatas as &$DDL) {
+            foreach ($DDLdatas['data'] as &$DDL) {
                 $DDL->items = DB::connection('mysql_data')
                     ->table('ddl_items')
                     ->where('list_id', '=', $DDL->id)

@@ -6,9 +6,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Vanguard\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Vanguard\Services\TableService;
 
 class AppController extends Controller
 {
+    private $tableService;
+
+    public function __construct(TableService $tb) {
+        $this->tableService = $tb;
+    }
+
     public function landing() {
         if (empty($_SERVER['HTTP_REFERER'])) {
             $_SERVER['HTTP_REFERER'] = "";
@@ -80,10 +87,10 @@ class AppController extends Controller
             'socialProviders' => config('auth.social.providers'),
             'listTables' => $this->getListTables($group),
             'tableName' => $tableName,
-            'headers' => $tableName ? $this->getHeaders($tableName) : [],
-            'settingsHeaders' => $tableName ? $this->getHeaders('tb_settings_display') : [],
-            'settingsDDL_Headers' => $tableName ? $this->getHeaders('ddl') : [],
-            'settingsDDL_Items_Headers' => $tableName ? $this->getHeaders('ddl_items') : [],
+            'headers' => $tableName ? $this->tableService->getHeaders($tableName) : [],
+            'settingsHeaders' => $tableName ? $this->tableService->getHeaders('tb_settings_display') : [],
+            'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
+            'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
@@ -184,22 +191,6 @@ class AppController extends Controller
     private function getSelectedEntries($tableName) {
         $tb = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
         return $tb->nbr_entry_listing;
-    }
-
-    private function getHeaders($tableName) {
-        $header_data = DB::connection('mysql_data')
-            ->table('tb')
-            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
-            ->where('db_tb', '=', $tableName)
-            ->select('tsd.*')
-            ->get();
-
-        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
-        $headers = [];
-        foreach ($tb as $key => $val) {
-            $headers[$key] = $header_data->where('field', '=', $key)->first();
-        }
-        return $headers;
     }
 
     private function tableExist($tableName) {

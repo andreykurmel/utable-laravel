@@ -1,3 +1,11 @@
+function setAllNullObj(obj) {
+    var resObj = Object.assign({}, obj);
+    Object.keys(resObj).forEach(function(k) {
+        resObj[k] = null;
+    });
+    return resObj;
+}
+
 /* Page loading */
 $(document).ready(function () {
     if (selectedTableName == "st") {
@@ -1234,7 +1242,13 @@ function settingsTabShowDisplay() {
 
 /* ------------------------ Settings / tab 'DDL' ----------------------------*/
 
-var settingsDDLs;
+var settingsDDLs,
+    settingsDDL_hdr,
+    settingsDDL_items_hdr,
+    settingsDDL_Obj,
+    settingsDDL_ItemsObj,
+    settingsDDL_selectedIndex = -1,
+    settingsDDL_TableMeta;
 
 function getDDLdatas(tableName) {
     $.ajax({
@@ -1246,8 +1260,13 @@ function getDDLdatas(tableName) {
             }
 
             console.log(response);
-            settingsDDLs = response;
-            showSettingsDDLDataTable(settingsDDLs, -1);
+            settingsDDLs = response.data;
+            settingsDDL_hdr = response.DDL_hdr;
+            settingsDDL_items_hdr = response.DDL_items_hdr;
+            settingsDDL_TableMeta = response.table_meta;
+            settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
+            settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
+            showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
         },
         error: function () {
             alert("Server error");
@@ -1256,12 +1275,19 @@ function getDDLdatas(tableName) {
     });
 }
 
-function showSettingsDDLDataTable(data, idx) {
-    var tableData = "", tbHiddenData = "", key;
+function showSettingsDDLDataTable(headers, data, idx) {
+    var tableData = "", tbHiddenData = "", tbAddRow = "", key;
+
+    if (settingsDDL_selectedIndex > -1) {
+        $('#row_' + settingsDDL_selectedIndex + '_settings_ddl').css('background-color', '#FFA');
+    }
+
     if (idx > -1) {
         data = settingsDDLs[idx].items;
         $('.settings_ddl_rows').css('background-color', '#FFF');
         $('#row_' + idx + '_settings_ddl').css('background-color', '#FFA');
+        $('#add_settings_ddl_item_btn').show();
+        settingsDDL_selectedIndex = idx;
     }
 
     for(var i = 0; i < data.length; i++) {
@@ -1275,10 +1301,10 @@ function showSettingsDDLDataTable(data, idx) {
                     'data-idx="' + i + '"' +
                     'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
                     'data-table_idx="' + idx + '"' +
-                    (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\')"' : '') +
-                    'style="position:relative;">';
+                    (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (key == 'id') {
-                    tableData += '<a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(\'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
+                    tableData += '<a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
                 } else {
                     tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
                 }
@@ -1289,22 +1315,40 @@ function showSettingsDDLDataTable(data, idx) {
         tbHiddenData += "<tr>";
         for(key in data[i]) {
             if (key != 'items') {
-                tbHiddenData += '<td>' + (data[i][key] !== null ? data[i][key] : '') + '</td>';
+                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    (key == 'id' ? '<span class="font-icon">`</span><b>'+ (i+1) +'</b>' : '') +
+                    (key != 'id' && data[i][key] !== null ? data[i][key] : '') +
+                    '</td>';
             }
         }
         tbHiddenData += "</tr>";
     }
 
+    tbAddRow += "<tr style='height: 37px;'>";
+    for(key in headers) {
+        if (key != 'items') {
+            tbAddRow += '<td ' +
+                'id="add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
+                'data-key="' + key + '"' +
+                'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
+                (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
+                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' + '</td>';
+        }
+    }
+    tbAddRow += "</tr>";
+
     if (idx > -1) {
+        $('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
         $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
         $('#tbSettingsDDL_Items_data').html(tableData);
     } else {
+        $('#tbSettingsDDL_addrow').html(tbAddRow+tbHiddenData);
         $('#tbSettingsDDL_headers').html(tbHiddenData);
         $('#tbSettingsDDL_data').html(tableData);
     }
 }
 
-function showInlineEdit_SDDL(id) {
+function showInlineEdit_SDDL(id, isUpdate) {
     if ($('#'+id).data('innerHTML')) {
         return;
     }
@@ -1321,7 +1365,7 @@ function showInlineEdit_SDDL(id) {
         'data-table="' + $('#'+id).data('table') + '"' +
         'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
         'onblur="hideInlineEdit(\''+id+'\')" ' +
-        'onchange="updateSettingsDDL(\''+id+'_inp\')" ' +
+        'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
         'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
 
     $('#'+id).html(html);
@@ -1351,7 +1395,7 @@ function updateSettingsDDL(id) {
 
     var strParams = "";
     for (var key in params) {
-        if (key != 'items') {
+        if (key != 'items' && params[key] !== null) {
             strParams += key + '=' + params[key] + '&';
         }
     }
@@ -1361,6 +1405,68 @@ function updateSettingsDDL(id) {
         method: 'GET',
         url: baseHttpUrl + '/updateTableRow?tableName=' + tableName + '&' + strParams,
         success: function (response) {
+            $('.loadingFromServer').hide();
+            alert(response.msg);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
+
+function addSettingsDDL(id) {
+    //update in the table view
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
+    var table = $('#'+id).data('table'),
+        key_name = $('#'+id).data('key');
+
+    if (table == 'ddl') {
+        settingsDDL_Obj[key_name] = $('#'+id).val();
+    } else {
+        settingsDDL_ItemsObj[key_name] = $('#'+id).val();
+    }
+}
+
+function saveSettingsDDLRow(tableName) {
+    if (tableName == 'ddl') {
+        settingsDDL_Obj['items'] = [];
+        settingsDDL_Obj['tb_id'] = settingsDDL_TableMeta.id;
+    } else {
+        settingsDDL_ItemsObj['list_id'] = settingsDDLs[settingsDDL_selectedIndex].id;
+    }
+
+    var params = (tableName == 'ddl' ? settingsDDL_Obj : settingsDDL_ItemsObj);
+    var strParams = "";
+    for (var key in params) {
+        if (key != 'items' && params[key] !== null) {
+            strParams += key + '=' + params[key] + '&';
+        }
+    }
+
+    if (tableName == 'ddl') {
+        console.log(settingsDDL_Obj);
+        settingsDDLs.push(settingsDDL_Obj);
+        settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
+        showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+    } else {
+        settingsDDLs[settingsDDL_selectedIndex].items.push(settingsDDL_ItemsObj);
+        settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
+        showSettingsDDLDataTable(settingsDDL_items_hdr, '', settingsDDL_selectedIndex);
+    }
+
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/addTableRow?tableName=' + tableName + '&' + strParams,
+        success: function (response) {
+            console.log(response);
+            if (tableName == 'ddl') {
+                settingsDDLs[ settingsDDLs.length-1 ].id = response.last_id;
+            }
+            console.log(settingsDDLs);
             $('.loadingFromServer').hide();
             alert(response.msg);
         },

@@ -211,4 +211,20 @@ class TableService {
 
         return $responseArray;
     }
+
+    public function getHeaders($tableName) {
+        $header_data = DB::connection('mysql_data')
+            ->table('tb')
+            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
+            ->where('db_tb', '=', $tableName)
+            ->select('tsd.*')
+            ->get();
+
+        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
+        $headers = [];
+        foreach ($tb as $key => $val) {
+            $headers[$key] = $header_data->where('field', '=', $key)->first();
+        }
+        return $headers;
+    }
 }
