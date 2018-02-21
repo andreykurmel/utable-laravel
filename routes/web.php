@@ -391,7 +391,8 @@ Route::group(['middleware' => 'database.change'], function () {
 Route::post('/download', 'DownloadController@download')->name('downloader');
 
 Route::get('/', 'AppController@landing')->name('landing');
-Route::get('/data', 'AppController@homepage')->name('homepage');
-Route::get('/data/crown', 'AppController@crown')->name('crown');
-Route::get('/data/{tableName}', 'AppController@homepageTable')->name('homepage.table');
-Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('homepage.table');
+Route::get('/data', function () { redirect( route('homepage') ); });
+Route::get('/data/all', 'AppController@homepage')->name('homepage');
+Route::get('/data/all/{tableName}', 'AppController@homepageTable')->name('homepage.table');
+Route::get('/data/{group}', 'AppController@homepageGroup')->name('group');
+Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('group.table');

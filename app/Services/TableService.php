@@ -180,27 +180,12 @@ class TableService {
         }
 
         $responseArray["data"] = array();
-        //$responseArray["key"] = array();
-        //$responseArray["key_settings"] = array();
         $responseArray["filters"] = $respFilters;
         $responseArray["ddls"] = $respDDLs;
         $responseArray["rows"] = $rowsCount;
         $responseArray["headers"] = $headers;
         if (count($result)) {
             $responseArray["data"] = $result;
-            // output data of each row
-            /*if(sizeof($responseArray["key"]) == 0) {
-                $responseArray["key"] = array_keys((array)$result[0]);
-
-                $key_settings = DB::connection('mysql_data')->table('tb_settings_display as ts')
-                    ->join('tb', 'tb.id', '=', 'ts.tb_id')
-                    ->select('ts.*')
-                    ->where('tb.db_tb', '=', $tableName)
-                    ->get();
-                foreach ($key_settings as $setting) {
-                    $responseArray["key_settings"][$setting->field] = $setting;
-                }
-            }*/
         } else {
             $data = (array) DB::connection('mysql_data')->table($tableName)->first();
             $data = array_fill_keys(array_keys($data), null);

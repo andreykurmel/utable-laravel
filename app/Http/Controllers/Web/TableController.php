@@ -67,6 +67,10 @@ class TableController extends Controller
                 unset($params[$key]);
             }
         }
+        $params['createdBy'] = Auth::user()->id;
+        $params['createdOn'] = now();
+        $params['modifiedBy'] = Auth::user()->id;
+        $params['modifiedOn'] = now();
 
         $id = DB::connection('mysql_data')->table($tableName)->insert($params);
 
@@ -92,6 +96,8 @@ class TableController extends Controller
                 unset($params[$key]);
             }
         }
+        $params['modifiedBy'] = Auth::user()->id;
+        $params['modifiedOn'] = now();
 
         $res = DB::connection('mysql_data')->table($tableName)->where('id', '=', $id)->update($params);
 

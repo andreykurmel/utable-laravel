@@ -214,12 +214,13 @@ function changePage(page) {
 }
 
 function showDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key,
+    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, tbDataHeaders = "", visibleColumns = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
 
     for(var i = 0; i < data.length; i++) {
         if (canEdit) {
             tableData += "<tr>";
+            tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
             for(key in data[i]) {
                 tableData +=
                     '<td ' +
@@ -229,16 +230,13 @@ function showDataTable(headers, data) {
                     'data-idx="' + i + '"' +
                     (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (key == 'id') {
-                    tableData += '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
-                } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
-                }
+                tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
             }
             tableData += "</tr>";
 
             if (i == 0) {
                 tbAddRow += "<tr style='height: 53px;'>";
+                tbAddRow += '<td></td>';
                 for(key in data[i]) {
                     tbAddRow +=
                         '<td ' +
@@ -256,7 +254,7 @@ function showDataTable(headers, data) {
                 }
                 tbAddRow += "</tr>";
 
-                tbAddRow_h += "<tr style='visibility: hidden;height: 53px'>";
+                tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
                 for(key in data[i]) {
                     tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
                 }
@@ -265,19 +263,38 @@ function showDataTable(headers, data) {
         }
 
         tbHiddenData += "<tr>";
+        if (canEdit) {
+            tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
+        } else {
+            tbHiddenData += '<td></td>';
+        }
         for(key in data[i]) {
             tbHiddenData +=
                 '<td ' +
                 'data-key="' + headers[key].field + '"' +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            if (key == 'id' && canEdit) {
-                tbHiddenData += '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
-            } else {
-                tbHiddenData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
-            }
+            tbHiddenData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
         }
         tbHiddenData += "</tr>";
     }
+
+    tbDataHeaders += "<tr><td class='sorting nowrap'><b>#</b></td>";
+    for(var $hdr in headers) {
+        tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' + headers[$hdr].name + '</th>';
+
+        visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
+        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" checked > ' +
+                            '<label class="labels" for="{{ $hdr->field }}_visibility"> ' + headers[$hdr].name + ' </label>';
+        visibleColumns += '</li>';
+    }
+    tbDataHeaders += "</tr>";
+
+    $('#tbAddRow_header').html(tbDataHeaders);
+    $('#tbHeaders_header').html(tbDataHeaders);
+    $('#tbData_header').html(tbDataHeaders);
+
+    $('#ul-cols-list').html(visibleColumns);
+
     $('#tbAddRow_body').html(tbAddRow + tbHiddenData);
     $('#tbHeaders_body').html(tbHiddenData);
     $('#tbData_body').html(canEdit ? tableData : tbHiddenData);
@@ -459,6 +476,7 @@ function showMap() {
     $("#map_view").show();
     initMap();
     $('.showhidemenu').hide();
+    $('#showHideColumnsList').hide();
 }
 
 function showList() {
@@ -479,6 +497,7 @@ function showSettings() {
     $("#list_view").hide();
     $("#map_view").hide();
     $('.showhidemenu').hide();
+    $('#showHideColumnsList').hide();
 }
 
 function detailsShowMap() {
@@ -685,13 +704,24 @@ function showInlineEdit(id, instant) {
         'onchange="updateSettingsRowLocal('+idx+',\''+key+'\',\''+id+'_inp\')"' :
         'onchange="updateAddRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ';
 
+    if (key == 'ddl_id') {
+        var html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        for(var i in settingsDDLs) {
+            html += '<option value="'+settingsDDLs[i].id+'">'+settingsDDLs[i].name+'</option>';
+        }
+        html += '</select>';
+    } else
     if (inp_t == 'input') {
         var html = '<input ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-    }
+    } else
     if (inp_t == 'date') {
         var html = '<input ' +
             'id="'+id+'_inp" ' +
@@ -699,7 +729,7 @@ function showInlineEdit(id, instant) {
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-    }
+    } else
     if (inp_t == 'ddl') {
         var html = '<select ' +
             'id="'+id+'_inp" ' +
@@ -707,7 +737,7 @@ function showInlineEdit(id, instant) {
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
         for(var i in ltableDDls[key]) {
-            html += '<option val="'+ltableDDls[key][i]+'">'+ltableDDls[key][i]+'</option>';
+            html += '<option value="'+ltableDDls[key][i]+'">'+ltableDDls[key][i]+'</option>';
         }
         html += '</select>';
     }
@@ -805,6 +835,7 @@ function updateRow(params) {
         showDataTable(tableHeaders, tableData);
     } else {
         showSettingsDataTable(settingsTableHeaders, settingsTableData);
+        changePage(1);
     }
 }
 
@@ -1070,6 +1101,7 @@ function showSettingsDataTable(headers, data) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
+        tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in data[i]) {
             tableData +=
                 '<td ' +
@@ -1080,25 +1112,22 @@ function showSettingsDataTable(headers, data) {
                 'data-settings="true"' +
                 (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '\', '+canEditSettings+')"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            if (key == 'id') {
-                tableData += '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
-            } else {
-                tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
-            }
+            tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
         }
         tableData += "</tr>";
 
         tbHiddenData += "<tr>";
+        if (canEditSettings) {
+            tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
+        } else {
+            tbHiddenData += '<td></td>';
+        }
         for(key in data[i]) {
             tbHiddenData +=
                 '<td ' +
                 'data-key="' + headers[key].field + '"' +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            if (key == 'id' && canEditSettings) {
-                tbHiddenData += '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
-            } else {
-                tbHiddenData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
-            }
+            tbHiddenData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
         }
         tbHiddenData += "</tr>";
     }
@@ -1213,6 +1242,16 @@ function updateSettingsRowLocal(idx, key, id) {
             }
             showFiltersList(filtersData);
         }
+    } else if (key == "web") {
+        if (val == "No") {
+            $('#tbAddRow th[data-key="'+header_key+'"], #tbAddRow td[data-key="'+header_key+'"]').hide();
+            $('#tbHeaders th[data-key="'+header_key+'"], #tbHeaders td[data-key="'+header_key+'"]').hide();
+            $('#tbData th[data-key="'+header_key+'"], #tbData td[data-key="'+header_key+'"]').hide();
+        } else {
+            $('#tbAddRow th[data-key="'+header_key+'"], #tbAddRow td[data-key="'+header_key+'"]').show();
+            $('#tbHeaders th[data-key="'+header_key+'"], #tbHeaders td[data-key="'+header_key+'"]').show();
+            $('#tbData th[data-key="'+header_key+'"], #tbData td[data-key="'+header_key+'"]').show();
+        }
     }
 }
 
@@ -1264,6 +1303,7 @@ function getDDLdatas(tableName) {
             settingsDDL_hdr = response.DDL_hdr;
             settingsDDL_items_hdr = response.DDL_items_hdr;
             settingsDDL_TableMeta = response.table_meta;
+            availableDDL = response.available_DDL;
             settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
             settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
             showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
@@ -1292,6 +1332,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
+        tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in data[i]) {
             if (key != 'items') {
                 tableData +=
@@ -1301,38 +1342,37 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'data-idx="' + i + '"' +
                     'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
                     'data-table_idx="' + idx + '"' +
-                    (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
+                    ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (key == 'id') {
-                    tableData += '<a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
-                } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
-                }
+                tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
             }
         }
         tableData += "</tr>";
 
         tbHiddenData += "<tr>";
+        tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in data[i]) {
             if (key != 'items') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    (key == 'id' ? '<span class="font-icon">`</span><b>'+ (i+1) +'</b>' : '') +
-                    (key != 'id' && data[i][key] !== null ? data[i][key] : '') +
+                    (data[i][key] !== null ? data[i][key] : '') +
                     '</td>';
             }
         }
         tbHiddenData += "</tr>";
     }
 
-    tbAddRow += "<tr style='height: 37px;'>";
+    tbAddRow += "<tr style='height: 37px;'><td></td>";
     for(key in headers) {
         if (key != 'items') {
             tbAddRow += '<td ' +
                 'id="add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
                 'data-key="' + key + '"' +
                 'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
-                (key != 'id' ? 'onclick="showInlineEdit_SDDL(\'add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' + '</td>';
+                ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
+                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    (key == 'list_id' ? settingsDDLs[settingsDDL_selectedIndex].id : '') +
+                    (key == 'id' ? 'auto' : '') +
+                '</td>';
         }
     }
     tbAddRow += "</tr>";
@@ -1446,27 +1486,25 @@ function saveSettingsDDLRow(tableName) {
         }
     }
 
-    if (tableName == 'ddl') {
-        console.log(settingsDDL_Obj);
-        settingsDDLs.push(settingsDDL_Obj);
-        settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
-        showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
-    } else {
-        settingsDDLs[settingsDDL_selectedIndex].items.push(settingsDDL_ItemsObj);
-        settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
-        showSettingsDDLDataTable(settingsDDL_items_hdr, '', settingsDDL_selectedIndex);
-    }
-
     $('.loadingFromServer').show();
     $.ajax({
         method: 'GET',
         url: baseHttpUrl + '/addTableRow?tableName=' + tableName + '&' + strParams,
         success: function (response) {
-            console.log(response);
+            //console.log(response);
+
             if (tableName == 'ddl') {
-                settingsDDLs[ settingsDDLs.length-1 ].id = response.last_id;
+                settingsDDL_Obj.id = response.last_id;
+                settingsDDLs.push(settingsDDL_Obj);
+                settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
+                showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+            } else {
+                settingsDDL_ItemsObj.id = response.last_id;
+                settingsDDLs[settingsDDL_selectedIndex].items.push(settingsDDL_ItemsObj);
+                settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
+                showSettingsDDLDataTable(settingsDDL_items_hdr, '', settingsDDL_selectedIndex);
             }
-            console.log(settingsDDLs);
+
             $('.loadingFromServer').hide();
             alert(response.msg);
         },

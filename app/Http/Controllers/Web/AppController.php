@@ -29,50 +29,24 @@ class AppController extends Controller
         }
     }
 
-    public function crown() {
-        /*$canEdit = false;
-        $public_tables = DB::connection('mysql_data')->table('tb')->join('group as g', 'g.id', '=', 'tb.group_id')->where('group_id', '=', 1);
-        if (!Auth::user()) {
-            //guest - get public data
-            $public_tables->where('access', '=', 'public');
-        } else {
-            if (Auth::user()->role_id != 1) {
-                //user - get user`s data, tables with right 'view' and public
-                $public_tables->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
-                $public_tables->where(function ($q) {
-                    $q->where('user_id', '=', Auth::user()->id);
-                    $q->orWhereNull('user_id');
-                });
-                $public_tables->where(function ($q) {
-                    $q->where('owner', '=', Auth::user()->id);
-                    $q->orWhere('access', '=', 'public');
-                    $q->orWhereNotNull('rights.right');
-                });
-            }
-            //admin - get all data
-        }
-        $public_tables->select('tb.*', 'www_add');
-        $public_tables = $public_tables->get();
-        //$public_tables = DB::connection('mysql_data')->table('tb')->where('group_id', '=', 1)->get();
-        $socialProviders = config('auth.social.providers');
-        return view('crown', compact('socialProviders', 'canEdit', 'public_tables'));*/
-        return view('table', $this->getVariables("", "crown"));
-    }
-
     public function homepage() {
         return view('table', $this->getVariables());
     }
 
     public function homepageTable($tableName) {
-        if ($this->tableExist($tableName)) {
+        if ($this->tableExist($tableName, "")) {
             return view('table', $this->getVariables($tableName));
         } else {
             return redirect( route('homepage') );
         }
     }
 
+    public function homepageGroup($group) {
+        return view('table', $this->getVariables("", $group));
+    }
+
     public function homepageGroupedTable($group, $tableName) {
-        if ($this->tableExist($tableName)) {
+        if ($this->tableExist($tableName, $group)) {
             return view('table', $this->getVariables($tableName, $group));
         } else {
             return redirect( route('homepage') );
@@ -182,7 +156,7 @@ class AppController extends Controller
         $tb->select('tb.*', 'g.www_add', 'rights.right')->groupBy('tb.id');
         $tb = $tb->get();
         foreach ($tb as &$item) {
-            $item->www_add = ($item->www_add ? $item->www_add . "/" . $item->db_tb : $item->db_tb);
+            $item->www_add = ($item->www_add ? $item->www_add."/".$item->db_tb : "all/".$item->db_tb);
         }
 
         return $tb;
@@ -193,7 +167,18 @@ class AppController extends Controller
         return $tb->nbr_entry_listing;
     }
 
-    private function tableExist($tableName) {
-        return DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+    private function tableExist($tableName, $group) {
+        if ($group) {
+            $cnt = DB::connection('mysql_data')->table('tb')->join('group', 'group.id', '=', 'tb.group_id')
+                ->where('tb.db_tb', '=', $tableName)
+                ->where('group.www_add', '=', $group)
+                ->first();
+        } else {
+            $cnt = DB::connection('mysql_data')->table('tb')
+                ->where('db_tb', '=', $tableName)
+                ->where('group_id', '=', '')
+                ->first();
+        }
+        return $cnt;
     }
 }

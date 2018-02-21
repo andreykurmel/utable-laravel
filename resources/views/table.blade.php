@@ -282,10 +282,11 @@
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-37px;z-index: 25;display: none;">
-                                        <thead>
+                                        <thead id="tbAddRow_header">
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -294,10 +295,11 @@
                                         </tbody>
                                     </table>
                                     <table class="table dataTable" id="tbHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
-                                        <thead>
+                                        <thead id="tbHeaders_header">
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -307,10 +309,11 @@
                                     </table>
                                     <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:37px;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -37px;">
-                                            <thead>
+                                            <thead id="tbData_header">
                                             <tr>
+                                                <th class="sorting nowrap">#</th>
                                                 @foreach($headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -379,8 +382,9 @@
                                     <table class="table dataTable" style="margin-bottom: 0;">
                                         <thead>
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($settingsHeaders as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -392,8 +396,9 @@
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
+                                                <th class="sorting nowrap">#</th>
                                                 @foreach($settingsHeaders as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -425,8 +430,9 @@
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -437,8 +443,9 @@
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -450,8 +457,9 @@
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
+                                                <th class="sorting nowrap">#</th>
                                                 @foreach($settingsDDL_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -467,8 +475,9 @@
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -484,8 +493,9 @@
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
+                                            <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -497,8 +507,9 @@
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
+                                                <th class="sorting nowrap">#</th>
                                                 @foreach($settingsDDL_Items_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'id' ? '#' : $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -613,7 +624,7 @@
                     <ul class='list' id='ul-cols-list'>
                         @foreach($headers as $hdr)
                             <li style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
-                                <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->field == 'id' ? '#' : $hdr->name }} </label>
+                                <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->name }} </label>
                             </li>
                         @endforeach
                     </ul>
