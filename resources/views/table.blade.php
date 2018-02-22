@@ -347,12 +347,15 @@
                         <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
                             <!-- Tabs -->
-                            <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 150px;transform: rotate(-90deg);left: -50px;top: 35px;">
+                            <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 200px;transform: rotate(-90deg);left: -75px;top: 80px;">
                                 <ul class="tabs">
                                     @if($canEditSettings)
-                                        <li id="li_settings_ddl"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding'>DDL</a></li>
+                                        <li id="li_settings_rights" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowRights()" class='with-med-padding'>Rights</a></li>
                                     @endif
-                                    <li class="active" id="li_settings_display"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding'>Display</a></li>
+                                    @if($canEditSettings)
+                                        <li id="li_settings_ddl" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding'>DDL</a></li>
+                                    @endif
+                                    <li class="active" id="li_settings_display" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding'>Display</a></li>
                                 </ul>
                             </div>
 
@@ -536,6 +539,59 @@
                                     <div role="status" aria-live="polite" style="position:absolute;">
                                         Showing all entries
                                     </div>
+                                </div>
+                            </div>
+
+                            <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
+                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(100% - 20px); top: 15px;">Rights for current table</div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
+                                        <thead>
+                                        <tr>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($settingsRights_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsRights_headers">
+                                        </tbody>
+                                    </table>
+                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                            <thead>
+                                            <tr>
+                                                <th class="sorting nowrap">#</th>
+                                                @foreach($settingsRights_Headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                                @endforeach
+                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="tbSettingsRights_data">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
+                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsRightRow()">Add</a>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                        <thead>
+                                        <tr>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($settingsRights_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsRights_addrow">
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 

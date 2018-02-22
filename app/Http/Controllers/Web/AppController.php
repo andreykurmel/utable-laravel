@@ -65,6 +65,7 @@ class AppController extends Controller
             'settingsHeaders' => $tableName ? $this->tableService->getHeaders('tb_settings_display') : [],
             'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
             'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
+            'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('rights') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,

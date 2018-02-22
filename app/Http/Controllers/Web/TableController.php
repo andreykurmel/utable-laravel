@@ -200,4 +200,36 @@ class TableController extends Controller
         }
         return $DDLdatas;
     }
+
+    public function getRightsDatas(Request $request)
+    {
+        $RightsDatas = [];
+        if (Auth::user()) {
+            $RightsDatas['data_hdr'] = $this->tableService->getHeaders('rights');
+
+            $RightsDatas['data'] = DB::connection('mysql_data')
+                ->table('rights')
+                ->join('tb', 'tb.id', '=', 'rights.table_id')
+                ->where('tb.db_tb', '=', $request->tableName)
+                ->select('rights.*')
+                ->get();
+
+            foreach ($RightsDatas['data'] as &$Right) {
+                $Right->username = ( DB::table('users')->where('id', '=', $Right->user_id)->first() )->username;
+            }
+        }
+        return $RightsDatas;
+    }
+
+    public function addRightsDatas(Request $request)
+    {
+        $request->tableName = 'rights';
+        return $this->addTableRow($request);
+    }
+
+    public function deleteRightsDatas(Request $request)
+    {
+        $request->tableName = 'rights';
+        return $this->deleteTableRow($request);
+    }
 }
