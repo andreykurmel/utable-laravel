@@ -425,35 +425,23 @@
 
                             <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
 
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 12px; bottom: 52px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Headers as $hdr)
                                                 <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
-                                        </tr>
-                                        </thead>
-
-                                        <tbody id="tbSettingsDDL_addrow">
-                                        </tbody>
-                                    </table>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
-                                        <thead>
-                                        <tr>
-                                            <th class="sorting nowrap">#</th>
-                                            @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
                                         </tr>
                                         </thead>
 
                                         <tbody id="tbSettingsDDL_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 74px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
@@ -461,6 +449,7 @@
                                                 @foreach($settingsDDL_Headers as $hdr)
                                                     <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
+                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
                                             </tr>
                                             </thead>
 
@@ -469,41 +458,41 @@
                                         </table>
                                     </div>
                                 </div>
-
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 12px; bottom: 52px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
+                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
-                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                            @foreach($settingsDDL_Headers as $hdr)
                                                 <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
                                         </tr>
                                         </thead>
 
-                                        <tbody id="tbSettingsDDL_Items_addrow">
-                                            <tr style="height: 37px;">
-                                            @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
-                                            @endforeach
-                                            </tr>
+                                        <tbody id="tbSettingsDDL_addrow">
                                         </tbody>
                                     </table>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 37px;left: 0;right: 0;z-index: 100;">
+                                </div>
+
+                                <div style="position:absolute; font-size: 2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List</div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
                                                 <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
                                         </tr>
                                         </thead>
 
                                         <tbody id="tbSettingsDDL_Items_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 74px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
                                             <thead>
                                             <tr>
@@ -511,6 +500,7 @@
                                                 @foreach($settingsDDL_Items_Headers as $hdr)
                                                     <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
+                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
                                             </tr>
                                             </thead>
 
@@ -519,10 +509,33 @@
                                         </table>
                                     </div>
                                 </div>
+                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                        <thead>
+                                        <tr>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                        </tr>
+                                        </thead>
 
-                                <div class="dataTables_footer" style="position: absolute; bottom: 50px; right: 0; left: 0">
-                                    <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
-                                        Showing all entries</div>
+                                        <tbody id="tbSettingsDDL_Items_addrow">
+                                        <tr style="height: 37px;">
+                                            @foreach($settingsDDL_Items_Headers as $hdr)
+                                                <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
+                                            @endforeach
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="dataTables_footer" style="position: absolute; bottom: 25px; right: 0; left: 10px">
+                                    <div role="status" aria-live="polite" style="position:absolute;">
+                                        Showing all entries
+                                    </div>
                                 </div>
                             </div>
 

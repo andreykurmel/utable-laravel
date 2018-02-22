@@ -1347,9 +1347,10 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
             }
         }
+        tableData += "<td><button onclick='deleteSettingsDDL('"+(idx == -1 ? 'ddl' : 'ddl_items')+"', "+data[i].id+")', "+i+")'><i class='fa fa-trash-o'></i></button></td>";
         tableData += "</tr>";
 
-        tbHiddenData += "<tr>";
+        tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in data[i]) {
             if (key != 'items') {
@@ -1358,6 +1359,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     '</td>';
             }
         }
+        tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
         tbHiddenData += "</tr>";
     }
 
@@ -1375,6 +1377,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 '</td>';
         }
     }
+    tbAddRow += "<td></td>";
     tbAddRow += "</tr>";
 
     if (idx > -1) {
@@ -1467,6 +1470,26 @@ function addSettingsDDL(id) {
         settingsDDL_Obj[key_name] = $('#'+id).val();
     } else {
         settingsDDL_ItemsObj[key_name] = $('#'+id).val();
+    }
+}
+
+function deleteSettingsDDL(tableName, rowId, idx) {
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/deleteTableRow?tableName=' + tableName + '&id=' + rowId,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+            alert(response.data.msg);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+    if (tableName == 'ddl') {
+        showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+    } else {
+        showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, idx);
     }
 }
 
