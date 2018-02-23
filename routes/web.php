@@ -385,6 +385,7 @@ Route::get('/api/getDDLdatas', 'TableController@getDDLdatas')->name('getDDLdatas
 Route::get('/api/getRightsDatas', 'TableController@getRightsDatas')->name('getRightsDatas');
 Route::get('/api/addRightsDatas', 'TableController@addRightsDatas')->name('addRightsDatas');
 Route::get('/api/deleteRightsDatas', 'TableController@deleteRightsDatas')->name('deleteRightsDatas');
+Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxSearchUser');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');

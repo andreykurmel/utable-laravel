@@ -12,7 +12,7 @@ $(document).ready(function () {
         $('.js_tableNameST').css('top', '50px');
     }
 
-    $('#tableChanger').val( (selectedTableGroup ? selectedTableGroup+"/" : "") + selectedTableName );
+    $('#tableChanger').val( (selectedTableGroup ? selectedTableGroup+"/" : "all/") + selectedTableName );
 
     if (selectedTableName) {
         selectTable(selectedTableName);
@@ -27,6 +27,14 @@ $(document).ready(function () {
         theme: "3d",
         scrollInertia: 300,
         axis: "y"
+    });
+
+    $('#selectUserSearch').select2({
+        ajax: {
+            url: baseHttpUrl+'/ajaxSearchUser',
+            dataType: 'json',
+            delay: 250
+        }
     });
 
     $('body').show();
@@ -61,7 +69,8 @@ var settingsTableName = 'tb_settings_display',
     settingsTableHeaders = [],
     settingsTableDDLs = [],
     settingsChangedSearchKeyword = false,
-    settingsSearchKeyword = "";
+    settingsSearchKeyword = "",
+    ddl_names_for_settings = [];
 
 /* -------------------- Functions ---------------------- */
 
@@ -82,7 +91,7 @@ function selectTable(tableName) {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Main Data', response);
             rowsCount = response.rows;
             tableData = response.data;
             tableHeaders = response.headers;
@@ -225,11 +234,11 @@ function showDataTable(headers, data) {
             for(key in data[i]) {
                 tableData +=
                     '<td ' +
-                    'id="' + headers[key].field + i + headers[key].input_type + '"' +
+                    'id="' + headers[key].field + i + '_dataT"' +
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '\', 1)"' : '') +
+                    (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
             }
@@ -692,21 +701,34 @@ function showInlineEdit(id, instant) {
     var lv = $('#list_view').is(':visible'),
         ltableDDls = (lv ? tableDDLs : settingsTableDDLs);
 
+    var inp_t = $('#'+id).data('input'),
+        idx = $('#'+id).data('idx'),
+        key = $('#'+id).data('key');
+
+    //freeze 'ddl_id' field if 'input_type' no selection (for Settings/Display Tab)
+    if (id.indexOf('settingsDisplay') > -1
+        &&
+        key == 'ddl_id'
+        &&
+        settingsTableData[idx].input_type != 'Selection'
+    ) {
+        return;
+    }
+
     if ($('#'+id).data('innerHTML')) {
         return;
     }
 
+    //save current cell data
     $('#'+id).data('innerHTML', $('#'+id).html());
-    var inp_t = $('#'+id).data('input'),
-        idx = $('#'+id).data('idx'),
-        key = $('#'+id).data('key');
 
     var not_instant_func = $('#'+id).data('settings') ?
         'onchange="updateSettingsRowLocal('+idx+',\''+key+'\',\''+id+'_inp\')"' :
         'onchange="updateAddRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ';
 
-    if (key == 'ddl_id') {
-        var html = '<select ' +
+    /* hardcode for Settings/Display tab */
+    if (id.indexOf('settingsDisplay') > -1 && key == 'ddl_id') {
+        var html = '<select class="form-control" ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
@@ -716,23 +738,26 @@ function showInlineEdit(id, instant) {
         }
         html += '</select>';
     } else
-    if (inp_t == 'input') {
+    if (id.indexOf('settingsDisplay') > -1 && key == 'input_type') {
+        var html = '<select class="form-control" ' +
+            'id="'+id+'_inp" ' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        html += '<option value="Input">Input</option>';
+        html += '<option value="Selection">Selection</option>';
+        html += '</select>';
+    } /*end hardcode */
+    else
+    if (inp_t == 'Input') {
         var html = '<input ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
     } else
-    if (inp_t == 'date') {
-        var html = '<input ' +
-            'id="'+id+'_inp" ' +
-            'data-date-time-picker' +
-            'onblur="hideInlineEdit(\''+id+'\')" ' +
-            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-    } else
-    if (inp_t == 'ddl') {
-        var html = '<select ' +
+    if (inp_t == 'Selection') {
+        var html = '<select class="form-control" ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
@@ -914,14 +939,11 @@ function editSelectedData(idx) {
             html +=
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
                 '<td>';
-            if (ltableHeaders[key].input_type == 'input') {
+            if (ltableHeaders[key].input_type == 'Input') {
                 html += '<input id="modals_inp_'+key+'" type="text" class="form-control" />';
             } else
-            if (ltableHeaders[key].input_type == 'date') {
-                html += '<input id="modals_inp_'+key+'" type="text" class="form-control" data-date-time-picker/>';
-            } else
-            if (ltableHeaders[key].input_type == 'ddl') {
-                html += '<select id="modals_inp_'+key+'" class="form-control" style="margin-bottom: 5px">';
+            if (ltableHeaders[key].input_type == 'Selection') {
+                html += '<select class="form-control" id="modals_inp_'+key+'" class="form-control" style="margin-bottom: 5px">';
                 for(var i in ltableDDLs[key]) {
                     html += '<option val="'+ltableDDLs[key][i]+'">'+ltableDDLs[key][i]+'</option>';
                 }
@@ -1022,7 +1044,6 @@ function selectSettingsTable() {
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable?tableName=' + settingsTableName,
         data: {
-            getfilters: true,
             p: 0,
             c: settingsEntries,
             q: JSON.stringify(query)
@@ -1032,11 +1053,12 @@ function selectSettingsTable() {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Settings/Display', response);
             settingsRowsCount = response.rows;
             settingsTableData = response.data;
             settingsTableHeaders = response.headers;
             settingsTableDDLs = response.ddls;
+            ddl_names_for_settings = response.ddl_names_for_settings;
             showSettingsDataTable(settingsTableHeaders, settingsTableData);
             showSettingsTableFooter();
             $('.loadingFromServer').hide();
@@ -1069,7 +1091,6 @@ function changeSettingsPage(page) {
         url: baseHttpUrl + '/getSelectedTable',
         data: {
             tableName: settingsTableName,
-            getfilters: true,
             p: settingsPage,
             c: settingsEntries,
             q: JSON.stringify(query),
@@ -1080,11 +1101,12 @@ function changeSettingsPage(page) {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Settings/Display', response);
             settingsRowsCount = response.rows;
             settingsTableData = response.data;
             settingsTableHeaders = response.headers;
             settingsTableDDLs = response.ddls;
+            ddl_names_for_settings = response.ddl_names_for_settings;
             showSettingsDataTable(settingsTableHeaders, settingsTableData);
             showSettingsTableFooter();
             $('.loadingFromServer').hide();
@@ -1104,16 +1126,23 @@ function showSettingsDataTable(headers, data) {
         tableData += "<tr>";
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in data[i]) {
-            tableData +=
-                '<td ' +
-                'id="' + headers[key].field + i + headers[key].input_type + '"' +
-                'data-key="' + headers[key].field + '"' +
-                'data-input="' + headers[key].input_type + '"' +
-                'data-idx="' + i + '"' +
-                'data-settings="true"' +
-                (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '\', '+canEditSettings+')"' : '') +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+            if (key != 'ddl_name') {
+                tableData +=
+                    '<td ' +
+                    'id="' + headers[key].field + i + '_settingsDisplay"' +
+                    'data-key="' + headers[key].field + '"' +
+                    'data-input="' + headers[key].input_type + '"' +
+                    'data-idx="' + i + '"' +
+                    'data-settings="true"' +
+                    (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+canEditSettings+')"' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (key === 'ddl_id') {
+                    tableData += (data[i][key] > 0 && ddl_names_for_settings[data[i][key]] !== null ? ddl_names_for_settings[data[i][key]] : '');
+                } else {
+                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tableData += '</td>';
+            }
         }
         tableData += "</tr>";
 
@@ -1124,11 +1153,18 @@ function showSettingsDataTable(headers, data) {
             tbHiddenData += '<td></td>';
         }
         for(key in data[i]) {
-            tbHiddenData +=
-                '<td ' +
-                'data-key="' + headers[key].field + '"' +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            tbHiddenData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+            if (key != 'ddl_name') {
+                tbHiddenData +=
+                    '<td ' +
+                    'data-key="' + headers[key].field + '"' +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (key === 'ddl_id') {
+                    tbHiddenData += (data[i][key] > 0 && ddl_names_for_settings[data[i][key]] !== null ? ddl_names_for_settings[data[i][key]] : '');
+                } else {
+                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tbHiddenData += '</td>';
+            }
         }
         tbHiddenData += "</tr>";
     }
@@ -1312,7 +1348,7 @@ function getDDLdatas(tableName) {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Settings/DDL', response);
             settingsDDLs = response.data;
             settingsDDL_hdr = response.DDL_hdr;
             settingsDDL_items_hdr = response.DDL_items_hdr;
@@ -1358,7 +1394,14 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'data-table_idx="' + idx + '"' +
                     ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+                if (idx == -1 && key === 'tb_id') {
+                    tableData += settingsDDL_TableMeta.name;
+                } else if (idx != -1 && key === 'list_id') {
+                    tableData += settingsDDLs[idx].name;
+                } else {
+                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tableData += '</td>';
             }
         }
         tableData += "<td><button onclick='deleteSettingsDDL(\""+(idx == -1 ? 'ddl' : 'ddl_items')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button></td>";
@@ -1368,16 +1411,22 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in data[i]) {
             if (key != 'items') {
-                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    (data[i][key] !== null ? data[i][key] : '') +
-                    '</td>';
+                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (idx == -1 && key === 'tb_id') {
+                    tbHiddenData += settingsDDL_TableMeta.name;
+                } else if (idx != -1 && key === 'list_id') {
+                    tbHiddenData += settingsDDLs[idx].name;
+                } else {
+                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tbHiddenData += '</td>';
             }
         }
         tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
         tbHiddenData += "</tr>";
     }
 
-    tbAddRow += "<tr style='height: 37px;'><td></td>";
+    tbAddRow += "<tr style='height: 37px;'><td>auto</td>";
     for(key in headers) {
         if (key != 'items') {
             tbAddRow += '<td ' +
@@ -1386,8 +1435,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
                 ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    (key == 'list_id' ? settingsDDLs[settingsDDL_selectedIndex].id : '') +
-                    (key == 'id' ? 'auto' : '') +
+                    ((key != 'name' && key != 'option' && key != 'notes') ? 'auto' : '') +
                 '</td>';
         }
     }
@@ -1580,7 +1628,7 @@ function getRightsDatas(tableName) {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Settings/Rights', response);
             settingsRights = response.data;
             settingsRights_hdr = response.data_hdr;
             settingsRights_Obj = setAllNullObj(settingsRights_hdr);
@@ -1604,6 +1652,8 @@ function showSettingsRightsDataTable(headers, data) {
                 tableData += '<td style="' + (headers[key].web === 'No' ? 'display: none;' : '') + '">';
                 if (key === 'user_id') {
                     tableData += (data[i].username !== null ? data[i].username : '');
+                } else if (key === 'table_id') {
+                    tableData += selectedTableName;
                 } else {
                     tableData += (data[i][key] !== null ? data[i][key] : '');
                 }

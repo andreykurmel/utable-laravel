@@ -26,6 +26,7 @@ class TableService {
 
         $forFiltersQuery = "SELECT * FROM $tableName WHERE";
         $sql = DB::connection('mysql_data')->table($tableName);
+
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
                 if (!in_array($key, ['opt', 'searchKeyword', 'changedKeyword']) && $val) {
@@ -186,6 +187,15 @@ class TableService {
         $responseArray["headers"] = $headers;
         if (count($result)) {
             $responseArray["data"] = $result;
+            if ($query['opt'] == 'settings') {
+                $responseArray["ddl_names_for_settings"] = array();
+                foreach ($responseArray["data"] as $item) {
+                    if (!empty($item->ddl_id)) {
+                        $ddl_name = DB::connection('mysql_data')->table('ddl')->where('id', '=', $item->ddl_id)->first();
+                        $responseArray["ddl_names_for_settings"][$ddl_name->id] = $ddl_name->name;
+                    }
+                }
+            }
         } else {
             $data = (array) DB::connection('mysql_data')->table($tableName)->first();
             $data = array_fill_keys(array_keys($data), null);

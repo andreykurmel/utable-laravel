@@ -23,6 +23,7 @@
     {!! HTML::style('css/vendor.css') !!}
     {!! HTML::style('assets/css/app.css') !!}
     {!! HTML::style('css/table.css') !!}
+    {!! HTML::style('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css') !!}
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
@@ -387,7 +388,7 @@
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsHeaders as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'ddl_id' ? 'DDL Name' : $hdr->name }}</th>
                                             @endforeach
                                         </tr>
                                         </thead>
@@ -401,7 +402,7 @@
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
                                                 @foreach($settingsHeaders as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'ddl_id' ? 'DDL Name' : $hdr->name }}</th>
                                                 @endforeach
                                             </tr>
                                             </thead>
@@ -428,16 +429,16 @@
 
                             <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
 
-                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
+                                <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'tb_id' ? 'Table Name' : $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -450,9 +451,9 @@
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
                                                 @foreach($settingsDDL_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'tb_id' ? 'Table Name' : $hdr->name }}</th>
                                                 @endforeach
-                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                                <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                             </tr>
                                             </thead>
 
@@ -462,15 +463,15 @@
                                     </div>
                                 </div>
                                 <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
+                                    <a style="position: absolute;top: 4px;right: 22px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'tb_id' ? 'Table Name' : $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -479,16 +480,16 @@
                                     </table>
                                 </div>
 
-                                <div style="position:absolute; font-size: 2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List</div>
+                                <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List</div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -501,9 +502,9 @@
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
                                                 @foreach($settingsDDL_Items_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
                                                 @endforeach
-                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                                <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                             </tr>
                                             </thead>
 
@@ -513,15 +514,15 @@
                                     </div>
                                 </div>
                                 <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
+                                    <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_Items_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -543,7 +544,10 @@
                             </div>
 
                             <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
-                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(100% - 20px); top: 15px;">Rights for current table</div>
+                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(100% - 20px); top: 15px;">
+                                    Rights for current table
+                                    <select id="selectUserSearch" style="width: 200px;margin-left: 50px;"></select>
+                                </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
@@ -863,6 +867,7 @@
     {!! HTML::script('assets/js/lib/developr.modal.js') !!}
     {!! HTML::script('assets/js/lib/developr.input.js') !!}
     {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
+    {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js') !!}
     {!! HTML::script('assets/js/lib/table.js') !!}
 
     {{-- Login scripts --}}

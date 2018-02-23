@@ -232,4 +232,14 @@ class TableController extends Controller
         $request->tableName = 'rights';
         return $this->deleteTableRow($request);
     }
+
+    public function ajaxSearchUser(Request $request)
+    {
+        $users = DB::table('users')
+            ->where('username', 'LIKE', '%'.$request->q.'%')
+            ->orWhere('email', 'LIKE', '%'.$request->q.'%')
+            ->select('id', 'username as text')
+            ->limit(5)->get();
+        return ['results' => $users];
+    }
 }
