@@ -2,6 +2,7 @@
 
 namespace Vanguard\Services;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TableService {
@@ -22,6 +23,34 @@ class TableService {
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "TableName Not Found!";
             return $responseArray;
+        }
+
+        $fields_for_select = [];
+        if (!in_array($tableName, ['tb', 'tb_settings_display', 'ddl', 'ddl_items', 'rights', 'rights_fields'])) {
+            if (
+                Auth::user()
+                &&
+                //not admin
+                Auth::user()->role_id != 1
+                &&
+                //not owner
+                !DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->where('owner', '=', Auth::user()->id)->first()
+            ) {
+                $tmp_fields_set = DB::connection('mysql_data')
+                    ->table('tb')
+                    ->join('rights as r', 'tb.id', '=', 'r.table_id')
+                    ->join('rights_fields as rf', 'r.id', '=', 'rf.rights_id')
+                    ->where('r.user_id', '=', Auth::user()->id)
+                    ->where('tb.db_tb', '=', $tableName)
+                    ->select('rf.*')
+                    ->get();
+                foreach ($tmp_fields_set as $fld) {
+                    if ($fld->view) {
+                        $fields_for_select[$fld->field] = $fld->edit;
+                    }
+                }
+                $fields_for_select['id'] = 0;
+            }
         }
 
         $forFiltersQuery = "SELECT * FROM $tableName WHERE";
@@ -93,6 +122,13 @@ class TableService {
         $rowsCount = $sql->count();
         if ($count) {
             $sql->offset($page*$count)->limit($count);
+        }
+        if ($fields_for_select) {
+            $select_cls = [];
+            foreach ($fields_for_select as $key => $fld) {
+                $select_cls[] = $key;
+            }
+            $sql->select($select_cls);
         }
         $result = $sql->get();
 
@@ -177,7 +213,14 @@ class TableService {
         $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
         $headers = [];
         foreach ($tb as $key => $val) {
-            $headers[$key] = $header_data->where('field', '=', $key)->first();
+            if ($fields_for_select) {
+                if (isset($fields_for_select[$key])) {
+                    $headers[$key] = $header_data->where('field', '=', $key)->first();
+                    $headers[$key]->can_edit = $fields_for_select[$key];
+                }
+            } else {
+                $headers[$key] = $header_data->where('field', '=', $key)->first();
+            }
         }
 
         $responseArray["data"] = array();

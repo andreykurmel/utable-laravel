@@ -69,27 +69,18 @@ class AppController extends Controller
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
-            'canEdit' => $tableName ? $this->getCanEdit($tableName) : "",
-            'canEditSettings' => $tableName ? $this->getCanEdit('tb_settings_display') : "",
+            'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favourite' => $tableName ? $this->getFavourite($tableName) : ""
         ];
     }
 
-    private function getCanEdit($tableName) {
+    private function getCanEditSetings($tableName) {
         $canEdit = false;
         if (Auth::user()) {
             if (Auth::user()->role_id != 1) {
-                $tb = DB::connection('mysql_data')
-                    ->table('tb')
-                    ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
+                $tb = DB::connection('mysql_data')->table('tb');
                 $tb->where('tb.db_tb', '=', $tableName);
-                $tb->where(function ($q) {
-                    $q->where('tb.owner', '=', Auth::user()->id);
-                    $q->orWhere(function ($q_in) {
-                        $q_in->where('rights.user_id', '=', Auth::user()->id);
-                        $q_in->where('rights.right', '=', 'All');
-                    });
-                });
+                $tb->where('tb.owner', '=', Auth::user()->id);
                 //if user have rights for edit table (owner or right='All')
                 if ($tb->count() > 0) {
                     $canEdit = true;
@@ -110,7 +101,6 @@ class AppController extends Controller
                 ->join('tb', 'table_id', '=', 'tb.id')
                 ->where('db_tb', '=', $tableName)
                 ->where('user_id', '=', Auth::user()->id)
-                ->where('right', '=', 'View')
                 ->count()
             ) {
                 $status = "Active";
@@ -139,16 +129,10 @@ class AppController extends Controller
                 if (Auth::user()->role_id != 1) {
                     //user - get user`s data, favourites and public data in the current folder
                     $tb->where('g.www_add', '=', null);
-                    $tb->where('tb.access', '=', 'public');
-                    $tb->orWhere(function ($qt) {
-                        $qt->where(function ($q) {
-                            $q->where('rights.user_id', '=', Auth::user()->id);
-                            $q->orWhereNull('rights.user_id');
-                        });
-                        $qt->where(function ($q) {
-                            $q->where('tb.owner', '=', Auth::user()->id);
-                            $q->orWhereNotNull('rights.right');
-                        });
+                    $tb->where(function ($qt) {
+                        $qt->where('tb.access', '=', 'public');
+                        $qt->orWhere('tb.owner', '=', Auth::user()->id);
+                        $qt->orWhere('rights.user_id', '=', Auth::user()->id);
                     });
                 }
                 //admin - get all data

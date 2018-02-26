@@ -16,7 +16,7 @@ class RegisterRequest extends Request
         $rules = [
             'email' => 'required|email|unique:users,email',
             'username' => 'required|unique:users,username',
-            'password' => 'required|confirmed|min:6',
+            'password' => 'required|confirmed|min:6|regex:/^.*(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!$#%@]).*$/',
         ];
 
         if (settings('registration.captcha.enabled')) {

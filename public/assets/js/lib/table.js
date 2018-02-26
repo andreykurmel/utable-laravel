@@ -228,56 +228,50 @@ function showDataTable(headers, data) {
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
 
     for(var i = 0; i < data.length; i++) {
-        if (canEdit) {
-            tableData += "<tr>";
-            tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
+        tableData += "<tr>";
+        tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
+        for(key in data[i]) {
+            tableData +=
+                '<td ' +
+                'id="' + headers[key].field + i + '_dataT"' +
+                'data-key="' + headers[key].field + '"' +
+                'data-input="' + headers[key].input_type + '"' +
+                'data-idx="' + i + '"' +
+                (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
+                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+            tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+        }
+        tableData += "</tr>";
+
+        if (i == 0) {
+            tbAddRow += "<tr style='height: 53px;'>";
+            tbAddRow += '<td></td>';
             for(key in data[i]) {
-                tableData +=
+                tbAddRow +=
                     '<td ' +
-                    'id="' + headers[key].field + i + '_dataT"' +
+                    'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                tableData += (data[i][key] !== null ? data[i][key] : '') + '</td>';
+                    (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
+                /*if (key == 'id') {
+                 tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
+                 } else {
+                 tbAddRow += '</td>';
+                 }*/
             }
-            tableData += "</tr>";
+            tbAddRow += "</tr>";
 
-            if (i == 0) {
-                tbAddRow += "<tr style='height: 53px;'>";
-                tbAddRow += '<td></td>';
-                for(key in data[i]) {
-                    tbAddRow +=
-                        '<td ' +
-                        'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
-                        'data-key="' + headers[key].field + '"' +
-                        'data-input="' + headers[key].input_type + '"' +
-                        'data-idx="' + i + '"' +
-                        (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
-                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
-                    /*if (key == 'id') {
-                        tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
-                    } else {
-                        tbAddRow += '</td>';
-                    }*/
-                }
-                tbAddRow += "</tr>";
-
-                tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
-                for(key in data[i]) {
-                    tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
-                }
-                tbAddRow_h += "</tr>";
+            tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
+            for(key in data[i]) {
+                tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
             }
+            tbAddRow_h += "</tr>";
         }
 
         tbHiddenData += "<tr>";
-        if (canEdit) {
-            tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
-        } else {
-            tbHiddenData += '<td></td>';
-        }
+        tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
         for(key in data[i]) {
             tbHiddenData +=
                 '<td ' +
@@ -307,7 +301,7 @@ function showDataTable(headers, data) {
 
     $('#tbAddRow_body').html(tbAddRow + tbHiddenData);
     $('#tbHeaders_body').html(tbHiddenData);
-    $('#tbData_body').html(canEdit ? tableData : tbHiddenData);
+    $('#tbData_body').html(tableData);
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -939,10 +933,10 @@ function editSelectedData(idx) {
             html +=
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
                 '<td>';
-            if (ltableHeaders[key].input_type == 'Input') {
+            if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
                 html += '<input id="modals_inp_'+key+'" type="text" class="form-control" />';
             } else
-            if (ltableHeaders[key].input_type == 'Selection') {
+            if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
                 html += '<select class="form-control" id="modals_inp_'+key+'" class="form-control" style="margin-bottom: 5px">';
                 for(var i in ltableDDLs[key]) {
                     html += '<option val="'+ltableDDLs[key][i]+'">'+ltableDDLs[key][i]+'</option>';
@@ -1769,3 +1763,69 @@ function deleteSettingsRight(rowId, idx) {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ------------------- Additional Functions ----------------------- */
+
+$(document).ready(function () {
+    $('#pswd_target_input').keyup(function() {
+        var pswd = $(this).val();
+
+        //validate the length
+        if ( pswd.length < 6 ) {
+            $('#pswd_length').removeClass('valid-i').addClass('invalid-i');
+        } else {
+            $('#pswd_length').removeClass('invalid-i').addClass('valid-i');
+        }
+
+        //validate letter
+        if ( pswd.match(/[A-z]/) ) {
+            $('#pswd_letter').removeClass('invalid-i').addClass('valid-i');
+        } else {
+            $('#pswd_letter').removeClass('valid-i').addClass('invalid-i');
+        }
+
+        //validate capital letter
+        if ( pswd.match(/[A-Z]/) ) {
+            $('#pswd_capital').removeClass('invalid-i').addClass('valid-i');
+        } else {
+            $('#pswd_capital').removeClass('valid-i').addClass('invalid-i');
+        }
+
+        //validate number
+        if ( pswd.match(/\d/) ) {
+            $('#pswd_number').removeClass('invalid-i').addClass('valid-i');
+        } else {
+            $('#pswd_number').removeClass('valid-i').addClass('invalid-i');
+        }
+
+        //validate special character
+        if ( pswd.match(/[!$#%@]/) ) {
+            $('#pswd_special').removeClass('invalid-i').addClass('valid-i');
+        } else {
+            $('#pswd_special').removeClass('valid-i').addClass('invalid-i');
+        }
+    }).focus(function() {
+        $('#pswd_info').show();
+    }).blur(function() {
+        $('#pswd_info').hide();
+    });
+})

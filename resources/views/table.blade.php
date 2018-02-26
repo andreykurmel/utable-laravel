@@ -8,12 +8,10 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('page-title') | {{ settings('app_name') }}</title>
+    <title>Table Data Place</title>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
 
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ url('assets/img/icons/apple-touch-icon-144x144.png') }}" />
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ url('assets/img/icons/apple-touch-icon-152x152.png') }}" />
     <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-32x32.png') }}" sizes="32x32" />
     <link rel="icon" type="image/png" href="{{ url('assets/img/icons/favicon-16x16.png') }}" sizes="16x16" />
     <meta name="application-name" content="{{ settings('app_name') }}"/>
@@ -24,6 +22,51 @@
     {!! HTML::style('assets/css/app.css') !!}
     {!! HTML::style('css/table.css') !!}
     {!! HTML::style('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css') !!}
+
+    <style>
+        #pswd_info {
+            display:none;
+
+            position:absolute;
+            top: 45px;
+            left: 70px;
+            width:250px;
+            padding:15px;
+            background:#fefefe;
+            font-size:.875em;
+            border-radius:5px;
+            box-shadow:0 1px 3px #ccc;
+            border:1px solid #ddd;
+        }
+        #pswd_info h4 {
+            margin:0 0 10px 0;
+            padding:0;
+            font-weight:normal;
+        }
+        #pswd_info::before {
+            content: "\25B2";
+            position:absolute;
+            top:-12px;
+            left:45%;
+            font-size:14px;
+            line-height:14px;
+            color:#ddd;
+            text-shadow:none;
+            display:block;
+        }
+        .invalid-i {
+            background:url({{ url('img/icons/cross.png') }}) no-repeat 0 50%;
+            padding-left:22px;
+            line-height:24px;
+            color:#ec3f41;
+        }
+        .valid-i {
+            background:url({{ url('img/icons/accept.png') }}) no-repeat 0 50%;
+            padding-left:22px;
+            line-height:24px;
+            color:#3a7d34;
+        }
+    </style>
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
 </head>
@@ -275,7 +318,7 @@
                                             entries
                                         </label>
                                     </div>
-                                    @if(Auth::user() && $canEdit)
+                                    @if(Auth::user())
                                         <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
                                         <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
                                     @endif
@@ -790,9 +833,19 @@
                                 <i class="fa fa-user"></i>
                                 <input type="text" name="username" class="form-control" placeholder="@lang('app.username')"  value="{{ old('username') }}">
                             </div>
-                            <div class="form-group input-icon">
+                            <div class="form-group input-icon" style="position: relative;">
                                 <i class="fa fa-lock"></i>
-                                <input type="password" name="password" class="form-control" placeholder="@lang('app.password')">
+                                <input id="pswd_target_input" type="password" name="password" class="form-control" placeholder="@lang('app.password')">
+                                <div id="pswd_info">
+                                    <h4>Password must meet the following requirements:</h4>
+                                    <ul>
+                                        <li id="pswd_letter" class="invalid">At least <strong>one letter</strong></li>
+                                        <li id="pswd_capital" class="invalid">At least <strong>one capital letter</strong></li>
+                                        <li id="pswd_number" class="invalid">At least <strong>one number</strong></li>
+                                        <li id="pswd_special" class="invalid">At least <strong>one special character</strong></li>
+                                        <li id="pswd_length" class="invalid">Be at least <strong>6 characters</strong></li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group input-icon">
                                 <i class="fa fa-lock"></i>
@@ -877,7 +930,6 @@
     {{-- Register scripts --}}
     {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
     <script>
-        canEdit = {{ (int)$canEdit }};
         canEditSettings = {{ (int)$canEditSettings }};
     </script>
 </body>

@@ -153,15 +153,13 @@ class TableController extends Controller
                     ->table('rights')
                     ->where('user_id', '=', Auth::user()->id)
                     ->where('table_id', '=', $table_id->id)
-                    ->where('right', '=', 'View')
                     ->count()
                 ) {
                     DB::connection('mysql_data')
                         ->table('rights')
                         ->insert([
                             'user_id' => Auth::user()->id,
-                            'table_id' => $table_id->id,
-                            'right' => 'View'
+                            'table_id' => $table_id->id
                         ]);
                 }
             //if need to inactive favourite -> then delete from 'rights' table
@@ -169,7 +167,6 @@ class TableController extends Controller
                 DB::connection('mysql_data')->table('rights')
                     ->where('user_id', '=', Auth::user()->id)
                     ->where('table_id', '=', $table_id->id)
-                    ->where('right', '=', 'View')
                     ->delete();
             }
         }
