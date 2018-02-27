@@ -66,6 +66,10 @@
             line-height:24px;
             color:#3a7d34;
         }
+        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+            line-height: 1em;
+            vertical-align: middle;
+        }
     </style>
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
@@ -325,7 +329,7 @@
                                     <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
-                                    <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-37px;z-index: 25;display: none;">
+                                    <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;display: none;">
                                         <thead id="tbAddRow_header">
                                         <tr>
                                             <th class="sorting nowrap">#</th>
@@ -351,8 +355,8 @@
                                         <tbody style="visibility: hidden;" id="tbHeaders_body">
                                         </tbody>
                                     </table>
-                                    <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:37px;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -37px;">
+                                    <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:32px;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead id="tbData_header">
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
@@ -439,8 +443,8 @@
                                         <tbody id="tbSettingsHeaders_body">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                    <div style="top: 32px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead>
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
@@ -488,8 +492,8 @@
                                         <tbody id="tbSettingsDDL_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                    <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead>
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
@@ -507,7 +511,7 @@
                                 </div>
                                 <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                     <a style="position: absolute;top: 4px;right: 22px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
@@ -539,8 +543,8 @@
                                         <tbody id="tbSettingsDDL_Items_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                    <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead>
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
@@ -558,7 +562,7 @@
                                 </div>
                                 <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                     <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
@@ -570,7 +574,7 @@
                                         </thead>
 
                                         <tbody id="tbSettingsDDL_Items_addrow">
-                                        <tr style="height: 37px;">
+                                        <tr style="height: 32px;">
                                             @foreach($settingsDDL_Items_Headers as $hdr)
                                                 <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
                                             @endforeach
@@ -606,8 +610,8 @@
                                         <tbody id="tbSettingsRights_headers">
                                         </tbody>
                                     </table>
-                                    <div style="top: 37px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -37px;">
+                                    <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead>
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
@@ -623,9 +627,9 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
+                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 32px; bottom: 32px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
                                     <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsRightRow()">Add</a>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -37px;left: 0;right: 0;z-index: 50;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>

@@ -26,10 +26,8 @@ class TableService {
         }
 
         $fields_for_select = [];
-        if (!in_array($tableName, ['tb', 'tb_settings_display', 'ddl', 'ddl_items', 'rights', 'rights_fields'])) {
+        if (Auth::user()) {
             if (
-                Auth::user()
-                &&
                 //not admin
                 Auth::user()->role_id != 1
                 &&
@@ -50,6 +48,8 @@ class TableService {
                     }
                 }
                 $fields_for_select['id'] = 0;
+            } else {
+                $fields_for_select = 1;
             }
         }
 
@@ -123,7 +123,7 @@ class TableService {
         if ($count) {
             $sql->offset($page*$count)->limit($count);
         }
-        if ($fields_for_select) {
+        if ($fields_for_select && $fields_for_select !== 1) {
             $select_cls = [];
             foreach ($fields_for_select as $key => $fld) {
                 $select_cls[] = $key;
@@ -135,60 +135,63 @@ class TableService {
         //filters data
         $respFilters = [];
         $respDDLs = [];
-        if (isset($post->getfilters)) {
+        if (isset($post->getfilters) || $query['opt'] == 'settings') {
 
-            //get columns for which filters are enabled
-            if (
-                !empty($filterData)
-                &&
-                (!empty($query['changedKeyword']) || !empty($changedFilter))
-            ) {
-                $selected_filters = $filterData;
-            } else {
-                $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
-                    ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
-                    ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
-                    ->where('tb.db_tb', '=', $tableName)
-                    ->where('tb_settings_display.filter', '=', 'Yes')
-                    ->select('tb_settings_display.field as key', 'tb_settings_display.name')
-                    ->get();
-            }
+            if ($query['opt'] != 'settings') {
+                //get columns for which filters are enabled
+                if (
+                    !empty($filterData)
+                    &&
+                    (!empty($query['changedKeyword']) || !empty($changedFilter))
+                ) {
+                    $selected_filters = $filterData;
+                } else {
+                    $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
+                        ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
+                        ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
+                        ->where('tb.db_tb', '=', $tableName)
+                        ->where('tb_settings_display.filter', '=', 'Yes')
+                        ->select('tb_settings_display.field as key', 'tb_settings_display.name')
+                        ->get();
+                }
 
-            foreach ($selected_filters as $sf) {
-                //get values for each filter
-                $filter_vals = DB::connection('mysql_data')->table($tableName)
-                    ->select($sf->key." as value")
-                    ->distinct();
-                $data_items = (clone $resultSQL)
-                    ->select($sf->key." as value")
-                    ->distinct();
-                //if user switched off some filters -> then display it in the result data
-                if ($filter_vals->count() == $data_items->count()) {
+                foreach ($selected_filters as $sf) {
+                    //get values for each filter
                     $filter_vals = DB::connection('mysql_data')->table($tableName)
                         ->select($sf->key." as value")
-                        ->selectRaw("true as checked")
-                        ->distinct()->get();
-                    $filterObj = [
-                        'key' => $sf->key,
-                        'name' => $sf->name,
-                        'val' => $filter_vals ? $filter_vals : [],
-                        'checkAll' => true
-                    ];
-                } else {
-                    $filter_vals = DB::connection('mysql_data')->select("
+                        ->distinct();
+                    $data_items = (clone $resultSQL)
+                        ->select($sf->key." as value")
+                        ->distinct();
+                    //if user switched off some filters -> then display it in the result data
+                    if ($filter_vals->count() == $data_items->count()) {
+                        $filter_vals = DB::connection('mysql_data')->table($tableName)
+                            ->select($sf->key." as value")
+                            ->selectRaw("true as checked")
+                            ->distinct()->get();
+                        $filterObj = [
+                            'key' => $sf->key,
+                            'name' => $sf->name,
+                            'val' => $filter_vals ? $filter_vals : [],
+                            'checkAll' => true
+                        ];
+                    } else {
+                        $filter_vals = DB::connection('mysql_data')->select("
                         SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
                         FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
                         GROUP BY `$tableName`.`".$sf->key."`
                     ");
-                    $filterObj = [
-                        'key' => $sf->key,
-                        'name' => $sf->name,
-                        'val' => $filter_vals ? $filter_vals : [],
-                        'checkAll' => false
-                    ];
+                        $filterObj = [
+                            'key' => $sf->key,
+                            'name' => $sf->name,
+                            'val' => $filter_vals ? $filter_vals : [],
+                            'checkAll' => false
+                        ];
+                    }
+                    $respFilters[] = $filterObj;
                 }
-                $respFilters[] = $filterObj;
             }
+
 
             $ddls = DB::connection('mysql_data')->table('tb')
                 ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
@@ -200,6 +203,22 @@ class TableService {
 
             foreach ($ddls as $row) {
                 $respDDLs[$row->field][] = $row->option;
+            }
+
+            $blet = [];
+            if ($post->tableSelected) {
+                $blet = DB::connection('mysql_data')->table('ddl')
+                    ->join('tb', 'tb.id', '=', 'ddl.tb_id')
+                    ->where('tb.db_tb', '=', $post->tableSelected)
+                    ->select('ddl.*')
+                    ->get();
+            } else {
+                if ($tableName == 'tb_settings_display')
+                $blet = DB::connection('mysql_data')->table('ddl')->get();
+            }
+            $respDDLs['ddl_id'] = [];
+            foreach ($blet as $item) {
+                $respDDLs['ddl_id'][$item->id] = $item->name;
             }
         }
 
@@ -214,9 +233,14 @@ class TableService {
         $headers = [];
         foreach ($tb as $key => $val) {
             if ($fields_for_select) {
-                if (isset($fields_for_select[$key])) {
+                if ($fields_for_select === 1) {
                     $headers[$key] = $header_data->where('field', '=', $key)->first();
-                    $headers[$key]->can_edit = $fields_for_select[$key];
+                    $headers[$key]->can_edit = 1;
+                } else {
+                    if (isset($fields_for_select[$key])) {
+                        $headers[$key] = $header_data->where('field', '=', $key)->first();
+                        $headers[$key]->can_edit = $fields_for_select[$key];
+                    }
                 }
             } else {
                 $headers[$key] = $header_data->where('field', '=', $key)->first();
@@ -230,7 +254,7 @@ class TableService {
         $responseArray["headers"] = $headers;
         if (count($result)) {
             $responseArray["data"] = $result;
-            if ($query['opt'] == 'settings') {
+            /*if ($query['opt'] == 'settings') {
                 $responseArray["ddl_names_for_settings"] = array();
                 foreach ($responseArray["data"] as $item) {
                     if (!empty($item->ddl_id)) {
@@ -238,7 +262,7 @@ class TableService {
                         $responseArray["ddl_names_for_settings"][$ddl_name->id] = $ddl_name->name;
                     }
                 }
-            }
+            }*/
         } else {
             $data = (array) DB::connection('mysql_data')->table($tableName)->first();
             $data = array_fill_keys(array_keys($data), null);
