@@ -66,6 +66,7 @@ class AppController extends Controller
             'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
             'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
             'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('rights') : [],
+            'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('rights_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
@@ -138,7 +139,7 @@ class AppController extends Controller
                 //admin - get all data
             }
         }
-        $tb->select('tb.*', 'g.www_add', 'rights.right')->groupBy('tb.id');
+        $tb->select('tb.*', 'g.www_add', 'rights.id as right')->groupBy('tb.id');
         $tb = $tb->get();
         foreach ($tb as &$item) {
             $item->www_add = ($item->www_add ? $item->www_add."/".$item->db_tb : "all/".$item->db_tb);

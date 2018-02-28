@@ -34,7 +34,9 @@ $(document).ready(function () {
             url: baseHttpUrl+'/ajaxSearchUser',
             dataType: 'json',
             delay: 250
-        }
+        },
+        width: '100%',
+        height: '100%'
     });
 
     $('body').show();
@@ -1645,7 +1647,12 @@ function saveSettingsDDLRow(tableName) {
 
 var settingsRights,
     settingsRights_hdr,
-    settingsRights_Obj;
+    settingsRights_Fields_hdr,
+    settingsRights_Obj,
+    settingsRights_FieldsObj,
+    settingsRights_selectedIndex = -1,
+    settingsRights_TableMeta,
+    settingsUsersNames;
 
 function getRightsDatas(tableName) {
     $.ajax({
@@ -1658,9 +1665,13 @@ function getRightsDatas(tableName) {
 
             console.log('Settings/Rights', response);
             settingsRights = response.data;
-            settingsRights_hdr = response.data_hdr;
+            settingsRights_hdr = response.Rights_hdr;
+            settingsRights_Fields_hdr = response.Rights_Fields_hdr;
+            settingsRights_TableMeta = response.table_meta;
+            settingsUsersNames = response.users_names;
             settingsRights_Obj = setAllNullObj(settingsRights_hdr);
-            showSettingsRightsDataTable(settingsRights_hdr, settingsRights);
+            settingsRights_FieldsObj = setAllNullObj(settingsRights_Fields_hdr);
+            showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
         },
         error: function () {
             alert("Server error");
@@ -1669,107 +1680,88 @@ function getRightsDatas(tableName) {
     });
 }
 
-function showSettingsRightsDataTable(headers, data) {
-    var tableData = "", tbAddRow = "", key;
+function showSettingsRightsDataTable(headers, data, idx) {
+    var tableData = "", tbHiddenData = "", tbAddRow = "", key;
+
+    if (settingsRights_selectedIndex > -1) {
+        $('#row_' + settingsRights_selectedIndex + '_settings_Rights').css('background-color', '#FFA');
+    }
+
+    if (idx > -1) {
+        data = settingsRights[idx].fields;
+        $('.settings_Rights_rows').css('background-color', '#FFF');
+        $('#row_' + idx + '_settings_Rights').css('background-color', '#FFA');
+        $('#add_settings_Rights_item_btn').show();
+        settingsRights_selectedIndex = idx;
+    }
 
     for(var i = 0; i < data.length; i++) {
-        tableData += "<tr>";
-        tableData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
+        tableData += "<tr id='row_" + i + (idx == -1 ? '_settings_Rights' : '_settings_Fields_Rights') + "' class='settings_Rights_rows'>";
+        tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsRightsDataTable(settingsRights_Fields_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in data[i]) {
-            if (key !== 'username') {
-                tableData += '<td style="' + (headers[key].web === 'No' ? 'display: none;' : '') + '">';
-                if (key === 'user_id') {
-                    tableData += (data[i].username !== null ? data[i].username : '');
-                } else if (key === 'table_id') {
-                    tableData += selectedTableName;
+            if (key != 'fields') {
+                tableData +=
+                    '<td ' +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (idx == -1 && key === 'table_id') {
+                    tableData += settingsRights_TableMeta.name;
+                } else
+                if (idx == -1 && key === 'user_id') {
+                    tableData += settingsUsersNames[data[i][key]];
+                } else
+                if (idx != -1 && (key === 'view' || key === 'edit')) {
+                    tableData += '<input ' +
+                        'id="inp_' + key + i + '_settings_rights_field"' +
+                        'type="checkbox" ' +
+                        'onclick="updateSettingsRightsItem(\'' + key + '\', ' + i + ', \'inp_' + key + i + '_settings_rights_field\')" ' +
+                        (data[i][key] ? 'checked>' : '>');
                 } else {
                     tableData += (data[i][key] !== null ? data[i][key] : '');
                 }
                 tableData += '</td>';
             }
         }
-        tableData += "<td><button onclick='deleteSettingsRight("+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button></td>";
+        tableData += "<td><button onclick='deleteSettingsRights(\""+(idx == -1 ? 'rights' : 'rights_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button></td>";
         tableData += "</tr>";
-    }
 
-    tbAddRow += "<tr style='height: 37px;'><td></td>";
-    for(key in headers) {
-        if (key != 'username') {
-            tbAddRow += '<td ' +
-                'id="add_' + key + '_settings_rights"' +
-                'data-key="' + key + '"' +
-                ((key == 'user_id' || key == 'right') ? 'onclick="showInlineEdit_Rights(\'add_' + key + '_settings_rights\', \'' + key + '\')"' : '') +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    ((key != 'user_id' && key != 'right') ? 'auto' : '') +
-                '</td>';
+        tbHiddenData += "<tr style='visibility: hidden;'>";
+        tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
+        for(key in data[i]) {
+            if (key != 'fields') {
+                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (idx == -1 && key === 'table_id') {
+                    tbHiddenData += settingsRights_TableMeta.name;
+                } else {
+                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tbHiddenData += '</td>';
+            }
         }
-    }
-    tbAddRow += "<td></td>";
-    tbAddRow += "</tr>";
-
-    $('#tbSettingsRights_addrow').html(tbAddRow+tableData);
-    $('#tbSettingsRights_headers').html(tableData);
-    $('#tbSettingsRights_data').html(tableData);
-}
-
-function showInlineEdit_Rights(id, key) {
-    if ($('#'+id).data('innerHTML')) {
-        return;
+        tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
+        tbHiddenData += "</tr>";
     }
 
-    var html;
-    if (key == 'user_id') {
-        html = '<input ' +
-            'id="'+id+'_inp" ' +
-            'onblur="hideInlineEdit(\''+id+'\')" ' +
-            'onchange="addSettingsRight(\''+id+'_inp\', \'user_id\')" ' +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+    if (idx > -1) {
+        $('#tbSettingsRights_Fields_headers').html(tbHiddenData);
+        $('#tbSettingsRights_Fields_data').html(tableData);
     } else {
-        html = '<select class="form-control" ' +
-            'id="'+id+'_inp" ' +
-            'onblur="hideInlineEdit(\''+id+'\')" ' +
-            'onchange="addSettingsRight(\''+id+'_inp\', \'right\')" ' +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-        html += '<option>All</option>';
-        html += '<option>View</option>';
-        html += '</select>';
+        $('#tbSettingsRights_headers').html(tbHiddenData);
+        $('#tbSettingsRights_data').html(tableData);
     }
-
-    $('#'+id).html(html);
-    $('#'+id+'_inp').val( $('#'+id).data('innerHTML') );
-    $('#'+id+'_inp').focus();
 }
 
-function addSettingsRight(id, key) {
-    //update in the table view
-    var par_id = id.substr(0, id.length-4);
-    $('#'+par_id).data('innerHTML', $('#'+id).val());
+function updateSettingsRightsItem(key, idx, id) {
+    var val = $('#'+id).is(':checked') ? 1 : 0;
 
-    settingsRights_Obj[key] = $('#'+id).val();
-}
+    settingsRights[settingsRights_selectedIndex].fields[idx][key] = val;
 
-function saveSettingsRightRow() {
-    settingsRights_Obj['table_id'] = settingsDDL_TableMeta.id;
-
-    var strParams = "";
-    for (var key in settingsRights_Obj) {
-        if (key !== 'username' && settingsRights_Obj[key] !== null) {
-            strParams += key + '=' + settingsRights_Obj[key] + '&';
-        }
-    }
+    idx = settingsRights[settingsRights_selectedIndex].fields[idx].id;
 
     $('.loadingFromServer').show();
     $.ajax({
         method: 'GET',
-        url: baseHttpUrl + '/addRightsDatas?tableName=rights&' + strParams,
+        url: baseHttpUrl + '/updateRightsDatas?id=' + idx + '&fieldname=' + key + '&val=' + val,
         success: function (response) {
-            //console.log(response);
-
-            settingsRights_Obj.id = response.last_id;
-            settingsRights.push(settingsRights_Obj);
-            settingsRights_Obj = setAllNullObj(settingsRights_hdr);
-            showSettingsRightsDataTable(settingsRights_hdr, settingsRights);
-
             $('.loadingFromServer').hide();
             alert(response.msg);
         },
@@ -1780,13 +1772,18 @@ function saveSettingsRightRow() {
     });
 }
 
-function deleteSettingsRight(rowId, idx) {
-    settingsRights.splice(idx, 1);
-    showSettingsRightsDataTable(settingsRights_hdr, settingsRights);
+function deleteSettingsRights(tableName, rowId, idx) {
+    if (tableName == 'rights') {
+        settingsRights.splice(idx, 1);
+        showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
+    } else {
+        settingsRights[settingsRights_selectedIndex].fields.splice(idx, 1);
+        showSettingsRightsDataTable(settingsRights_Fields_hdr, settingsRights[settingsRights_selectedIndex].fields, settingsRights_selectedIndex);
+    }
 
     $.ajax({
         method: 'GET',
-        url: baseHttpUrl + '/deleteRightsDatas?id=' + rowId,
+        url: baseHttpUrl + '/deleteRightsDatas?tableName=' + tableName + '&id=' + rowId,
         success: function (response) {
             $('.loadingFromServer').hide();
             alert(response.msg);
@@ -1798,6 +1795,25 @@ function deleteSettingsRight(rowId, idx) {
     });
 }
 
+function addSettingsRights() {
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/addRightsDatas?tableName=rights&table_id=' + settingsRights_TableMeta.id + '&user_id=' + $('#selectUserSearch').val(),
+        success: function (response) {
+            //console.log(response);
+
+            $('.loadingFromServer').hide();
+            alert(response.msg);
+
+            getRightsDatas(selectedTableName);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
 
 
 

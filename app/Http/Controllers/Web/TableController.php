@@ -200,34 +200,139 @@ class TableController extends Controller
 
     public function getRightsDatas(Request $request)
     {
-        $RightsDatas = [];
+        $Rightsdatas = [];
         if (Auth::user()) {
-            $RightsDatas['data_hdr'] = $this->tableService->getHeaders('rights');
+            $Rightsdatas['Rights_hdr'] = $this->tableService->getHeaders('rights');
+            $Rightsdatas['Rights_Fields_hdr'] = $this->tableService->getHeaders('rights_fields');
+            $Rightsdatas['table_meta'] = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
-            $RightsDatas['data'] = DB::connection('mysql_data')
+            $usrs = DB::table('users')->get();
+            foreach ($usrs as $usr) {
+                $Rightsdatas['users_names'][$usr->id] = $usr->username;
+            }
+
+            $Rightsdatas['data'] = DB::connection('mysql_data')
                 ->table('rights')
                 ->join('tb', 'tb.id', '=', 'rights.table_id')
                 ->where('tb.db_tb', '=', $request->tableName)
                 ->select('rights.*')
                 ->get();
 
-            foreach ($RightsDatas['data'] as &$Right) {
-                $Right->username = ( DB::table('users')->where('id', '=', $Right->user_id)->first() )->username;
+            foreach ($Rightsdatas['data'] as &$Rights) {
+                $Rights->fields = DB::connection('mysql_data')
+                    ->table('rights_fields')
+                    ->where('rights_id', '=', $Rights->id)
+                    ->get();
             }
         }
-        return $RightsDatas;
+        return $Rightsdatas;
+    }
+
+    public function updateRightsDatas(Request $request) {
+        if (Auth::user()) {
+            $id = $request->id;
+
+            $params[$request->fieldname] = $request->val;
+            $params['modifiedBy'] = Auth::user()->id;
+            $params['modifiedOn'] = now();
+
+            $res = DB::connection('mysql_data')->table('rights_fields')->where('id', '=', $id)->update($params);
+
+            if ($res) {
+                $responseArray['error'] = FALSE;
+                $responseArray['msg'] = "Data Updated Successfully";
+
+            } else {
+                $responseArray['error'] = TRUE;
+                $responseArray['msg'] =  "Server Error";
+            }
+            return $responseArray;
+        }
     }
 
     public function addRightsDatas(Request $request)
     {
-        $request->tableName = 'rights';
-        return $this->addTableRow($request);
+        if (Auth::user()) {
+            $tableName= $request->tableName;
+
+            $params = $request->except(['id', 'tableName']);
+            foreach ($params as $key => $par) {
+                if (strpos($key,'/') !== false) {
+                    unset($params[$key]);
+                }
+            }
+            $params['createdBy'] = Auth::user()->id;
+            $params['createdOn'] = now();
+            $params['modifiedBy'] = Auth::user()->id;
+            $params['modifiedOn'] = now();
+
+            if ($request->tableName == 'rights') {
+                DB::connection('mysql_data')->table('rights')->insert($params);
+
+                $id = DB::connection('mysql_data')->getPdo()->lastInsertId();
+
+                $rights_fields = DB::connection('mysql_data')
+                    ->table('tb_settings_display')
+                    ->where('tb_id', '=', $request->table_id)
+                    ->get();
+
+                foreach ($rights_fields as $rf) {
+                    DB::connection('mysql_data')->table('rights_fields')->insert([
+                        'rights_id' => $id,
+                        'field' => $rf->field,
+                        'view' => 0,
+                        'edit' => 0,
+                        'notes' => '',
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+                }
+            }
+            if ($request->tableName == 'rights_fields') {
+                $id = DB::connection('mysql_data')->table('rights_fields')->insert($params);
+            }
+
+            if ($id) {
+                $responseArray['error'] = FALSE;
+                $responseArray['last_id'] = DB::connection('mysql_data')->getPdo()->lastInsertId();
+                $responseArray['msg'] = "Data Inserted Successfully";
+
+            } else {
+                $responseArray['error'] = TRUE;
+                $responseArray['msg'] =  "Server Error";
+            }
+            return $responseArray;
+        }
+        return [];
     }
 
     public function deleteRightsDatas(Request $request)
     {
-        $request->tableName = 'rights';
-        return $this->deleteTableRow($request);
+        if (Auth::user()) {
+            $id = $request->id;
+            $tableName= $request->tableName;
+
+            if ($request->tableName == 'rights') {
+                $res = DB::connection('mysql_data')->table('rights')->where('id', '=', $id)->delete();
+                $res = DB::connection('mysql_data')->table('rights_fields')->where('rights_id', '=', $id)->delete();
+            }
+            if ($request->tableName == 'rights_fields') {
+                $res = DB::connection('mysql_data')->table('rights_fields')->where('id', '=', $id)->delete();
+            }
+
+            if ($res) {
+                $responseArray['error'] = FALSE;
+                $responseArray['msg'] = 'Deleted Successfully';
+
+            } else {
+                $responseArray['error'] = TRUE;
+                $responseArray['msg'] =  "Server Error";
+            }
+            return $responseArray;
+        }
+        return [];
     }
 
     public function ajaxSearchUser(Request $request)

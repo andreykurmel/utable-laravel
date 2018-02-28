@@ -591,19 +591,16 @@
                             </div>
 
                             <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
-                                <div style="position:absolute; font-size: 2em; left: 10px; width: calc(100% - 20px); top: 15px;">
-                                    Rights for current table
-                                    <select id="selectUserSearch" style="width: 200px;margin-left: 50px;"></select>
-                                </div>
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
+                                <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Rights list</div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                     <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsRights_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -616,9 +613,9 @@
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
                                                 @foreach($settingsRights_Headers as $hdr)
-                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
-                                                <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                                <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                             </tr>
                                             </thead>
 
@@ -627,22 +624,49 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 32px; bottom: 32px; left: 10px; width: calc(100% - 20px); background-color: #fff;">
-                                    <a style="position: absolute;top: 4px;left: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsRightRow()">Add</a>
-                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
+                                <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #ccc;">
+                                    <div style="width: calc(100% - 110px);position: relative;top: 5px;left: 10px;"><select id="selectUserSearch"></select></div>
+                                    <a style="position: absolute;top: 4px;right: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addSettingsRights()">Add User</a>
+                                </div>
+
+                                <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Right</div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                    <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
-                                            @foreach($settingsRights_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'user_id' ? 'User' : $hdr->name }}</th>
+                                            @foreach($settingsRights_Fields_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
-                                            <th class="sorting nowrap" style="width: 30px;">Delete</th>
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
-                                        <tbody id="tbSettingsRights_addrow">
+                                        <tbody id="tbSettingsRights_Fields_headers">
                                         </tbody>
                                     </table>
+                                    <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
+                                            <thead>
+                                            <tr>
+                                                <th class="sorting nowrap">#</th>
+                                                @foreach($settingsRights_Fields_Headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                @endforeach
+                                                <th class="sorting nowrap" style="width: 30px;">Actions</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="tbSettingsRights_Fields_data">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="dataTables_footer" style="position: absolute; bottom: 25px; right: 0; left: 10px">
+                                    <div role="status" aria-live="polite" style="position:absolute;">
+                                        Showing all entries
+                                    </div>
                                 </div>
                             </div>
 
