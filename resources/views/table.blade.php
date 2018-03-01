@@ -328,7 +328,7 @@
                                     @endif
                                     <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                                 </div>
-                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
+                                <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;display: none;">
                                         <thead id="tbAddRow_header">
                                         <tr>
@@ -805,7 +805,7 @@
                                 <i class="fa fa-lock"></i>
                                 <input type="password" name="password" class="form-control" placeholder="@lang('app.password')">
                                 @if (settings('forgot_password'))
-                                    <a href="<?= url('password/remind') ?>" class="forgot" style="top: 9px;">@lang('app.i_forgot_my_password')</a>
+                                    <a href="javascript:void(0)" onclick="$('.loginForm').hide();$('.passResetForm').show();" class="forgot" style="top: 9px;">@lang('app.i_forgot_my_password')</a>
                                 @endif
                             </div>
                             <div style="margin-bottom:20px;">
@@ -920,6 +920,45 @@
             </div>
         </div>
         <div class="registerForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.registerForm').hide()"></div>
+
+        {{-- Password Reset form --}}
+        <div class="passResetForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+            <div class="auth" style="font-size: 14px;">
+                <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                    <div class="form-wrap">
+                        <h1>@lang('app.forgot_your_password')</h1>
+
+                        @include('partials.messages')
+
+                        <form role="form" action="<?= url('password/remind') ?>" method="POST" id="remind-password-form" autocomplete="off">
+                            <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+
+                            <div class="form-group password-field input-icon">
+                                <label for="password" class="sr-only">@lang('app.email')</label>
+                                <i class="fa fa-at"></i>
+                                <input type="email" name="email" id="email" class="form-control" placeholder="@lang('app.your_email')">
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-reset-password">
+                                    @lang('app.reset_password')
+                                </button>
+                                <a href="javascript:void(0)" onclick="$('.passResetForm').hide();$('.loginForm').show();" class="btn btn-default btn-lg btn-block">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                            <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="passResetForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.passResetForm').hide()"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>
@@ -957,6 +996,9 @@
 
     {{-- Register scripts --}}
     {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
+
+    {{-- Reset Pass scripts --}}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\PasswordRemindRequest', '#remind-password-form') !!}
     <script>
         canEditSettings = {{ (int)$canEditSettings }};
     </script>

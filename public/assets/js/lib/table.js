@@ -35,6 +35,7 @@ $(document).ready(function () {
             dataType: 'json',
             delay: 250
         },
+        minimumInputLength: 3,
         width: '100%',
         height: '100%'
     });
@@ -44,6 +45,17 @@ $(document).ready(function () {
     $(document).keyup(function (e) {
         if (e.ctrlKey && e.keyCode == 39) {
             $('#open-menu').trigger("click");
+        }
+    });
+
+    $(document).keydown(function (e) {
+        if (e.keyCode == 37) {
+            var left = document.getElementById('div_for_horizontal_scroll');
+            left.scrollLeft -= 40;
+        }
+        if (e.keyCode == 39) {
+            var left = document.getElementById('div_for_horizontal_scroll');
+            left.scrollLeft += 40;
         }
     });
 });
@@ -237,7 +249,9 @@ function showDataTable(headers, data) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
-        tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
+        tableData += '<td '+(i === 0 ? 'id="first_data_td"' : '')+'>' +
+            '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a>' +
+            '</td>';
         for(key in data[i]) {
             tableData +=
                 '<td ' +
@@ -1038,13 +1052,13 @@ function checkboxAddToggle() {
 
         $('#tbAddRow').show();
         $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', '90px');
+        $('#divTbData').css('top', '85px');
 
         editSelectedData(-1);
     } else {
         $('#tbAddRow').hide();
         $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', '37px');
+        $('#divTbData').css('top', '32px');
     }
 }
 

@@ -136,7 +136,7 @@
                             <i class="fa fa-lock"></i>
                             <input type="password" name="password" class="form-control" placeholder="@lang('app.password')">
                             @if (settings('forgot_password'))
-                            <a href="<?= url('password/remind') ?>" class="forgot" style="top: 9px;">@lang('app.i_forgot_my_password')</a>
+                                <a href="javascript:void(0)" onclick="$('.showLoginForm').hide();$('.passResetForm').show();" class="forgot" style="top: 9px;">@lang('app.i_forgot_my_password')</a>
                             @endif
                         </div>
                         <div style="margin-bottom:20px;">
@@ -252,6 +252,45 @@
     </div>
     <div class="showRegisterForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000; display: none;" onclick="showRegisterForm = false"></div>
 
+    {{-- Password Reset form --}}
+    <div class="passResetForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+        <div class="auth" style="font-size: 14px;">
+            <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                <div class="form-wrap">
+                    <h1>@lang('app.forgot_your_password')</h1>
+
+                    @include('partials.messages')
+
+                    <form role="form" action="<?= url('password/remind') ?>" method="POST" id="remind-password-form" autocomplete="off">
+                        <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+
+                        <div class="form-group password-field input-icon">
+                            <label for="password" class="sr-only">@lang('app.email')</label>
+                            <i class="fa fa-at"></i>
+                            <input type="email" name="email" id="email" class="form-control" placeholder="@lang('app.your_email')">
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-reset-password">
+                                @lang('app.reset_password')
+                            </button>
+                            <a href="javascript:void(0)" onclick="$('.passResetForm').hide();$('.showLoginForm').show();" class="btn btn-default btn-lg btn-block">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="row">
+                    <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                        <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="passResetForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.passResetForm').hide()"></div>
+
 
     {!! HTML::script('assets/js/lib/modernizr.custom.js') !!}
     {!! HTML::script('assets/js/jquery-3.2.1.min.js') !!}
@@ -275,6 +314,9 @@
 
     {{-- Register scripts --}}
     {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\RegisterRequest', '#registration-form') !!}
+
+    {{-- Reset Pass scripts --}}
+    {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\PasswordRemindRequest', '#remind-password-form') !!}
 
     {!! HTML::script('assets/js/lib/table.js') !!}
 </body>

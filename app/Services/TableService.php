@@ -229,21 +229,20 @@ class TableService {
             ->select('tsd.*')
             ->get();
 
-        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
         $headers = [];
-        foreach ($tb as $key => $val) {
+        foreach ($header_data as $hdr) {
             if ($fields_for_select) {
                 if ($fields_for_select === 1) {
-                    $headers[$key] = $header_data->where('field', '=', $key)->first();
-                    $headers[$key]->can_edit = 1;
+                    $headers[$hdr->field] = $hdr;
+                    $headers[$hdr->field]->can_edit = 1;
                 } else {
-                    if (isset($fields_for_select[$key])) {
-                        $headers[$key] = $header_data->where('field', '=', $key)->first();
-                        $headers[$key]->can_edit = $fields_for_select[$key];
+                    if (isset($fields_for_select[$hdr->field])) {
+                        $headers[$hdr->field] = $hdr;
+                        $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
                     }
                 }
             } else {
-                $headers[$key] = $header_data->where('field', '=', $key)->first();
+                $headers[$hdr->field] = $hdr;
             }
         }
 
@@ -264,8 +263,10 @@ class TableService {
                 }
             }*/
         } else {
-            $data = (array) DB::connection('mysql_data')->table($tableName)->first();
-            $data = array_fill_keys(array_keys($data), null);
+            $data = [];
+            foreach ($headers as $hdr) {
+                $data[$hdr->field] = '';
+            }
             array_push($responseArray["data"],$data);
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "No Data";
@@ -284,8 +285,8 @@ class TableService {
 
         $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
         $headers = [];
-        foreach ($tb as $key => $val) {
-            $headers[$key] = $header_data->where('field', '=', $key)->first();
+        foreach ($header_data as $hdr) {
+            $headers[$hdr->field] = $hdr;
         }
         return $headers;
     }
