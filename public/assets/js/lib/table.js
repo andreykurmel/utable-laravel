@@ -1735,7 +1735,10 @@ function showSettingsRightsDataTable(headers, data, idx) {
                 tableData += '</td>';
             }
         }
-        tableData += "<td><button onclick='deleteSettingsRights(\""+(idx == -1 ? 'rights' : 'rights_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button></td>";
+        tableData += "<td>" +
+            (idx == -1 ? "<button onclick='toggleAllrights()'><i class='fa fa-check'></i></button>" : "") +
+            "<button onclick='deleteSettingsRights(\""+(idx == -1 ? 'rights' : 'rights_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button>" +
+            "</td>";
         tableData += "</tr>";
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
