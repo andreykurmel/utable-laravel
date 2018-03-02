@@ -1041,7 +1041,7 @@ function editSelectedData(idx) {
 
     var html = "";
     for(var key in ltableData[idx_loc]) {
-        if (key != 'id') {
+        if (key != 'id' && key != 'is_favorited') {
             html += "<tr>";
             html +=
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
