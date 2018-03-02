@@ -172,6 +172,43 @@ class TableController extends Controller
         }
     }
 
+    public function favouriteToggleRow(Request $request) {
+        if (Auth::user()) {
+            $table_id = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->select('id')->first();
+            //if need to activate favourite -> then add row into 'favorite' table
+            if ($request->status == "Active") {
+                //add row only if it doesn`t exist
+                if (!DB::connection('mysql_data')
+                    ->table('favorite')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('table_id', '=', $table_id->id)
+                    ->where('row_id', '=', $request->row_id)
+                    ->count()
+                ) {
+                    DB::connection('mysql_data')
+                        ->table('favorite')
+                        ->insert([
+                            'user_id' => Auth::user()->id,
+                            'table_id' => $table_id->id,
+                            'row_id' => $request->row_id,
+                            'createdBy' => Auth::user()->id,
+                            'createdOn' => now(),
+                            'modifiedBy' => Auth::user()->id,
+                            'modifiedOn' => now()
+                        ]);
+                }
+            //if need to inactive favourite -> then delete from 'favorite' table
+            } else {
+                DB::connection('mysql_data')
+                    ->table('favorite')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('table_id', '=', $table_id->id)
+                    ->where('row_id', '=', $request->row_id)
+                    ->delete();
+            }
+        }
+    }
+
     public function getDDLdatas(Request $request)
     {
         $DDLdatas = [];
@@ -325,6 +362,27 @@ class TableController extends Controller
             if ($res) {
                 $responseArray['error'] = FALSE;
                 $responseArray['msg'] = 'Deleted Successfully';
+
+            } else {
+                $responseArray['error'] = TRUE;
+                $responseArray['msg'] =  "Server Error";
+            }
+            return $responseArray;
+        }
+        return [];
+    }
+
+    public function toggleAllrights(Request $request)
+    {
+        if (Auth::user()) {
+            $res = DB::connection('mysql_data')->table('rights_fields')->where('rights_id', '=', $request->right_id)->update([
+                'view' => $request->r_status,
+                'edit' => $request->r_status
+            ]);
+
+            if ($res) {
+                $responseArray['error'] = FALSE;
+                $responseArray['msg'] = 'Updated Successfully';
 
             } else {
                 $responseArray['error'] = TRUE;

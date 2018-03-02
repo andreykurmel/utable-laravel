@@ -381,11 +381,13 @@ Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
 Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
 Route::get('/api/loadFilter', 'TableController@loadFilter')->name('loadFilter');
 Route::get('/api/favouriteToggle', 'TableController@favouriteToggle')->name('favouriteToggle');
+Route::get('/api/favouriteToggleRow', 'TableController@favouriteToggleRow')->name('favouriteToggleRow');
 Route::get('/api/getDDLdatas', 'TableController@getDDLdatas')->name('getDDLdatas');
 Route::get('/api/getRightsDatas', 'TableController@getRightsDatas')->name('getRightsDatas');
 Route::get('/api/addRightsDatas', 'TableController@addRightsDatas')->name('addRightsDatas');
 Route::get('/api/updateRightsDatas', 'TableController@updateRightsDatas')->name('updateRightsDatas');
 Route::get('/api/deleteRightsDatas', 'TableController@deleteRightsDatas')->name('deleteRightsDatas');
+Route::get('/api/toggleAllrights', 'TableController@toggleAllrights')->name('toggleAllrights');
 Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxSearchUser');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
@@ -396,7 +398,7 @@ Route::group(['middleware' => 'database.change'], function () {
 Route::post('/download', 'DownloadController@download')->name('downloader');
 
 Route::get('/', 'AppController@landing')->name('landing');
-Route::get('/data', function () { redirect( route('homepage') ); });
+Route::get('/data', function () { return redirect( route('homepage') ); });
 Route::get('/data/all', 'AppController@homepage')->name('homepage');
 //Route::get('/data/all', 'AppController@homepage')->name('homepage.all');
 Route::get('/data/all/{tableName}', 'AppController@homepageTable')->name('homepage.table');

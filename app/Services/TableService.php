@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class TableService {
     public function getData($post) {
+        $fromMainData = isset($post->from_main_data) ? 1 : 0;
         $tableName = $post->tableName;
         $responseArray = array();
         $page = isset($post->p) ? (int)$post->p : 0;
@@ -25,6 +26,8 @@ class TableService {
             return $responseArray;
         }
 
+        $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+
         $fields_for_select = [];
         if (Auth::user()) {
             if (
@@ -32,7 +35,7 @@ class TableService {
                 Auth::user()->role_id != 1
                 &&
                 //not owner
-                !DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->where('owner', '=', Auth::user()->id)->first()
+                $table_meta->owner != Auth::user()->id
             ) {
                 $tmp_fields_set = DB::connection('mysql_data')
                     ->table('tb')
@@ -55,6 +58,9 @@ class TableService {
 
         $forFiltersQuery = "SELECT * FROM $tableName WHERE";
         $sql = DB::connection('mysql_data')->table($tableName);
+        if($fromMainData) {
+            $sql->leftJoin('favorite as f', $tableName.'.id', '=', 'f.row_id');
+        }
 
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
@@ -128,8 +134,25 @@ class TableService {
             foreach ($fields_for_select as $key => $fld) {
                 $select_cls[] = $key;
             }
+            if($fromMainData) {
+                $select_cls[] = 'f.id as is_favorited';
+            }
             $sql->select($select_cls);
+        } else {
+            if($fromMainData) {
+                $sql->select($tableName.'.*', 'f.id as is_favorited');
+            }
         }
+        if($fromMainData) {
+            $sql->where(function ($q) use ($table_meta) {
+                $q->where(function ($qq) use ($table_meta) {
+                    $qq->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
+                    $qq->where('f.table_id', '=', $table_meta->id);
+                });
+                $q->orWhereNull('f.id');
+            });
+        }
+        $sql->orderBy($tableName.'.id');
         $result = $sql->get();
 
         //filters data

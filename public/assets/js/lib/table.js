@@ -79,7 +79,8 @@ var baseHttpUrl = "/api",
     markerBounds = {top:0, left:0, right:0, bottom:0},
     tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
 
-var curFilter = "";
+var curFilter = "",
+    arrAddFieldsInData = ['is_favorited'];
 
 var settingsTableName = 'tb_settings_display',
     settingsEntries = $('#inpSettingsEntries').val(),
@@ -102,6 +103,7 @@ function selectTable(tableName) {
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable?tableName=' + tableName,
         data: {
+            from_main_data: true,
             getfilters: true,
             p: 0,
             c: selectedEntries
@@ -212,6 +214,7 @@ function changePage(page) {
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable',
         data: {
+            from_main_data: true,
             tableName: selectedTableName,
             getfilters: true,
             p: selectedPage,
@@ -252,69 +255,81 @@ function showDataTable(headers, data) {
         tableData += '<td '+(i === 0 ? 'id="first_data_td"' : '')+'>' +
             '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a>' +
             '</td>';
+        tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)"><i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="font-size: 1.5em;color: #FD0;"></i></a></td>';
         for(key in data[i]) {
-            tableData +=
-                '<td ' +
-                'id="' + headers[key].field + i + '_dataT"' +
-                'data-key="' + headers[key].field + '"' +
-                'data-input="' + headers[key].input_type + '"' +
-                'data-idx="' + i + '"' +
-                (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            if (key === 'ddl_id') {
-                tableData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
-            } else {
-                tableData += (data[i][key] !== null ? data[i][key] : '');
+            if ($.inArray(key, arrAddFieldsInData) == -1) {
+                tableData +=
+                    '<td ' +
+                    'id="' + headers[key].field + i + '_dataT"' +
+                    'data-key="' + headers[key].field + '"' +
+                    'data-input="' + headers[key].input_type + '"' +
+                    'data-idx="' + i + '"' +
+                    (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (key === 'ddl_id') {
+                    tableData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
+                } else {
+                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tableData += '</td>';
             }
-            tableData += '</td>';
         }
         tableData += "</tr>";
 
         if (i == 0) {
             tbAddRow += "<tr style='height: 53px;'>";
             tbAddRow += '<td></td>';
+            tbAddRow += '<td></td>';
             for(key in data[i]) {
-                tbAddRow +=
-                    '<td ' +
-                    'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
-                    'data-key="' + headers[key].field + '"' +
-                    'data-input="' + headers[key].input_type + '"' +
-                    'data-idx="' + i + '"' +
-                    (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
-                /*if (key == 'id') {
-                 tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
-                 } else {
-                 tbAddRow += '</td>';
-                 }*/
+                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                    tbAddRow +=
+                        '<td ' +
+                        'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
+                        'data-key="' + headers[key].field + '"' +
+                        'data-input="' + headers[key].input_type + '"' +
+                        'data-idx="' + i + '"' +
+                        (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
+                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
+                    /*if (key == 'id') {
+                     tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
+                     } else {
+                     tbAddRow += '</td>';
+                     }*/
+                }
             }
             tbAddRow += "</tr>";
 
             tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
             for(key in data[i]) {
-                tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
+                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                    tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
+                }
             }
             tbAddRow_h += "</tr>";
         }
 
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
+        tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i></td>';
         for(key in data[i]) {
-            tbHiddenData +=
-                '<td ' +
-                'data-key="' + headers[key].field + '"' +
-                'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-            if (key === 'ddl_id') {
-                tbHiddenData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
-            } else {
-                tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+            if ($.inArray(key, arrAddFieldsInData) == -1) {
+                tbHiddenData +=
+                    '<td ' +
+                    'data-key="' + headers[key].field + '"' +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                if (key === 'ddl_id') {
+                    tbHiddenData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
+                } else {
+                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                }
+                tbHiddenData += '</td>';
             }
-            tbHiddenData += '</td>';
         }
         tbHiddenData += "</tr>";
     }
 
-    tbDataHeaders += "<tr><td class='sorting nowrap'><b>#</b></td>";
+    tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</th>';
 
@@ -480,10 +495,16 @@ function showHideColumn(fieldKey) {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').hide();
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').hide();
         $('#tbData th[data-key="'+fieldKey+'"], #tbData td[data-key="'+fieldKey+'"]').hide();
+
+        $('#tbFavouriteHeaders th[data-key="'+fieldKey+'"], #tbFavouriteHeaders td[data-key="'+fieldKey+'"]').hide();
+        $('#tbFavouriteData th[data-key="'+fieldKey+'"], #tbFavouriteData td[data-key="'+fieldKey+'"]').hide();
     } else {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').show();
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').show();
         $('#tbData th[data-key="'+fieldKey+'"], #tbData td[data-key="'+fieldKey+'"]').show();
+
+        $('#tbFavouriteHeaders th[data-key="'+fieldKey+'"], #tbFavouriteHeaders td[data-key="'+fieldKey+'"]').show();
+        $('#tbFavouriteData th[data-key="'+fieldKey+'"], #tbFavouriteData td[data-key="'+fieldKey+'"]').show();
     }
 }
 
@@ -503,11 +524,39 @@ function favouriteToggle() {
     }
 }
 
+function toggleFavoriteRow(idx, elem) {
+    if (authUser) {
+        var i = $(elem).find('i');
+        if ($(i).hasClass('fa-star')) {
+            $.ajax({
+                method: 'GET',
+                url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Inactive'
+            });
+            $(i).removeClass('fa-star').addClass('fa-star-o');
+        } else {
+            $.ajax({
+                method: 'GET',
+                url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Active'
+            });
+            $(i).removeClass('fa-star-o').addClass('fa-star');
+        }
+    } else {
+        var i = $(elem).find('i');
+        if ($(i).hasClass('fa-star')) {
+            $(i).removeClass('fa-star').addClass('fa-star-o');
+        } else {
+            $(i).removeClass('fa-star-o').addClass('fa-star');
+        }
+    }
+}
+
 function showMap() {
     $("#li_list_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
+    $("#li_favorite_view").removeClass("active");
     $("#li_map_view").addClass("active");
     $("#list_view").hide();
+    $("#favorite_view").hide();
     $("#settings_view").hide();
     $("#map_view").show();
     initMap();
@@ -517,9 +566,23 @@ function showMap() {
 
 function showList() {
     $("#li_list_view").addClass("active");
+    $("#li_favorite_view").removeClass("active");
     $("#li_map_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
     $("#list_view").show();
+    $("#favorite_view").hide();
+    $("#map_view").hide();
+    $("#settings_view").hide();
+    $('.showhidemenu').show();
+}
+
+function showFavorite() {
+    $("#li_favorite_view").addClass("active");
+    $("#li_list_view").removeClass("active");
+    $("#li_map_view").removeClass("active");
+    $("#li_settings_view").removeClass("active");
+    $("#favorite_view").show();
+    $("#list_view").hide();
     $("#map_view").hide();
     $("#settings_view").hide();
     $('.showhidemenu').show();
@@ -527,9 +590,11 @@ function showList() {
 
 function showSettings() {
     $("#li_settings_view").addClass("active");
+    $("#li_favorite_view").removeClass("active");
     $("#li_list_view").removeClass("active");
     $("#li_map_view").removeClass("active");
     $("#settings_view").show();
+    $("#favorite_view").hide();
     $("#list_view").hide();
     $("#map_view").hide();
     $('.showhidemenu').hide();
@@ -1697,10 +1762,6 @@ function getRightsDatas(tableName) {
 function showSettingsRightsDataTable(headers, data, idx) {
     var tableData = "", tbHiddenData = "", tbAddRow = "", key;
 
-    if (settingsRights_selectedIndex > -1) {
-        $('#row_' + settingsRights_selectedIndex + '_settings_Rights').css('background-color', '#FFA');
-    }
-
     if (idx > -1) {
         data = settingsRights[idx].fields;
         $('.settings_Rights_rows').css('background-color', '#FFF');
@@ -1710,6 +1771,19 @@ function showSettingsRightsDataTable(headers, data, idx) {
     }
 
     for(var i = 0; i < data.length; i++) {
+        if (idx === -1) {
+            var all = true;
+            for(var j = 0; j < data[i].fields.length; j++) {
+                if(data[i].fields[j].view == 0 || data[i].fields[j].edit == 0) {
+                    all = false;
+                    break;
+                }
+            }
+            var check_btn = all ?
+                "<button onclick='toggleAllrights("+i+",false)'><i class='fa fa-close'></i></button>" :
+                "<button onclick='toggleAllrights("+i+",true)'><i class='fa fa-check'></i></button>";
+        }
+
         tableData += "<tr id='row_" + i + (idx == -1 ? '_settings_Rights' : '_settings_Fields_Rights') + "' class='settings_Rights_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsRightsDataTable(settingsRights_Fields_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in data[i]) {
@@ -1736,7 +1810,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
             }
         }
         tableData += "<td>" +
-            (idx == -1 ? "<button onclick='toggleAllrights()'><i class='fa fa-check'></i></button>" : "") +
+            (idx == -1 ? check_btn : "") +
             "<button onclick='deleteSettingsRights(\""+(idx == -1 ? 'rights' : 'rights_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button>" +
             "</td>";
         tableData += "</tr>";
@@ -1765,6 +1839,13 @@ function showSettingsRightsDataTable(headers, data, idx) {
         $('#tbSettingsRights_headers').html(tbHiddenData);
         $('#tbSettingsRights_data').html(tableData);
     }
+
+    if (settingsRights_selectedIndex > -1) {
+        $('#row_' + settingsRights_selectedIndex + '_settings_Rights').css('background-color', '#FFA');
+        if (idx === -1) {
+            showSettingsRightsDataTable(settingsRights_Fields_hdr, '', settingsRights_selectedIndex);
+        }
+    }
 }
 
 function updateSettingsRightsItem(key, idx, id) {
@@ -1773,6 +1854,8 @@ function updateSettingsRightsItem(key, idx, id) {
     settingsRights[settingsRights_selectedIndex].fields[idx][key] = val;
 
     idx = settingsRights[settingsRights_selectedIndex].fields[idx].id;
+
+    showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
 
     $('.loadingFromServer').show();
     $.ajax({
@@ -1818,8 +1901,25 @@ function addSettingsRights() {
         method: 'GET',
         url: baseHttpUrl + '/addRightsDatas?tableName=rights&table_id=' + settingsRights_TableMeta.id + '&user_id=' + $('#selectUserSearch').val(),
         success: function (response) {
-            //console.log(response);
+            $('.loadingFromServer').hide();
+            alert(response.msg);
 
+            getRightsDatas(selectedTableName);
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
+
+function toggleAllrights(idx, status) {
+    settingsRights_selectedIndex = idx;
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/toggleAllrights?right_id=' + settingsRights[idx].id + '&r_status=' + (status ? 1 : 0),
+        success: function (response) {
             $('.loadingFromServer').hide();
             alert(response.msg);
 

@@ -190,6 +190,7 @@
                     <!-- Tabs -->
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
                         <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
+                        <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
                         @if($tableName == 'st')
                             <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                         @endif
@@ -383,6 +384,66 @@
                                         </span><a class="paginate_button next" onclick="changePage((selectedPage+1)<(rowsCount/selectedEntries) ? selectedPage+2 : (rowsCount/selectedEntries))">Next
                                         </a><a class="paginate_button last" onclick="changePage(Math.ceil(rowsCount/selectedEntries))">Last</a>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="favorite_view" style='display:none;padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
+
+                            <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
+
+                                <div class="dataTables_header">
+                                    <div class="dataTables_length">
+                                        <label>
+                                            Show
+                                            <span class="select blue-gradient glossy replacement" tabindex="0">
+                                                <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
+                                                <span class="select-arrow"></span>
+                                                <span class="drop-down custom-scroll">
+                                                    <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
+                                                    <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
+                                                    <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
+                                                    <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
+                                                    <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
+                                                </span>
+                                            </span>
+                                            entries
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
+                                    <table class="table dataTable" id="tbFavouriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
+                                        <thead id="tbFavouriteHeaders_header">
+                                        <tr>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody style="visibility: hidden;" id="tbFavouriteHeaders_body">
+                                        </tbody>
+                                    </table>
+                                    <div style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:32px;" class="table_body_viewport">
+                                        <table class="table responsive-table responsive-table-on dataTable" id="tbFavoriteData" style="margin-bottom: 0; margin-top: -32px;">
+                                            <thead id="tbFavoriteData_header">
+                                            <tr>
+                                                <th class="sorting nowrap">#</th>
+                                                @foreach($headers as $hdr)
+                                                    <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                @endforeach
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="tbFavoriteData_body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
+                                    <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                                        Showing all entries</div>
                                 </div>
                             </div>
                         </div>
@@ -1001,6 +1062,7 @@
     {!! JsValidator::formRequest('Vanguard\Http\Requests\Auth\PasswordRemindRequest', '#remind-password-form') !!}
     <script>
         canEditSettings = {{ (int)$canEditSettings }};
+        authUser = {{ (int)Auth::check() }};
     </script>
 </body>
 </html>
