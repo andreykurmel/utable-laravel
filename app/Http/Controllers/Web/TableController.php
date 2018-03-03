@@ -402,4 +402,39 @@ class TableController extends Controller
             ->limit(5)->get();
         return ['results' => $users];
     }
+
+    public function getFavoritesForTable(Request $request)
+    {
+        if (Auth::user()) {
+            $page = isset($request->p) ? (int)$request->p : 0;
+            $count = isset($request->c) ? (int)$request->c : 0;
+
+            $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+
+            $headers = $this->tableService->getHeaders($request->tableName);
+
+            $rows = DB::connection('mysql_data')
+                ->table($request->tableName.' as mt')
+                ->join('favorite as f', 'mt.id', '=', 'f.row_id')
+                ->where('f.user_id', '=', Auth::user()->id)
+                ->where('f.table_id', '=', $table_meta->id)
+                ->select('mt.*');
+
+            $rowsCount = $rows->count();
+            if ($count) {
+                $rows->offset($page*$count)->limit($count);
+            }
+            $rows = $rows->get();
+
+            return [
+                'rows' => $rowsCount,
+                'data' => $rows,
+                'headers' => $headers
+            ];
+        } else {
+            return [
+                'headers' => $this->tableService->getHeaders($request->tableName)
+            ];
+        }
+    }
 }
