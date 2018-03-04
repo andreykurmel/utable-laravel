@@ -389,6 +389,7 @@ Route::get('/api/updateRightsDatas', 'TableController@updateRightsDatas')->name(
 Route::get('/api/deleteRightsDatas', 'TableController@deleteRightsDatas')->name('deleteRightsDatas');
 Route::get('/api/toggleAllrights', 'TableController@toggleAllrights')->name('toggleAllrights');
 Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxSearchUser');
+Route::get('/api/getFavoritesForTable', 'TableController@getFavoritesForTable')->name('getFavoritesForTable');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');

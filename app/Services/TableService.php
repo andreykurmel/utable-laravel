@@ -58,9 +58,6 @@ class TableService {
 
         $forFiltersQuery = "SELECT * FROM $tableName WHERE";
         $sql = DB::connection('mysql_data')->table($tableName);
-        if($fromMainData) {
-            $sql->leftJoin('favorite as f', $tableName.'.id', '=', 'f.row_id');
-        }
 
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
@@ -129,6 +126,13 @@ class TableService {
         if ($count) {
             $sql->offset($page*$count)->limit($count);
         }
+
+        //join favourite table for main data
+        if($fromMainData) {
+            $sql->leftJoin('favorite as f', $tableName.'.id', '=', 'f.row_id');
+        }
+
+        //if user isn`t admin or owner -> then select only accessible fields
         if ($fields_for_select && $fields_for_select !== 1) {
             $select_cls = [];
             foreach ($fields_for_select as $key => $fld) {
@@ -143,6 +147,8 @@ class TableService {
                 $sql->select($tableName.'.*', 'f.id as is_favorited');
             }
         }
+
+        //select favourite table for main data
         if($fromMainData) {
             $sql->where(function ($q) use ($table_meta) {
                 $q->where(function ($qq) use ($table_meta) {
@@ -152,10 +158,12 @@ class TableService {
                 $q->orWhereNull('f.id');
             });
         }
+
         $sql->orderBy($tableName.'.id');
         $result = $sql->get();
 
-        //filters data
+
+        //----------------------------------------filters data -----------------------------------------------
         $respFilters = [];
         $respDDLs = [];
         if (isset($post->getfilters) || $query['opt'] == 'settings') {
@@ -178,40 +186,46 @@ class TableService {
                         ->get();
                 }
 
-                foreach ($selected_filters as $sf) {
-                    //get values for each filter
-                    $filter_vals = DB::connection('mysql_data')->table($tableName)
-                        ->select($sf->key." as value")
-                        ->distinct();
-                    $data_items = (clone $resultSQL)
-                        ->select($sf->key." as value")
-                        ->distinct();
-                    //if user switched off some filters -> then display it in the result data
-                    if ($filter_vals->count() == $data_items->count()) {
+                //if in loaded data was no changes, only next page -> then return current filters
+                if (!empty($filterData) && empty($query['changedKeyword']) && empty($changedFilter)) {
+                    $respFilters = $filterData;
+                } else {
+                    //get filters if data was changed or it is first load
+                    foreach ($selected_filters as $sf) {
+                        //get values for each filter
                         $filter_vals = DB::connection('mysql_data')->table($tableName)
                             ->select($sf->key." as value")
-                            ->selectRaw("true as checked")
-                            ->distinct()->get();
-                        $filterObj = [
-                            'key' => $sf->key,
-                            'name' => $sf->name,
-                            'val' => $filter_vals ? $filter_vals : [],
-                            'checkAll' => true
-                        ];
-                    } else {
-                        $filter_vals = DB::connection('mysql_data')->select("
+                            ->distinct();
+                        $data_items = (clone $resultSQL)
+                            ->select($sf->key." as value")
+                            ->distinct();
+                        //if user switched off some filters -> then display it in the result data
+                        if ($filter_vals->count() == $data_items->count()) {
+                            $filter_vals = DB::connection('mysql_data')->table($tableName)
+                                ->select($sf->key." as value")
+                                ->selectRaw("true as checked")
+                                ->distinct()->get();
+                            $filterObj = [
+                                'key' => $sf->key,
+                                'name' => $sf->name,
+                                'val' => $filter_vals ? $filter_vals : [],
+                                'checkAll' => true
+                            ];
+                        } else {
+                            $filter_vals = DB::connection('mysql_data')->select("
                         SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
                         FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
                         GROUP BY `$tableName`.`".$sf->key."`
                     ");
-                        $filterObj = [
-                            'key' => $sf->key,
-                            'name' => $sf->name,
-                            'val' => $filter_vals ? $filter_vals : [],
-                            'checkAll' => false
-                        ];
+                            $filterObj = [
+                                'key' => $sf->key,
+                                'name' => $sf->name,
+                                'val' => $filter_vals ? $filter_vals : [],
+                                'checkAll' => false
+                            ];
+                        }
+                        $respFilters[] = $filterObj;
                     }
-                    $respFilters[] = $filterObj;
                 }
             }
 
@@ -245,6 +259,7 @@ class TableService {
             }
         }
 
+        //--------------------------------------------------- get headers --------------------------------------------
         $header_data = DB::connection('mysql_data')
             ->table('tb')
             ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
@@ -252,20 +267,39 @@ class TableService {
             ->select('tsd.*')
             ->get();
 
+        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
         $headers = [];
-        foreach ($header_data as $hdr) {
-            if ($fields_for_select) {
-                if ($fields_for_select === 1) {
-                    $headers[$hdr->field] = $hdr;
-                    $headers[$hdr->field]->can_edit = 1;
-                } else {
-                    if (isset($fields_for_select[$hdr->field])) {
-                        $headers[$hdr->field] = $hdr;
-                        $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
+        if ($tb) {
+            foreach ($tb as $key => $val) {
+                if ($fields_for_select) {
+                    if ($fields_for_select === 1) {
+                        $headers[$key] = $header_data->where('field', '=', $key)->first();
+                        $headers[$key]->can_edit = 1;
+                    } else {
+                        if (isset($fields_for_select[$key])) {
+                            $headers[$key] = $header_data->where('field', '=', $key)->first();
+                            $headers[$key]->can_edit = $fields_for_select[$key];
+                        }
                     }
+                } else {
+                    $headers[$key] = $header_data->where('field', '=', $key)->first();
                 }
-            } else {
-                $headers[$hdr->field] = $hdr;
+            }
+        } else {
+            foreach ($header_data as $hdr) {
+                if ($fields_for_select) {
+                    if ($fields_for_select === 1) {
+                        $headers[$hdr->field] = $hdr;
+                        $headers[$hdr->field]->can_edit = 1;
+                    } else {
+                        if (isset($fields_for_select[$hdr->field])) {
+                            $headers[$hdr->field] = $hdr;
+                            $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
+                        }
+                    }
+                } else {
+                    $headers[$hdr->field] = $hdr;
+                }
             }
         }
 
@@ -308,8 +342,14 @@ class TableService {
 
         $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
         $headers = [];
-        foreach ($header_data as $hdr) {
-            $headers[$hdr->field] = $hdr;
+        if ($tb) {
+            foreach ($tb as $key => $val) {
+                $headers[$key] = $header_data->where('field', '=', $key)->first();
+            }
+        } else {
+            foreach ($header_data as $hdr) {
+                $headers[$hdr->field] = $hdr;
+            }
         }
         return $headers;
     }

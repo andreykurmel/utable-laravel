@@ -190,7 +190,9 @@
                     <!-- Tabs -->
                     <ul class="tabs" style="position: fixed ;top: 66px; left: 20px;">
                         <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
-                        <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
+                        @if($tableName)
+                            <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
+                        @endif
                         @if($tableName == 'st')
                             <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                         @endif
@@ -390,7 +392,7 @@
 
                         <div id="favorite_view" style='display:none;padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
 
-                            <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
+                            <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
 
                                 <div class="dataTables_header">
                                     <div class="dataTables_length">
@@ -410,10 +412,11 @@
                                             entries
                                         </label>
                                     </div>
+                                    <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;" onclick="favoritesCopyToClipboard()">copy</button>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
-                                    <table class="table dataTable" id="tbFavouriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
-                                        <thead id="tbFavouriteHeaders_header">
+                                    <table class="table dataTable" id="tbFavoriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
+                                        <thead id="tbFavoriteHeaders_header">
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($headers as $hdr)
@@ -422,7 +425,7 @@
                                         </tr>
                                         </thead>
 
-                                        <tbody style="visibility: hidden;" id="tbFavouriteHeaders_body">
+                                        <tbody style="visibility: hidden;" id="tbFavoriteHeaders_body">
                                         </tbody>
                                     </table>
                                     <div style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:32px;" class="table_body_viewport">
@@ -441,9 +444,25 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
+                                <div class="dataTables_footer" style="position: absolute; bottom: 0; right: 0; left: 0; height: 52px;">
                                     <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
-                                        Showing all entries</div>
+                                        Showing
+                                        @if(Auth::user())
+                                            <span id="favorite_showing_from_span"></span>
+                                            to <span id="favorite_showing_to_span"></span>
+                                            of <span id="favorite_showing_all_span"></span>
+                                        @else
+                                            all
+                                        @endif
+                                        entries
+                                    </div>
+                                    <div class="dataTables_paginate paging_full_numbers">
+                                        <a class="paginate_button first" onclick="changeFavoritePage(1)">First
+                                        </a><a class="paginate_button previous" onclick="changeFavoritePage(selectedFavoritePage>1 ? selectedFavoritePage : 1)">Previous
+                                        </a><span id="favorite_paginate_btns_span">
+                                        </span><a class="paginate_button next" onclick="changeFavoritePage((selectedFavoritePage+1)<(favoriteRowsCount/selectedEntries) ? selectedFavoritePage+2 : (favoriteRowsCount/selectedEntries))">Next
+                                        </a><a class="paginate_button last" onclick="changeFavoritePage(Math.ceil(favoriteRowsCount/selectedEntries))">Last</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1049,6 +1068,7 @@
     {!! HTML::script('assets/js/lib/developr.input.js') !!}
     {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
     {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js') !!}
+    {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js') !!}
     {!! HTML::script('assets/js/lib/table.js') !!}
 
     {{-- Login scripts --}}

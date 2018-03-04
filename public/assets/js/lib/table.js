@@ -544,8 +544,15 @@ function toggleFavoriteRow(idx, elem) {
         var i = $(elem).find('i');
         if ($(i).hasClass('fa-star')) {
             $(i).removeClass('fa-star').addClass('fa-star-o');
+            for(var j = 0; j < favoriteTableData.length; j++) {
+                if (favoriteTableData[j].id == tableData[idx].id) {
+                    favoriteTableData.splice(j, 1);
+                    break;
+                }
+            }
         } else {
             $(i).removeClass('fa-star-o').addClass('fa-star');
+            favoriteTableData.push( Object.assign({}, tableData[idx]) );
         }
     }
 }
@@ -586,6 +593,7 @@ function showFavorite() {
     $("#map_view").hide();
     $("#settings_view").hide();
     $('.showhidemenu').show();
+    changeFavoritePage(1);
 }
 
 function showSettings() {
@@ -778,6 +786,7 @@ function changeEntries(val) {
     selectedEntries = val;
     $('.js-selected_entries_span').html(val);
     changePage(1);
+    changeFavoritePage(1);
     $('.entry-elem').removeClass('selected');
     $('.entry'+val).addClass('selected');
 }
@@ -1125,6 +1134,180 @@ function checkboxAddToggle() {
         $('#tbHeaders').css('top', '0');
         $('#divTbData').css('top', '32px');
     }
+}
+
+
+
+
+
+
+
+/* --------------------------- Favorites tab -----------------------------------*/
+
+var selectedFavoritePage = 0,
+    favoriteRowsCount = 0,
+    favoriteTableData = [],
+    favoriteTableHeaders = [];
+
+function changeFavoritePage(page) {
+    $('.loadingFromServer').show();
+    selectedFavoritePage = page-1;
+
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/getFavoritesForTable',
+        data: {
+            tableName: selectedTableName,
+            p: selectedFavoritePage,
+            c: selectedEntries
+        },
+        success: function (response) {
+            if (response.msg) {
+                alert(response.msg);
+            }
+
+            console.log(response);
+            if (authUser) {
+                favoriteRowsCount = response.rows;
+                favoriteTableData = response.data;
+            } else {
+                favoriteRowsCount = 0;
+            }
+            favoriteTableHeaders = response.headers;
+            showFavoriteDataTable(favoriteTableHeaders, favoriteTableData);
+            showFavoriteTableFooter();
+            $('.loadingFromServer').hide();
+        },
+        error: function () {
+            alert("Server error");
+            $('.loadingFromServer').hide();
+        }
+    })
+}
+
+function showFavoriteDataTable(headers, data) {
+    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, tbDataHeaders = "",
+        lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
+
+    for(var i = 0; i < data.length; i++) {
+        if (i === 0) { //first row with checkboxes
+            tableData += "<tr>";
+            tableData += '<td></td><td></td>';
+            for(key in data[i]) {
+                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                    tableData += '<td style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"><input type="checkbox"></td>';
+                }
+            }
+            tableData += "</tr>";
+        }
+
+        tableData += "<tr>";
+        tableData += '<td>' +
+            '<span class="font-icon">`</span><b>'+ (i+1+Number(selectedFavoritePage*lselectedEntries)) +'</b>' +
+            '</td>';
+        tableData += '<td style="text-align: center;"><input type="checkbox"></td>';
+        for(key in data[i]) {
+            if ($.inArray(key, arrAddFieldsInData) == -1) {
+                tableData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    (data[i][key] !== null ? data[i][key] : '') +
+                    '</td>';
+            }
+        }
+        tableData += "</tr>";
+
+        tbHiddenData += "<tr>";
+        tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1+Number(selectedFavoritePage*lselectedEntries)) +'</b></td>';
+        tbHiddenData += '<td></td>';
+        for(key in data[i]) {
+            if ($.inArray(key, arrAddFieldsInData) == -1) {
+                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    (data[i][key] !== null ? data[i][key] : '') +
+                    '</td>';
+            }
+        }
+        tbHiddenData += "</tr>";
+    }
+
+    tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap'><b>Copy</b></th>";
+    for(var $hdr in headers) {
+        tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' +
+            ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+            '</th>';
+    }
+    tbDataHeaders += "</tr>";
+
+    $('#tbFavoriteHeaders_header').html(tbDataHeaders);
+    $('#tbFavoriteData_header').html(tbDataHeaders);
+
+    $('#tbFavoriteHeaders_body').html(tbHiddenData);
+    $('#tbFavoriteData_body').html(tableData);
+}
+
+function showFavoriteTableFooter() {
+    var lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
+    $('#favorite_showing_from_span').html((selectedFavoritePage)*lselectedEntries + 1);
+    $('#favorite_showing_to_span').html((selectedFavoritePage+1)*selectedEntries < favoriteRowsCount ? (selectedFavoritePage+1)*lselectedEntries : favoriteRowsCount);
+    $('#favorite_showing_all_span').html(favoriteRowsCount);
+
+
+    var maxPage = lselectedEntries ? Math.ceil(favoriteRowsCount/lselectedEntries) : 1;
+    var paginateBtns = [], pbtn;
+    if (selectedFavoritePage+1 < 5) {
+        var idx = 1;
+        var maxStep = Math.min(5, maxPage);
+        while (idx <= maxStep) {
+            paginateBtns.push(idx);
+            idx++;
+        }
+        if (idx < maxPage) {
+            paginateBtns.push('...');
+            paginateBtns.push(maxPage);
+        }
+    } else {
+        if (selectedFavoritePage+1 > (maxPage-5)) {
+            if (maxPage > 5) {
+                paginateBtns.push(1);
+                paginateBtns.push('...');
+            }
+            var idx = maxPage-5;
+            while (idx <= maxPage) {
+                paginateBtns.push(idx);
+                idx++;
+            }
+        } else {
+            paginateBtns.push(1);
+            paginateBtns.push('...');
+            paginateBtns.push(selectedFavoritePage);
+            paginateBtns.push(selectedFavoritePage + 1);
+            paginateBtns.push(selectedFavoritePage + 2);
+            paginateBtns.push('...');
+            paginateBtns.push(maxPage);
+        }
+    }
+
+    var paginateHTML = '';
+    for(var i = 0; i < paginateBtns.length; i++) {
+        if (pbtn == '...') {
+            paginateHTML += '<span>...</span>';
+        } else {
+            paginateHTML += '<a class="paginate_button" tabindex="0" onclick="changeFavoritePage('+paginateBtns[i]+')">'+paginateBtns[i]+'</a>';
+        }
+    }
+    $('#favorite_paginate_btns_span').html(paginateHTML);
+}
+
+function favoritesCopyToClipboard() {
+    copyToClipboard("<table><tr><td>1</td><td>2</td></tr> <tr><td>3</td><td>4</td></tr></table>");
+}
+
+function copyToClipboard(text){
+    var dummy = document.createElement("input");
+    document.body.appendChild(dummy);
+    dummy.setAttribute('value', text);
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
 }
 
 
