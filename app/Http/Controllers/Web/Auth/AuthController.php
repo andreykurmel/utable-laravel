@@ -80,19 +80,19 @@ class AuthController extends Controller
                 $this->incrementLoginAttempts($request);
             }
 
-            return redirect()->to('login' . $to)
+            return back()
                 ->withErrors(trans('auth.failed'));
         }
 
         $user = Auth::getProvider()->retrieveByCredentials($credentials);
 
         if ($user->isUnconfirmed()) {
-            return redirect()->to('login' . $to)
+            return back()
                 ->withErrors(trans('app.please_confirm_your_email_first'));
         }
 
         if ($user->isBanned()) {
-            return redirect()->to('login' . $to)
+            return back()
                 ->withErrors(trans('app.your_account_is_banned'));
         }
 

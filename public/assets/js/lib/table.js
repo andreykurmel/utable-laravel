@@ -248,14 +248,32 @@ function changePage(page) {
 
 function showDataTable(headers, data) {
     var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, tbDataHeaders = "", visibleColumns = "",
-        lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
+        lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, star_class;
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
         tableData += '<td '+(i === 0 ? 'id="first_data_td"' : '')+'>' +
             '<a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a>' +
             '</td>';
-        tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)"><i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="font-size: 1.5em;color: #FD0;"></i></a></td>';
+
+        //second column ("star")
+        if (authUser) {
+            tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
+                '<i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="font-size: 1.5em;color: #FD0;"></i>' +
+                '</a></td>';
+        } else {
+            star_class = 'fa-star-o';
+            for (var v = 0; v < favoriteTableData.length; v++) {
+                if (favoriteTableData[v].id === data[i].id) {
+                    star_class = 'fa-star';
+                }
+            }
+            tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
+                '<i class="fa '+(star_class)+'" style="font-size: 1.5em;color: #FD0;"></i>' +
+                '</a></td>';
+        }
+
+        //main table data
         for(key in data[i]) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
                 tableData +=
@@ -265,7 +283,9 @@ function showDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                    (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
+                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
                 if (key === 'ddl_id') {
                     tableData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
                 } else {
@@ -276,6 +296,7 @@ function showDataTable(headers, data) {
         }
         tableData += "</tr>";
 
+        //add row data
         if (i == 0) {
             tbAddRow += "<tr style='height: 53px;'>";
             tbAddRow += '<td></td>';
@@ -289,7 +310,9 @@ function showDataTable(headers, data) {
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
                         (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
-                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"></td>';
+                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                        (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
+                        (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '"></td>';
                     /*if (key == 'id') {
                      tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
                      } else {
@@ -308,6 +331,7 @@ function showDataTable(headers, data) {
             tbAddRow_h += "</tr>";
         }
 
+        //hidden data for correct columns size
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
         tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i></td>';
@@ -316,7 +340,9 @@ function showDataTable(headers, data) {
                 tbHiddenData +=
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                    (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
+                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
                 if (key === 'ddl_id') {
                     tbHiddenData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
                 } else {
@@ -328,10 +354,16 @@ function showDataTable(headers, data) {
         tbHiddenData += "</tr>";
     }
 
+    //recreate headers for main data
     tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
     tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
     for(var $hdr in headers) {
-        tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</th>';
+        tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+            (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
+            (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
+            '">' +
+            ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+            '</th>';
 
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
         visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" checked > ' +
@@ -1192,10 +1224,18 @@ function showFavoriteDataTable(headers, data) {
     for(var i = 0; i < data.length; i++) {
         if (i === 0) { //first row with checkboxes
             tableData += "<tr>";
-            tableData += '<td></td><td></td>';
+            tableData += '<td></td><td></td><td></td>';
             for(key in data[i]) {
                 if ($.inArray(key, arrAddFieldsInData) == -1) {
-                    tableData += '<td style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '"><input type="checkbox"></td>';
+                    tableData += '<td ' +
+                        'data-key="' + headers[key].field + '"' +
+                        'style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                            '<input ' +
+                            'type="checkbox" ' +
+                            'class="js-favoriteCheckboxRow" ' +
+                            'data-key="' + headers[key].field + '"' +
+                            '>' +
+                        '</td>';
                 }
             }
             tableData += "</tr>";
@@ -1205,11 +1245,21 @@ function showFavoriteDataTable(headers, data) {
         tableData += '<td>' +
             '<span class="font-icon">`</span><b>'+ (i+1+Number(selectedFavoritePage*lselectedEntries)) +'</b>' +
             '</td>';
-        tableData += '<td style="text-align: center;"><input type="checkbox"></td>';
+        //second column ("star")
+        tableData += '<td><a href="javascript:void(0)" onclick="removeFavoriteRow('+i+',this)">' +
+            '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' +
+            '</a></td>';
+        //checkbox for selecting
+        tableData += '<td style="text-align: center;">' +
+            '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '">' +
+            '</td>';
         for(key in data[i]) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
-                tableData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    (data[i][key] !== null ? data[i][key] : '') +
+                tableData += '<td ' +
+                    'data-key="' + headers[key].field + '"' +
+                    'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
+                    '>' +
+                        (data[i][key] !== null ? data[i][key] : '') +
                     '</td>';
             }
         }
@@ -1217,11 +1267,16 @@ function showFavoriteDataTable(headers, data) {
 
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1+Number(selectedFavoritePage*lselectedEntries)) +'</b></td>';
+        //second column ("star")
+        tbHiddenData += '<td>' + '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' + '</td>';
         tbHiddenData += '<td></td>';
         for(key in data[i]) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
-                tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    (data[i][key] !== null ? data[i][key] : '') +
+                tbHiddenData += '<td ' +
+                    'data-key="' + headers[key].field + '"' +
+                    'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
+                    '>' +
+                        (data[i][key] !== null ? data[i][key] : '') +
                     '</td>';
             }
         }
@@ -1229,6 +1284,7 @@ function showFavoriteDataTable(headers, data) {
     }
 
     tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
     tbDataHeaders += "<th class='sorting nowrap'><b>Copy</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' +
@@ -1297,17 +1353,60 @@ function showFavoriteTableFooter() {
     $('#favorite_paginate_btns_span').html(paginateHTML);
 }
 
-function favoritesCopyToClipboard() {
-    copyToClipboard("<table><tr><td>1</td><td>2</td></tr> <tr><td>3</td><td>4</td></tr></table>");
+function removeFavoriteRow(ixd, elem) {
+    favoriteTableData.splice(ixd, 1);
+    showFavoriteDataTable(favoriteTableHeaders, favoriteTableData);
 }
 
-function copyToClipboard(text){
-    var dummy = document.createElement("input");
-    document.body.appendChild(dummy);
-    dummy.setAttribute('value', text);
-    dummy.select();
-    document.execCommand("copy");
-    document.body.removeChild(dummy);
+function favoritesCopyToClipboard() {
+    var selectedColumns = [];
+    $('.js-favoriteCheckboxRow:checked').each(function (i, elem) {
+        selectedColumns.push( $(elem).data('key') );
+    });
+    console.log(selectedColumns);
+
+    var textToClip = "<table id='tableForCopy'>";
+    $('.js-favoriteRowsChecked:checked').each(function (i, elem) {
+        var idx = $(elem).data('idx');
+        textToClip += "<tr>";
+        for (var j = 0; j < selectedColumns.length; j++) {
+            textToClip += "<td>" + favoriteTableData[ idx ][ selectedColumns[j] ] + "</td>";
+        }
+        textToClip += "</tr>";
+    });
+    textToClip += "</table>";
+    console.log(textToClip);
+
+    copyToClipboard(textToClip);
+}
+
+function copyToClipboard(text) {
+    $(document.body).append(text);
+    selectElementContents(tableForCopy);
+    document.body.removeChild(tableForCopy);
+}
+
+function selectElementContents(el) {
+    var body = document.body, range, sel;
+    if (document.createRange && window.getSelection) {
+        range = document.createRange();
+        sel = window.getSelection();
+        sel.removeAllRanges();
+        try {
+            range.selectNodeContents(el);
+            sel.addRange(range);
+        } catch (e) {
+            range.selectNode(el);
+            sel.addRange(range);
+        }
+        document.execCommand("copy");
+
+    } else if (body.createTextRange) {
+        range = body.createTextRange();
+        range.moveToElementText(el);
+        range.select();
+        range.execCommand("Copy");
+    }
 }
 
 

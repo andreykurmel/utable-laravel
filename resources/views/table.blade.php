@@ -69,6 +69,7 @@
         .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
             line-height: 1em;
             vertical-align: middle;
+            overflow: hidden;
         }
     </style>
 
@@ -106,7 +107,7 @@
                             <li style="display: inline-block">
                                 <a href="{{ route('profile') }}">
                                     <i class="fa fa-user"></i>
-                                    {{ Auth::user()->username }}
+                                    {{ Auth::user()->first_name ? Auth::user()->first_name." ".Auth::user()->last_name : Auth::user()->username }}
                                 </a>
                             </li>
                             <li style="display: inline-block">
@@ -857,7 +858,7 @@
         </div>
 
         {{-- Login form --}}
-        <div class="loginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);display: none;">
+        <div class="loginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);{{ $errors->any() ? '' : 'display: none;' }}">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                     <div class="form-wrap" id="login">
@@ -918,7 +919,7 @@
                 </div>
             </div>
         </div>
-        <div class="loginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.loginForm').hide()"></div>
+        <div class="loginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;{{ $errors->any() ? '' : 'display: none;' }}" onclick="$('.loginForm').hide()"></div>
 
         {{-- Register form --}}
         <div class="registerForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px);display: none;">
@@ -1068,7 +1069,6 @@
     {!! HTML::script('assets/js/lib/developr.input.js') !!}
     {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
     {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js') !!}
-    {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js') !!}
     {!! HTML::script('assets/js/lib/table.js') !!}
 
     {{-- Login scripts --}}

@@ -156,7 +156,7 @@ class SocialAuthController extends Controller
 
         event(new LoggedIn);
 
-        return redirect()->intended('/');
+        return redirect()->intended(route('homepage'));
     }
 
     /**

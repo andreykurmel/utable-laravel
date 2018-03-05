@@ -85,7 +85,7 @@
                         <li style="display: inline-block">
                             <a href="{{ route('profile') }}">
                                 <i class="fa fa-user"></i>
-                                {{ Auth::user()->username }}
+                                {{ Auth::user()->first_name ? Auth::user()->first_name." ".Auth::user()->last_name : Auth::user()->username }}
                             </a>
                         </li>
                         <li style="display: inline-block">
@@ -112,13 +112,17 @@
     </div>
 
     <!-- Login form -->
-    <div class="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px); display: none;">
+    <div class="showLoginForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px); {{ $errors->any() ? '' : 'display: none;' }}">
         <div class="auth" style="font-size: 14px;">
             <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                 <div class="form-wrap" id="login">
                     <div style="text-align: center; margin-bottom: 25px;">
                         <img src="assets/img/tdp-logo.png" alt="Utable">
                     </div>
+
+                    {{-- This will simply include partials/messages.blade.php view here --}}
+                    @include('partials/messages')
+
                     <form role="form" action="<?= url('login') ?>" method="POST" id="login-form" autocomplete="off">
                         <input type="hidden" value="<?= csrf_token() ?>" name="_token">
 
@@ -169,7 +173,7 @@
             </div>
         </div>
     </div>
-    <div class="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000; display: none;" onclick="$('.showLoginForm').hide()"></div>
+    <div class="showLoginForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000; {{ $errors->any() ? '' : 'display: none;' }}" onclick="$('.showLoginForm').hide()"></div>
 
     <!-- Register form -->
     <div class="showRegisterForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 240px); display: none;">

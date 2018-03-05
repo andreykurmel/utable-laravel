@@ -245,7 +245,7 @@ class TableController extends Controller
 
             $usrs = DB::table('users')->get();
             foreach ($usrs as $usr) {
-                $Rightsdatas['users_names'][$usr->id] = $usr->username;
+                $Rightsdatas['users_names'][$usr->id] = $usr->first_name ? $usr->first_name." ".$usr->last_name : $usr->username;
             }
 
             $Rightsdatas['data'] = DB::connection('mysql_data')
