@@ -437,4 +437,34 @@ class TableController extends Controller
             ];
         }
     }
+
+    public function changeOrder(Request $request)
+    {
+        if (Auth::user()) {
+            $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+
+            //set selected column before target column
+            $orders = DB::connection('mysql_data')
+                ->table('orders')
+                ->where('user_id', '=', Auth::user()->id)
+                ->where('table_id', '=', $table_meta->id)
+                ->orderBy('order')
+                ->get();
+
+            $elem = $orders[$request->select-1];
+            $orders->splice($request->select-1, 1); //remove from array selected elem
+            $orders->splice($request->target-1, 0, [$elem]); //paste selected elem before target position
+
+            for ($i = 0; $i < count($orders); $i++) {
+                DB::connection('mysql_data')
+                    ->table('orders')
+                    ->where('id', '=', $orders[$i]->id)
+                    ->update([ 'order' => $i+1 ]);
+            }
+
+            return ['status' => 'success'];
+        } else {
+            return [];
+        }
+    }
 }

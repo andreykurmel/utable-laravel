@@ -80,7 +80,8 @@ var baseHttpUrl = "/api",
     tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
 
 var curFilter = "",
-    arrAddFieldsInData = ['is_favorited'];
+    arrAddFieldsInData = ['is_favorited'],
+    selectedForChangeOrder = -1;
 
 var settingsTableName = 'tb_settings_display',
     settingsEntries = $('#inpSettingsEntries').val(),
@@ -99,6 +100,7 @@ function selectTable(tableName) {
     $('.loadingFromServer').show();
     selectedPage = 0;
     searchKeyword = "";
+    selectedForChangeOrder = -1;
     $.ajax({
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable?tableName=' + tableName,
@@ -188,6 +190,7 @@ function showTableFooter() {
 function changePage(page) {
     $('.loadingFromServer').show();
     selectedPage = page-1;
+    selectedForChangeOrder = -1;
 
     var query = {};
     if (searchKeyword) {
@@ -274,7 +277,7 @@ function showDataTable(headers, data) {
         }
 
         //main table data
-        for(key in data[i]) {
+        for(key in headers) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
                 tableData +=
                     '<td ' +
@@ -301,7 +304,7 @@ function showDataTable(headers, data) {
             tbAddRow += "<tr style='height: 53px;'>";
             tbAddRow += '<td></td>';
             tbAddRow += '<td></td>';
-            for(key in data[i]) {
+            for(key in headers) {
                 if ($.inArray(key, arrAddFieldsInData) == -1) {
                     tbAddRow +=
                         '<td ' +
@@ -323,7 +326,7 @@ function showDataTable(headers, data) {
             tbAddRow += "</tr>";
 
             tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
-            for(key in data[i]) {
+            for(key in headers) {
                 if ($.inArray(key, arrAddFieldsInData) == -1) {
                     tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
                 }
@@ -335,7 +338,7 @@ function showDataTable(headers, data) {
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
         tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
                 tbHiddenData +=
                     '<td ' +
@@ -358,7 +361,11 @@ function showDataTable(headers, data) {
     tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
     tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
     for(var $hdr in headers) {
-        tbDataHeaders += '<th class="sorting nowrap" data-key="' + headers[$hdr].field + '" style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+        tbDataHeaders += '<th ' +
+            'class="sorting nowrap" ' +
+            'data-key="' + headers[$hdr].field + '" ' +
+            (authUser ? 'onclick="changeOrder(this, ' + headers[$hdr].calc_odr + ')" ' : '') +
+            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
@@ -589,6 +596,43 @@ function toggleFavoriteRow(idx, elem) {
     }
 }
 
+function changeOrder(elem, ord) {
+    if (selectedForChangeOrder > -1 && selectedForChangeOrder != ord) {
+        swal({
+                title: "Set selected column before this column?",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-success",
+                confirmButtonText: "Yes",
+                closeOnConfirm: true
+            },
+            function(isConfirm) {
+                if(isConfirm) {
+                    $('.loadingFromServer').show();
+                    $.ajax({
+                        method: 'GET',
+                        url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+ord,
+                        success: function (response) {
+                            $('.loadingFromServer').hide();
+                            changePage(selectedPage+1);
+                        },
+                        error: function () {
+                            alert("Server error");
+                            $('.loadingFromServer').hide();
+                        }
+                    });
+                } else {
+                    selectedForChangeOrder = -1;
+                    $('.js_selectedForChangeOrder').css('background', '').removeClass('js_selectedForChangeOrder');
+                }
+            }
+        );
+    } else {
+        selectedForChangeOrder = ord;
+        $(elem).css('background', '#ccc').addClass('js_selectedForChangeOrder');
+    }
+}
+
 function showMap() {
     $("#li_list_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
@@ -794,7 +838,7 @@ function openPrintDialog() {
             html += "<tbody>";
             for(var i = 0; i < tableData.length; i++) {
                 html += "<tr>";
-                for(key in tableData[i]) {
+                for(key in tableHeaders) {
                     html += '<td style="border: solid 1px #000;padding: 3px 5px; ' + (tableHeaders[key].web == 'No' ? 'display: none;' : '') + '">' + (tableData[i][key] !== null ? tableData[i][key] : '') + '</td>';
                 }
                 html += "</tr>";
@@ -927,8 +971,9 @@ function hideInlineEdit(id) {
         .data('innerHTML', '');
 }
 
-function deleteRow(params) {
+function deleteRow(params, idx) {
     var lv = $('#list_view').is(':visible'),
+        ltableData = (lv ? tableData : settingsTableData),
         lselectedTableName = (lv ? selectedTableName : settingsTableName);
 
     $('.loadingFromServer').show();
@@ -938,13 +983,14 @@ function deleteRow(params) {
         url: baseHttpUrl + '/deleteTableRow?tableName=' + lselectedTableName + '&id=' + params.id,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.data.msg);
+            alert(response.msg);
         },
         error: function () {
             $('.loadingFromServer').hide();
             alert("Server error");
         }
     });
+    ltableData.splice(idx, 1);
     if (lv) {
         showDataTable(tableHeaders, tableData);
     } else {
@@ -960,7 +1006,9 @@ function addRow(params) {
 
     var strParams = "";
     for (var key in params) {
-        strParams += key + '=' + params[key] + '&';
+        if ($.inArray(key, arrAddFieldsInData) == -1) {
+            strParams += key + '=' + params[key] + '&';
+        }
     }
 
     $.ajax({
@@ -990,7 +1038,9 @@ function updateRow(params) {
 
     var strParams = "";
     for (var key in params) {
-        strParams += key + '=' + params[key] + '&';
+        if ($.inArray(key, arrAddFieldsInData) == -1) {
+            strParams += key + '=' + params[key] + '&';
+        }
     }
 
     $.ajax({
@@ -1032,13 +1082,16 @@ function updateAddRowData(idx, key, id) {
 
 function updateRowModal() {
     var lv = $('#list_view').is(':visible'),
-        ltableData = (lv ? tableData : settingsTableData);
+        ltableData = (lv ? tableData : settingsTableData),
+        ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
 
     $('.js-editmodal').hide();
 
     var idx = $('.js-editmodal').data('idx');
-    for(var key in ltableData[idx]) {
-        ltableData[idx][key] = $('#modals_inp_'+key).val();
+    for(var key in ltableHeaders) {
+        if (key != 'id') {
+            ltableData[idx][key] = $('#modals_inp_'+key).val();
+        }
     }
 
     updateRow(ltableData[idx]);
@@ -1062,7 +1115,7 @@ function deleteRowModal() {
 
     $('.js-editmodal').hide();
     var idx = $('.js-editmodal').data('idx');
-    deleteRow(ltableData[idx]);
+    deleteRow(ltableData[idx], idx);
 }
 
 function editSelectedData(idx) {
@@ -1078,10 +1131,9 @@ function editSelectedData(idx) {
         $('#modal_btn_delete, #modal_btn_update').hide();
         $('#modal_btn_add').show();
     }
-    var idx_loc = idx > -1 ? idx : 0;
 
     var html = "";
-    for(var key in ltableData[idx_loc]) {
+    for(var key in ltableHeaders) {
         if (key != 'id' && key != 'is_favorited') {
             html += "<tr>";
             html +=
@@ -1225,7 +1277,7 @@ function showFavoriteDataTable(headers, data) {
         if (i === 0) { //first row with checkboxes
             tableData += "<tr>";
             tableData += '<td></td><td></td><td></td>';
-            for(key in data[i]) {
+            for(key in headers) {
                 if ($.inArray(key, arrAddFieldsInData) == -1) {
                     tableData += '<td ' +
                         'data-key="' + headers[key].field + '"' +
@@ -1253,7 +1305,7 @@ function showFavoriteDataTable(headers, data) {
         tableData += '<td style="text-align: center;">' +
             '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '">' +
             '</td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
                 tableData += '<td ' +
                     'data-key="' + headers[key].field + '"' +
@@ -1270,7 +1322,7 @@ function showFavoriteDataTable(headers, data) {
         //second column ("star")
         tbHiddenData += '<td>' + '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' + '</td>';
         tbHiddenData += '<td></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if ($.inArray(key, arrAddFieldsInData) == -1) {
                 tbHiddenData += '<td ' +
                     'data-key="' + headers[key].field + '"' +
@@ -1516,7 +1568,7 @@ function showSettingsDataTable(headers, data) {
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'ddl_name') {
                 tableData +=
                     '<td ' +
@@ -1543,7 +1595,7 @@ function showSettingsDataTable(headers, data) {
         } else {
             tbHiddenData += '<td></td>';
         }
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'ddl_name') {
                 tbHiddenData +=
                     '<td ' +
@@ -1774,7 +1826,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'items') {
                 tableData +=
                     '<td ' +
@@ -1800,7 +1852,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'items') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && key === 'tb_id') {
@@ -2068,7 +2120,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
 
         tableData += "<tr id='row_" + i + (idx == -1 ? '_settings_Rights' : '_settings_Fields_Rights') + "' class='settings_Rights_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsRightsDataTable(settingsRights_Fields_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'fields') {
                 tableData +=
                     '<td ' +
@@ -2099,7 +2151,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
-        for(key in data[i]) {
+        for(key in headers) {
             if (key != 'fields') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && key === 'table_id') {
@@ -2157,6 +2209,7 @@ function updateSettingsRightsItem(key, idx, id) {
 function deleteSettingsRights(tableName, rowId, idx) {
     if (tableName == 'rights') {
         settingsRights.splice(idx, 1);
+        settingsRights_selectedIndex = -1;
         showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
     } else {
         settingsRights[settingsRights_selectedIndex].fields.splice(idx, 1);

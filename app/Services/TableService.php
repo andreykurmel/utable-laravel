@@ -54,6 +54,9 @@ class TableService {
             } else {
                 $fields_for_select = 1;
             }
+
+            //if user don`t have correct order in 'orders.sql' for current table -> repair
+            $this->RepairColOrderForUser($table_meta);
         }
 
         $forFiltersQuery = "SELECT * FROM $tableName WHERE";
@@ -136,7 +139,7 @@ class TableService {
         if ($fields_for_select && $fields_for_select !== 1) {
             $select_cls = [];
             foreach ($fields_for_select as $key => $fld) {
-                $select_cls[] = $key;
+                $select_cls[] = $tableName.".".$key;
             }
             if($fromMainData) {
                 $select_cls[] = 'f.id as is_favorited';
@@ -213,10 +216,10 @@ class TableService {
                             ];
                         } else {
                             $filter_vals = DB::connection('mysql_data')->select("
-                        SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
-                        FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
-                        GROUP BY `$tableName`.`".$sf->key."`
-                    ");
+                                SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
+                                FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
+                                GROUP BY `$tableName`.`".$sf->key."`
+                            ");
                             $filterObj = [
                                 'key' => $sf->key,
                                 'name' => $sf->name,
@@ -260,46 +263,39 @@ class TableService {
         }
 
         //--------------------------------------------------- get headers --------------------------------------------
-        $header_data = DB::connection('mysql_data')
-            ->table('tb')
-            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
-            ->where('db_tb', '=', $tableName)
-            ->select('tsd.*')
-            ->get();
-
-        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
-        $headers = [];
-        if ($tb) {
-            foreach ($tb as $key => $val) {
-                if ($fields_for_select) {
-                    if ($fields_for_select === 1) {
-                        $headers[$key] = $header_data->where('field', '=', $key)->first();
-                        $headers[$key]->can_edit = 1;
-                    } else {
-                        if (isset($fields_for_select[$key])) {
-                            $headers[$key] = $header_data->where('field', '=', $key)->first();
-                            $headers[$key]->can_edit = $fields_for_select[$key];
-                        }
-                    }
-                } else {
-                    $headers[$key] = $header_data->where('field', '=', $key)->first();
-                }
-            }
+        if (Auth::user()) {
+            $header_data = DB::connection('mysql_data')
+                ->select("
+                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr 
+                    FROM `tb_settings_display` as tsd 
+                    LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
+                    WHERE tsd.tb_id = ".$table_meta->id."
+                    ORDER BY calc_odr, tsd.id
+                ");
         } else {
-            foreach ($header_data as $hdr) {
-                if ($fields_for_select) {
-                    if ($fields_for_select === 1) {
-                        $headers[$hdr->field] = $hdr;
-                        $headers[$hdr->field]->can_edit = 1;
-                    } else {
-                        if (isset($fields_for_select[$hdr->field])) {
-                            $headers[$hdr->field] = $hdr;
-                            $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
-                        }
-                    }
-                } else {
+            $header_data = DB::connection('mysql_data')
+                ->table('tb_settings_display as tsd')
+                ->where('tsd.tb_id', '=', $table_meta->id)
+                ->select('tsd.*', 'tsd.dfot_odr as calc_odr')
+                ->orderBy('tsd.dfot_odr')
+                ->orderBy('tsd.id')
+                ->get();
+        }
+
+        $headers = [];
+        foreach ($header_data as $hdr) {
+            if ($fields_for_select) {
+                if ($fields_for_select === 1) {
                     $headers[$hdr->field] = $hdr;
+                    $headers[$hdr->field]->can_edit = 1;
+                } else {
+                    if (isset($fields_for_select[$hdr->field])) {
+                        $headers[$hdr->field] = $hdr;
+                        $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
+                    }
                 }
+            } else {
+                $headers[$hdr->field] = $hdr;
             }
         }
 
@@ -333,24 +329,63 @@ class TableService {
     }
 
     public function getHeaders($tableName) {
-        $header_data = DB::connection('mysql_data')
-            ->table('tb')
-            ->join('tb_settings_display as tsd', 'tsd.tb_id', '=', 'tb.id')
-            ->where('db_tb', '=', $tableName)
-            ->select('tsd.*')
-            ->get();
-
-        $tb = (array)DB::connection('mysql_data')->table($tableName)->first();
-        $headers = [];
-        if ($tb) {
-            foreach ($tb as $key => $val) {
-                $headers[$key] = $header_data->where('field', '=', $key)->first();
-            }
+        $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+        if (Auth::user()) {
+            $header_data = DB::connection('mysql_data')
+                ->select("
+                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr 
+                    FROM `tb_settings_display` as tsd 
+                    LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
+                    WHERE tsd.tb_id = ".$table_meta->id."
+                    ORDER BY calc_odr, tsd.id
+                ");
         } else {
-            foreach ($header_data as $hdr) {
-                $headers[$hdr->field] = $hdr;
-            }
+            $header_data = DB::connection('mysql_data')
+                ->table('tb_settings_display as tsd')
+                ->where('tsd.tb_id', '=', $table_meta->id)
+                ->select('tsd.*', 'tsd.dfot_odr as calc_odr')
+                ->orderBy('tsd.dfot_odr')
+                ->orderBy('tsd.id')
+                ->get();
+        }
+
+        $headers = [];
+        foreach ($header_data as $hdr) {
+            $headers[$hdr->field] = $hdr;
         }
         return $headers;
+    }
+
+    public function RepairColOrderForUser($table_meta) {
+        //if user don`t have correct order in 'orders.sql' for current table -> repair
+        $columnsCnt = DB::connection('mysql_data')
+            ->table('orders')
+            ->where('user_id', '=', Auth::user()->id)
+            ->where('table_id', '=', $table_meta->id)
+            ->groupBy('order')
+            ->get();
+
+        $settingsCnt = DB::connection('mysql_data')
+            ->table('tb_settings_display')
+            ->where('tb_id', '=', $table_meta->id)
+            ->orderBy('dfot_odr')
+            ->orderBy('id');
+
+        if (count($columnsCnt) != $settingsCnt->count()) {
+            DB::connection('mysql_data')->table('orders')->where('user_id', '=', Auth::user()->id)->where('table_id', '=', $table_meta->id)->delete();
+            $settingsCnt = $settingsCnt->get();
+            for ($i = 0; $i < count($settingsCnt); $i++) {
+                DB::connection('mysql_data')->table('orders')->insert([
+                    'user_id' => Auth::user()->id,
+                    'table_id' => $table_meta->id,
+                    'column_key' => $settingsCnt[$i]->field,
+                    'order' => ($i+1),
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
     }
 }
