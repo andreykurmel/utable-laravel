@@ -137,14 +137,10 @@
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
                 <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
-                    @if($favourite)
+                    @if(Auth::user())
                         <div style="display: inline-block;">
-                            <a href="javascript:void(0)" style="padding: 15px;" onclick="favouriteToggle()" title="Favourite">
-                                @if($favourite == "Active")
-                                    <i id="favourite_star" class="fa fa-star" style="font-size: 1.5em;"></i>
-                                @else
-                                    <i id="favourite_star" class="fa fa-star-o" style="font-size: 1.5em;"></i>
-                                @endif
+                            <a href="javascript:void(0)" style="padding: 15px;" onclick="$('.tableCreateForm').show()" title="Create table">
+                                <i id="favourite_star" class="fa fa-upload" style="font-size: 1.5em;"></i>
                             </a>
                         </div>
                     @endif
@@ -336,7 +332,6 @@
                                     <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;display: none;">
                                         <thead id="tbAddRow_header">
                                         <tr>
-                                            <th class="sorting nowrap">#</th>
                                             @foreach($headers as $hdr)
                                                 <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
@@ -349,7 +344,6 @@
                                     <table class="table dataTable" id="tbHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
                                         <thead id="tbHeaders_header">
                                         <tr>
-                                            <th class="sorting nowrap">#</th>
                                             @foreach($headers as $hdr)
                                                 <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
@@ -363,7 +357,6 @@
                                         <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead id="tbData_header">
                                             <tr>
-                                                <th class="sorting nowrap">#</th>
                                                 @foreach($headers as $hdr)
                                                     <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                                 @endforeach
@@ -377,9 +370,9 @@
                                 </div>
                                 <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
                                     <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
-                                        Showing <span id="showing_from_span"></span>
-                                        to <span id="showing_to_span"></span>
-                                        of <span id="showing_all_span"></span> entries</div>
+                                        Showing <span id="showing_from_span">0</span>
+                                        to <span id="showing_to_span">0</span>
+                                        of <span id="showing_all_span">0</span> entries</div>
                                     <div class="dataTables_paginate paging_full_numbers">
                                         <a class="paginate_button first" onclick="changePage(1)">First
                                         </a><a class="paginate_button previous" onclick="changePage(selectedPage>1 ? selectedPage : 1)">Previous
@@ -1040,6 +1033,42 @@
             </div>
         </div>
         <div class="passResetForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.passResetForm').hide()"></div>
+
+        {{-- Table create form --}}
+        <div class="tableCreateForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+            <div class="auth" style="font-size: 14px;">
+                <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                    <div class="form-wrap">
+                        <h1>Create table</h1>
+
+                        <form role="form" action="<?= route('createTable') ?>" method="POST" id="create-table-form" autocomplete="off">
+                            <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+
+                            <div class="form-group password-field input-icon">
+                                <label for="password" class="sr-only">Your csv file</label>
+                                <input type="file" name="csv" id="csv" class="form-control" placeholder="Your csv file">
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-table-create">
+                                    Send
+                                </button>
+                                <a href="javascript:void(0)" onclick="$('.tableCreateForm').hide();" class="btn btn-default btn-lg btn-block">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                            <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tableCreateForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.tableCreateForm').hide()"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>

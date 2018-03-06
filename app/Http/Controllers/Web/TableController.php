@@ -2,7 +2,9 @@
 
 namespace Vanguard\Http\Controllers\Web;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Vanguard\Http\Controllers\Controller;
 use Vanguard\Services\TableService;
 use Illuminate\Http\Request;
@@ -466,5 +468,36 @@ class TableController extends Controller
         } else {
             return [];
         }
+    }
+
+    public function createTable(Request $request)
+    {
+        $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);;
+        if (DB::connection('mysql_data')->table($filename)->first()) {
+            return "error table is present!";
+        }
+
+        //create table
+        //Schema::connection('mysql_data')->create($filename, function (Blueprint $table) {
+            //
+        //});
+
+        DB::connection('mysql_data')->table('tb')->insert([
+            'name' => $filename,
+            'owner' => Auth::user()->id,
+            'access' => 'private',
+            'group_id' => '',
+            'nbr_entry_listing' => 20,
+            'source' => 'mysql',
+            'db_tb' => $filename,
+            'host' => env('DB_HOST', 'localhost'),
+            'db' => env('DB_DATABASE', 'utable_admin'),
+            'user' => env('DB_USERNAME', 'root'),
+            'pwd' => env('DB_PASSWORD', ''),
+            'createdBy' => Auth::user()->id,
+            'createdOn' => now(),
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
     }
 }
