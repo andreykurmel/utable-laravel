@@ -250,7 +250,7 @@ function changePage(page) {
 }
 
 function showDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, tbDataHeaders = "", visibleColumns = "",
+    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "", visibleColumns = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, star_class;
 
     for(var i = 0; i < data.length; i++) {
@@ -278,21 +278,22 @@ function showDataTable(headers, data) {
 
         //main table data
         for(key in headers) {
-            if ($.inArray(key, arrAddFieldsInData) == -1) {
+            d_key = headers[key].field;
+            if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                 tableData +=
                     '<td ' +
                     'id="' + headers[key].field + i + '_dataT"' +
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
+                    (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
-                if (key === 'ddl_id') {
-                    tableData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
+                if (d_key === 'ddl_id') {
+                    tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -305,18 +306,19 @@ function showDataTable(headers, data) {
             tbAddRow += '<td></td>';
             tbAddRow += '<td></td>';
             for(key in headers) {
-                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                d_key = headers[key].field;
+                if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                     tbAddRow +=
                         '<td ' +
                         'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
                         'data-key="' + headers[key].field + '"' +
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
-                        (key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
+                        (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
                         'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
                         (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                         (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '"></td>';
-                    /*if (key == 'id') {
+                    /*if (d_key == 'id') {
                      tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
                      } else {
                      tbAddRow += '</td>';
@@ -327,7 +329,8 @@ function showDataTable(headers, data) {
 
             tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
             for(key in headers) {
-                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                d_key = headers[key].field;
+                if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                     tbAddRow_h += '<td></td>';//(key == 'id' ? '<button class="btn btn-success">Save</button>' : '')
                 }
             }
@@ -339,17 +342,18 @@ function showDataTable(headers, data) {
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
         tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i></td>';
         for(key in headers) {
-            if ($.inArray(key, arrAddFieldsInData) == -1) {
+            d_key = headers[key].field;
+            if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                 tbHiddenData +=
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
-                if (key === 'ddl_id') {
-                    tbHiddenData += (data[i][key] > 0 && tableDDLs['ddl_id'][data[i][key]] !== null ? tableDDLs['ddl_id'][data[i][key]] : '');
+                if (d_key === 'ddl_id') {
+                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
-                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }
@@ -362,9 +366,10 @@ function showDataTable(headers, data) {
     tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th ' +
+            'draggable="true" ' +
             'class="sorting nowrap" ' +
             'data-key="' + headers[$hdr].field + '" ' +
-            (authUser ? 'onclick="changeOrder(this, ' + headers[$hdr].calc_odr + ')" ' : '') +
+            'data-order="' + $hdr + '" ' +
             'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
@@ -408,6 +413,19 @@ function showDataTable(headers, data) {
                 }
             }
         }
+    }
+
+    //add drag listeners for table headers
+    if (authUser) {
+        var cols = document.querySelectorAll('#tbHeaders_header th[draggable="true"]');
+        [].forEach.call(cols, function(col) {
+            col.addEventListener('dragstart', handleDragStart, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
+            col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('drop', handleDrop, false);
+            col.addEventListener('dragend', handleDragEnd, false);
+        });
     }
 }
 
@@ -596,42 +614,72 @@ function toggleFavoriteRow(idx, elem) {
     }
 }
 
-function changeOrder(elem, ord) {
-    if (selectedForChangeOrder > -1 && selectedForChangeOrder != ord) {
-        swal({
-                title: "Set selected column before this column?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonClass: "btn-success",
-                confirmButtonText: "Yes",
-                closeOnConfirm: true
-            },
-            function(isConfirm) {
-                if(isConfirm) {
-                    $('.loadingFromServer').show();
-                    $.ajax({
-                        method: 'GET',
-                        url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+ord,
-                        success: function (response) {
-                            $('.loadingFromServer').hide();
-                            changePage(selectedPage+1);
-                        },
-                        error: function () {
-                            alert("Server error");
-                            $('.loadingFromServer').hide();
-                        }
-                    });
-                } else {
-                    selectedForChangeOrder = -1;
-                    $('.js_selectedForChangeOrder').css('background', '').removeClass('js_selectedForChangeOrder');
-                }
-            }
-        );
-    } else {
-        selectedForChangeOrder = ord;
-        $(elem).css('background', '#ccc').addClass('js_selectedForChangeOrder');
-    }
+/* ------------------- change columns order for main table via drag/drop -----------*/
+function handleDragStart(e) {
+    selectedForChangeOrder = this.dataset.order;
+    this.style.opacity = '0.6';
 }
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault(); // Necessary. Allows us to drop.
+    }
+    return false;
+}
+
+function handleDragEnter(e) {
+    this.classList.add('over');
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    var target = this.dataset.order;
+    if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
+        var reoderedArr = [];
+        for (var i in tableHeaders) {
+            if (i == target) {
+                reoderedArr.push(tableHeaders[selectedForChangeOrder]);
+                reoderedArr.push(tableHeaders[i]);
+            } else
+            if (i != selectedForChangeOrder) {
+                reoderedArr.push(tableHeaders[i]);
+            }
+        }
+        tableHeaders = reoderedArr;
+
+        showDataTable(tableHeaders, tableData);
+
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            success: function () {
+                //
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
+
+    return false;
+}
+
+function handleDragEnd(e) {
+    var cols = document.querySelectorAll('#tbHeaders_header th[draggable="true"]');
+    this.style.opacity = '1';
+
+    [].forEach.call(cols, function (col) {
+        col.classList.remove('over');
+    });
+}
+/* ------------------- end change columns order for main table via drag/drop -----------*/
 
 function showMap() {
     $("#li_list_view").removeClass("active");
@@ -827,7 +875,7 @@ function openPrintDialog() {
             var html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
             var tableHeaders = response.headers;
             var tableData = response.data;
-            var key;
+            var key, d_key;
 
             html += "<thead><tr>";
             for (var m = 0; m < tableHeaders.length; m++) {
@@ -839,7 +887,8 @@ function openPrintDialog() {
             for(var i = 0; i < tableData.length; i++) {
                 html += "<tr>";
                 for(key in tableHeaders) {
-                    html += '<td style="border: solid 1px #000;padding: 3px 5px; ' + (tableHeaders[key].web == 'No' ? 'display: none;' : '') + '">' + (tableData[i][key] !== null ? tableData[i][key] : '') + '</td>';
+                    d_key = tableHeaders[key].field;
+                    html += '<td style="border: solid 1px #000;padding: 3px 5px; ' + (tableHeaders[key].web == 'No' ? 'display: none;' : '') + '">' + (tableData[i][d_key] !== null ? tableData[i][d_key] : '') + '</td>';
                 }
                 html += "</tr>";
             }
@@ -1270,7 +1319,7 @@ function changeFavoritePage(page) {
 }
 
 function showFavoriteDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, tbDataHeaders = "",
+    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
 
     for(var i = 0; i < data.length; i++) {
@@ -1278,7 +1327,8 @@ function showFavoriteDataTable(headers, data) {
             tableData += "<tr>";
             tableData += '<td></td><td></td><td></td>';
             for(key in headers) {
-                if ($.inArray(key, arrAddFieldsInData) == -1) {
+                d_key = headers[key].field;
+                if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                     tableData += '<td ' +
                         'data-key="' + headers[key].field + '"' +
                         'style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
@@ -1306,12 +1356,13 @@ function showFavoriteDataTable(headers, data) {
             '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '">' +
             '</td>';
         for(key in headers) {
-            if ($.inArray(key, arrAddFieldsInData) == -1) {
+            d_key = headers[key].field;
+            if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                 tableData += '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
-                        (data[i][key] !== null ? data[i][key] : '') +
+                        (data[i][d_key] !== null ? data[i][d_key] : '') +
                     '</td>';
             }
         }
@@ -1323,12 +1374,13 @@ function showFavoriteDataTable(headers, data) {
         tbHiddenData += '<td>' + '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' + '</td>';
         tbHiddenData += '<td></td>';
         for(key in headers) {
-            if ($.inArray(key, arrAddFieldsInData) == -1) {
+            d_key = headers[key].field;
+            if ($.inArray(d_key, arrAddFieldsInData) == -1) {
                 tbHiddenData += '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
-                        (data[i][key] !== null ? data[i][key] : '') +
+                        (data[i][d_key] !== null ? data[i][d_key] : '') +
                     '</td>';
             }
         }
@@ -1405,31 +1457,51 @@ function showFavoriteTableFooter() {
     $('#favorite_paginate_btns_span').html(paginateHTML);
 }
 
-function removeFavoriteRow(ixd, elem) {
-    favoriteTableData.splice(ixd, 1);
+function removeFavoriteRow(idx, elem) {
+    if (authUser) {
+        for(var j = 0; j < tableData.length; j++) {
+            if (favoriteTableData[idx].id == tableData[j].id) {
+                tableData[j].is_favorited = 0;
+                break;
+            }
+        }
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + favoriteTableData[idx].id + '&status=Inactive'
+        });
+    }
+    favoriteTableData.splice(idx, 1);
     showFavoriteDataTable(favoriteTableHeaders, favoriteTableData);
+    showDataTable(tableHeaders, tableData);
 }
 
 function favoritesCopyToClipboard() {
-    var selectedColumns = [];
-    $('.js-favoriteCheckboxRow:checked').each(function (i, elem) {
-        selectedColumns.push( $(elem).data('key') );
-    });
-    console.log(selectedColumns);
+    if (authUser) {
+        var selectedColumns = [];
+        $('.js-favoriteCheckboxRow:checked').each(function (i, elem) {
+            selectedColumns.push( $(elem).data('key') );
+        });
+        console.log(selectedColumns);
 
-    var textToClip = "<table id='tableForCopy'>";
-    $('.js-favoriteRowsChecked:checked').each(function (i, elem) {
-        var idx = $(elem).data('idx');
-        textToClip += "<tr>";
-        for (var j = 0; j < selectedColumns.length; j++) {
-            textToClip += "<td>" + favoriteTableData[ idx ][ selectedColumns[j] ] + "</td>";
-        }
-        textToClip += "</tr>";
-    });
-    textToClip += "</table>";
-    console.log(textToClip);
+        var textToClip = "<table id='tableForCopy'>";
+        $('.js-favoriteRowsChecked:checked').each(function (i, elem) {
+            var idx = $(elem).data('idx');
+            textToClip += "<tr>";
+            for (var j = 0; j < selectedColumns.length; j++) {
+                textToClip += "<td>" + favoriteTableData[ idx ][ selectedColumns[j] ] + "</td>";
+            }
+            textToClip += "</tr>";
+        });
+        textToClip += "</table>";
+        console.log(textToClip);
 
-    copyToClipboard(textToClip);
+        copyToClipboard(textToClip);
+    } else {
+        swal({
+            title: "Only available to logged user",
+            type: "warning"
+        });
+    }
 }
 
 function copyToClipboard(text) {
@@ -1562,14 +1634,15 @@ function changeSettingsPage(page) {
 }
 
 function showSettingsDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", key,
+    var tableData = "", tbHiddenData = "", key, d_key,
         lsettingsEntries = settingsEntries == 'All' ? 0 : settingsEntries;
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
-            if (key != 'ddl_name') {
+            d_key = headers[key].field;
+            if (d_key != 'ddl_name') {
                 tableData +=
                     '<td ' +
                     'id="' + headers[key].field + i + '_settingsDisplay"' +
@@ -1577,12 +1650,12 @@ function showSettingsDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
-                    (key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+canEditSettings+')"' : '') +
+                    (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+canEditSettings+')"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (key === 'ddl_id') {
-                    tableData += (data[i][key] > 0 && settingsTableDDLs['ddl_id'][data[i][key]] !== null ? settingsTableDDLs['ddl_id'][data[i][key]] : '');
+                if (d_key === 'ddl_id') {
+                    tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -1596,15 +1669,16 @@ function showSettingsDataTable(headers, data) {
             tbHiddenData += '<td></td>';
         }
         for(key in headers) {
-            if (key != 'ddl_name') {
+            d_key = headers[key].field;
+            if (d_key != 'ddl_name') {
                 tbHiddenData +=
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (key === 'ddl_id') {
-                    tbHiddenData += (data[i][key] > 0 && settingsTableDDLs['ddl_id'][data[i][key]] !== null ? settingsTableDDLs['ddl_id'][data[i][key]] : '');
+                if (d_key === 'ddl_id') {
+                    tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
-                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }
@@ -1809,7 +1883,7 @@ function getDDLdatas(tableName) {
 }
 
 function showSettingsDDLDataTable(headers, data, idx) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", key;
+    var tableData = "", tbHiddenData = "", tbAddRow = "", key, d_key;
 
     if (settingsDDL_selectedIndex > -1) {
         $('#row_' + settingsDDL_selectedIndex + '_settings_ddl').css('background-color', '#FFA');
@@ -1827,22 +1901,23 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in headers) {
-            if (key != 'items') {
+            d_key = headers[key].field;
+            if (d_key != 'items') {
                 tableData +=
                     '<td ' +
-                    'id="' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
-                    'data-key="' + key + '"' +
+                    'id="' + d_key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
+                    'data-key="' + d_key + '"' +
                     'data-idx="' + i + '"' +
                     'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
                     'data-table_idx="' + idx + '"' +
-                    ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'' + key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
+                    ((d_key == 'name' || d_key == 'option' || d_key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'' + d_key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (idx == -1 && key === 'tb_id') {
+                if (idx == -1 && d_key === 'tb_id') {
                     tableData += settingsDDL_TableMeta.name;
-                } else if (idx != -1 && key === 'list_id') {
+                } else if (idx != -1 && d_key === 'list_id') {
                     tableData += settingsDDLs[idx].name;
                 } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -1853,14 +1928,15 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in headers) {
-            if (key != 'items') {
+            d_key = headers[key].field;
+            if (d_key != 'items') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (idx == -1 && key === 'tb_id') {
+                if (idx == -1 && d_key === 'tb_id') {
                     tbHiddenData += settingsDDL_TableMeta.name;
-                } else if (idx != -1 && key === 'list_id') {
+                } else if (idx != -1 && d_key === 'list_id') {
                     tbHiddenData += settingsDDLs[idx].name;
                 } else {
-                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }
@@ -1871,14 +1947,15 @@ function showSettingsDDLDataTable(headers, data, idx) {
 
     tbAddRow += "<tr style='height: 37px;'><td>auto</td>";
     for(key in headers) {
-        if (key != 'items') {
+        d_key = headers[key].field;
+        if (d_key != 'items') {
             tbAddRow += '<td ' +
-                'id="add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
-                'data-key="' + key + '"' +
+                'id="add_' + d_key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
+                'data-key="' + d_key + '"' +
                 'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
-                ((key == 'name' || key == 'option' || key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'add_' + key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
+                ((d_key == 'name' || d_key == 'option' || d_key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'add_' + d_key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    ((key != 'name' && key != 'option' && key != 'notes') ? 'auto' : '') +
+                    ((d_key != 'name' && d_key != 'option' && d_key != 'notes') ? 'auto' : '') +
                 '</td>';
         }
     }
@@ -2094,7 +2171,7 @@ function getRightsDatas(tableName) {
 }
 
 function showSettingsRightsDataTable(headers, data, idx) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", key;
+    var tableData = "", tbHiddenData = "", tbAddRow = "", key, d_key;
 
     if (idx > -1) {
         data = settingsRights[idx].fields;
@@ -2121,24 +2198,25 @@ function showSettingsRightsDataTable(headers, data, idx) {
         tableData += "<tr id='row_" + i + (idx == -1 ? '_settings_Rights' : '_settings_Fields_Rights') + "' class='settings_Rights_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsRightsDataTable(settingsRights_Fields_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in headers) {
-            if (key != 'fields') {
+            d_key = headers[key].field;
+            if (d_key != 'fields') {
                 tableData +=
                     '<td ' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (idx == -1 && key === 'table_id') {
+                if (idx == -1 && d_key === 'table_id') {
                     tableData += settingsRights_TableMeta.name;
                 } else
-                if (idx == -1 && key === 'user_id') {
-                    tableData += settingsUsersNames[data[i][key]];
+                if (idx == -1 && d_key === 'user_id') {
+                    tableData += settingsUsersNames[data[i][d_key]];
                 } else
-                if (idx != -1 && (key === 'view' || key === 'edit')) {
+                if (idx != -1 && (d_key === 'view' || d_key === 'edit')) {
                     tableData += '<input ' +
-                        'id="inp_' + key + i + '_settings_rights_field"' +
+                        'id="inp_' + d_key + i + '_settings_rights_field"' +
                         'type="checkbox" ' +
-                        'onclick="updateSettingsRightsItem(\'' + key + '\', ' + i + ', \'inp_' + key + i + '_settings_rights_field\')" ' +
-                        (data[i][key] ? 'checked>' : '>');
+                        'onclick="updateSettingsRightsItem(\'' + d_key + '\', ' + i + ', \'inp_' + d_key + i + '_settings_rights_field\')" ' +
+                        (data[i][d_key] ? 'checked>' : '>');
                 } else {
-                    tableData += (data[i][key] !== null ? data[i][key] : '');
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -2152,12 +2230,13 @@ function showSettingsRightsDataTable(headers, data, idx) {
         tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in headers) {
-            if (key != 'fields') {
+            d_key = headers[key].field;
+            if (d_key != 'fields') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (idx == -1 && key === 'table_id') {
+                if (idx == -1 && d_key === 'table_id') {
                     tbHiddenData += settingsRights_TableMeta.name;
                 } else {
-                    tbHiddenData += (data[i][key] !== null ? data[i][key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }

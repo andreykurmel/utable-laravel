@@ -445,7 +445,6 @@ class TableController extends Controller
         if (Auth::user()) {
             $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
-            //set selected column before target column
             $orders = DB::connection('mysql_data')
                 ->table('orders')
                 ->where('user_id', '=', Auth::user()->id)
@@ -453,9 +452,18 @@ class TableController extends Controller
                 ->orderBy('order')
                 ->get();
 
-            $elem = $orders[$request->select-1];
-            $orders->splice($request->select-1, 1); //remove from array selected elem
-            $orders->splice($request->target-1, 0, [$elem]); //paste selected elem before target position
+            //set selected column before target column
+            $reoderedArr = [];
+            for ($i = 0; $i < count($orders); $i++) {
+                if ($i == $request->target) {
+                    $reoderedArr[] = ($orders[$request->select]);
+                    $reoderedArr[] = ($orders[$i]);
+                } else
+                    if ($i != $request->select) {
+                        $reoderedArr[] = ($orders[$i]);
+                    }
+            }
+            $orders = $reoderedArr;
 
             for ($i = 0; $i < count($orders); $i++) {
                 DB::connection('mysql_data')

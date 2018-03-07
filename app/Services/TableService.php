@@ -283,19 +283,19 @@ class TableService {
         }
 
         $headers = [];
-        foreach ($header_data as $hdr) {
+        foreach ($header_data as $idx => $hdr) {
             if ($fields_for_select) {
                 if ($fields_for_select === 1) {
-                    $headers[$hdr->field] = $hdr;
-                    $headers[$hdr->field]->can_edit = 1;
+                    $headers[$idx] = $hdr;
+                    $headers[$idx]->can_edit = 1;
                 } else {
                     if (isset($fields_for_select[$hdr->field])) {
-                        $headers[$hdr->field] = $hdr;
-                        $headers[$hdr->field]->can_edit = $fields_for_select[$hdr->field];
+                        $headers[$idx] = $hdr;
+                        $headers[$idx]->can_edit = $fields_for_select[$hdr->field];
                     }
                 }
             } else {
-                $headers[$hdr->field] = $hdr;
+                $headers[$idx] = $hdr;
             }
         }
 
@@ -349,11 +349,11 @@ class TableService {
                 ->get();
         }
 
-        $headers = [];
+        /*$headers = [];
         foreach ($header_data as $hdr) {
             $headers[$hdr->field] = $hdr;
-        }
-        return $headers;
+        }*/
+        return $header_data;
     }
 
     public function RepairColOrderForUser($table_meta) {

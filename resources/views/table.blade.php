@@ -71,6 +71,10 @@
             vertical-align: middle;
             overflow: hidden;
         }
+
+        #tbHeaders_header .over {
+            border-left: 3px dashed #000;;
+        }
     </style>
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
