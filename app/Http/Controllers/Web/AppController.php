@@ -167,4 +167,42 @@ class AppController extends Controller
         }
         return $cnt;
     }
+
+    public function showSettingsForCreateTable(Request $request) {
+        $tmp_csv = time()."_".rand().".csv";
+        $request->csv->storeAs('csv', $tmp_csv);
+
+        $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);
+        $filename = preg_replace('/[^\w\d]/i', '_', $filename);
+
+        $columns = 0;
+        $headers = [];
+        $fileHandle = fopen(storage_path("app/csv/".$tmp_csv), 'r');
+        while (($data = fgetcsv($fileHandle)) !== FALSE) {
+            if (!$columns) {
+                $columns = count($data);
+            }
+            if (!$headers) {
+                $correct = [];
+                foreach ($data as $d) {
+                    $correct[] = [
+                        'header' => $d,
+                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', $d)),
+                    ];
+                }
+                $headers = $correct;
+            }
+
+            if ($columns != count($data)) {
+                return "Incorrect csv format (your rows have different number of columns)!";
+            }
+        }
+
+        $to_view = $this->getVariables();
+        $to_view['filename'] = $filename;
+        $to_view['headers'] = $headers;
+        $to_view['with_headers'] = $request->with_headers;
+        $to_view['data_csv'] = $tmp_csv;
+        return view('createTable', $to_view);
+    }
 }

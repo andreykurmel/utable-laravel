@@ -879,7 +879,7 @@ function openPrintDialog() {
 
             html += "<thead><tr>";
             for (var m = 0; m < tableHeaders.length; m++) {
-                html += '<th style="border: solid 1px #000;padding: 3px 5px;background-color: #AAA; ' + (tableHeaders[key].web == 'No' ? 'display: none;' : '') + '">'+tableHeaders[m].name+'</th>';
+                html += '<th style="border: solid 1px #000;padding: 3px 5px;background-color: #AAA; ' + (tableHeaders[m].web == 'No' ? 'display: none;' : '') + '">'+tableHeaders[m].name+'</th>';
             }
             html += "</tr></thead>";
 

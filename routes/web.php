@@ -392,7 +392,8 @@ Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxS
 Route::get('/api/getFavoritesForTable', 'TableController@getFavoritesForTable')->name('getFavoritesForTable');
 Route::get('/api/changeOrder', 'TableController@changeOrder')->name('changeOrder');
 Route::group(['middleware' => 'database.change'], function () {
-    Route::get('/api/createTable', 'TableController@createTable')->name('createTable');
+    Route::post('/api/settingsForCreate', 'AppController@showSettingsForCreateTable')->name('showSettingsForCreateTable');
+    Route::post('/api/createTable', 'TableController@createTable')->name('createTable');
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
     Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');

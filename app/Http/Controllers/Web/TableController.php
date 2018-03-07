@@ -480,15 +480,40 @@ class TableController extends Controller
 
     public function createTable(Request $request)
     {
-        $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);;
-        if (DB::connection('mysql_data')->table($filename)->first()) {
-            return "error table is present!";
-        }
+        $columns = $request->columns;
+        $filename = $request->filename;
 
         //create table
-        //Schema::connection('mysql_data')->create($filename, function (Blueprint $table) {
-            //
-        //});
+        try {
+            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) use ($columns) {
+                $table->increments('id');
+
+                foreach ($columns as $col) {
+                    if ($col['type'] == 'date') {
+                        $t = $table->string($col['field'], $col['size'] > 0 ? $col['field'] : 255);
+                    } elseif ($col['type'] == 'str') {
+                        $t = $table->dateTime($col['field']);
+                    } else {
+                        $t = $table->integer($col['field']);
+                    }
+
+                    if (empty($col['required'])) {
+                        $t->nullable();
+                    }
+
+                    if (!empty($col['default'])) {
+                        $t->default($col['default']);
+                    }
+                }
+
+                $table->integer('createdBy')->nullable();
+                $table->dateTime('createdOn')->nullable();
+                $table->integer('modifiedBy')->nullable();
+                $table->dateTime('modifiedOn')->nullable();
+            });
+        } catch (\Exception $e) {
+            return "Seems that your table schema is incorrect!<br>".$e->getMessage();
+        }
 
         DB::connection('mysql_data')->table('tb')->insert([
             'name' => $filename,
@@ -507,5 +532,47 @@ class TableController extends Controller
             'modifiedBy' => Auth::user()->id,
             'modifiedOn' => now()
         ]);
+        $tb_id = DB::connection('mysql_data')->getPdo()->lastInsertId();
+
+        foreach ($columns as $col) {
+            DB::connection('mysql_data')->table('tb_settings_display')->insert([
+                'tb_id' => $tb_id,
+                'field' => $col['field'],
+                'name' => $col['header'],
+                'web' => 'Yes',
+                'filter' => 'No',
+                'sum' => 'No',
+                'input_type' => 'Input',
+                'min_wth' => 0,
+                'max_wth' => 0,
+                'createdBy' => Auth::user()->id,
+                'createdOn' => now(),
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
+        }
+
+        $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
+        $first = true;
+        while (($data = fgetcsv($fileHandle)) !== FALSE) {
+            if ($first) {
+                $first = false;
+                if ($request->with_headers) {
+                    continue;
+                }
+            }
+
+            $insert = [];
+            foreach ($data as $idx => $val) {
+                $insert[ $columns[$idx]['field'] ] = $val;
+            }
+            $insert['createdBy'] = Auth::user()->id;
+            $insert['createdOn'] = now();
+            $insert['modifiedBy'] = Auth::user()->id;
+            $insert['modifiedOn'] = now();
+            DB::connection('mysql_data')->table($filename)->insert($insert);
+        }
+
+        return redirect()->to( route('homepage')."/".$filename );
     }
 }

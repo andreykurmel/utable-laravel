@@ -20,10 +20,10 @@ class DownloadController extends Controller
         $data = "";
         switch ($request->filename) {
             case 'CSV': $dwn_mode = "csv";
-                $data = $this->downloader_csv($request, "data_export_" . date("Y-m-d") . "." . $dwn_mode);
+                $data = $this->downloader_csv($request, "data_export_" . date("Y-m-d"));
                 break;
             case 'XLS': $dwn_mode = "xlsx";
-                $data = $this->downloader_xlsx($request, "data_export_" . date("Y-m-d") . "." . $dwn_mode);
+                $data = $this->downloader_xlsx($request, "data_export_" . date("Y-m-d"));
                 break;
             case 'PDF': $dwn_mode = "pdf";
                 $data = $this->downloader_pdf($request);
@@ -58,7 +58,12 @@ class DownloadController extends Controller
         }
 
         foreach ($respArray['data'] as $row) {
-            $data[] = (array)$row;
+            $row = (array)$row;
+            $tmp_row = [];
+            foreach ($respArray['headers'] as $hdr) {
+                $tmp_row[] = $row[$hdr->field];
+            }
+            $data[] = $tmp_row;
         }
 
         return Excel::create($filename, function($excel) use ($data) {
@@ -91,25 +96,22 @@ class DownloadController extends Controller
         $respArray = $this->tableService->getData($post);
 
         $html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
-        $titles = array();
-        foreach ($respArray['headers'] as $key => $val) {
-            $titles[$key] = $val->name;
-        }
 
         $html .= "<thead><tr>";
-        foreach ($titles as $key => $title) {
-            if (($respArray['headers'][$key])->web == 'Yes') {
-                $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".$title."</th>";
+        foreach ($respArray['headers'] as $hdr) {
+            if ($hdr->web == 'Yes') {
+                $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".$hdr->name."</th>";
             }
         }
         $html .= "</tr></thead>";
 
         $html .= "<tbody>";
         foreach ($respArray['data'] as $row) {
+            $row = (array)$row;
             $html .= "<tr>";
-            foreach ((array)$row as $key => $item) {
-                if (($respArray['headers'][$key])->web == 'Yes') {
-                    $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>".$item."</td>";
+            foreach ($respArray['headers'] as $hdr) {
+                if ($hdr->web == 'Yes') {
+                    $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>".$row[$hdr->field]."</td>";
                 }
             }
             $html .= "</tr>";
