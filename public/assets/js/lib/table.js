@@ -657,6 +657,7 @@ function handleDrop(e) {
         tableHeaders = reoderedArr;
 
         showDataTable(tableHeaders, tableData);
+        showSettingsDataTable(settingsTableHeaders, settingsTableData);
 
         $.ajax({
             method: 'GET',
@@ -669,6 +670,7 @@ function handleDrop(e) {
             }
         });
     }
+    selectedForChangeOrder = -1;
 
     return false;
 }
@@ -1645,6 +1647,7 @@ function showSettingsDataTable(headers, data) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
+        tableData += '<td data-order="'+i+'" draggable="true"><i style="width: 100%;text-align: center;" class="fa fa-bars"></i></td>';
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
@@ -1660,6 +1663,11 @@ function showSettingsDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (d_key === 'ddl_id') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (d_key === 'dfot_odr') {
+                    tableData += '<button draggable="true" class="btn btn-sm" style="width: 100%">'
+                        + get_calc_odr(data[i].field) +
+                        '</button>';
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -1669,6 +1677,7 @@ function showSettingsDataTable(headers, data) {
         tableData += "</tr>";
 
         tbHiddenData += "<tr>";
+        tbHiddenData += "<td></td>";
         if (canEditSettings) {
             tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         } else {
@@ -1693,7 +1702,7 @@ function showSettingsDataTable(headers, data) {
     }
 
     //recreate headers for main data
-    tbSettingsHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
+    tbSettingsHeaders += "<tr> <th class='sorting nowrap'><b>Ord</b></th> <th class='sorting nowrap'><b>#</b> </th>";
     for(var $hdr in headers) {
         tbSettingsHeaders += '<th ' +
             'draggable="true" ' +
@@ -1725,6 +1734,26 @@ function showSettingsDataTable(headers, data) {
             col.addEventListener('dragleave', handleDragLeave, false);
             col.addEventListener('drop', handleDropSettings, false);
             col.addEventListener('dragend', handleDragEndSettings, false);
+        });
+
+        var cols_dfot = document.querySelectorAll('#tbSettingsData_body button[draggable="true"]');
+        [].forEach.call(cols_dfot, function(col) {
+            col.addEventListener('dragstart', handleDragStartSettings_dfot, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
+            col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('drop', handleDropSettings_dfot, false);
+            col.addEventListener('dragend', handleDragEndSettings_dfot, false);
+        });
+
+        var rows = document.querySelectorAll('#tbSettingsData_body td[draggable="true"]');
+        [].forEach.call(rows, function(col) {
+            col.addEventListener('dragstart', handleDragStart, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
+            col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('drop', handleDropSettings_rows, false);
+            col.addEventListener('dragend', handleDragEndSettings_rows, false);
         });
     }
 }
@@ -1782,6 +1811,14 @@ function showSettingsTableFooter() {
     $('#paginate_settings_btns_span').html(paginateHTML);
 }
 
+function get_calc_odr(key) {
+    for (var i in tableHeaders) {
+        if (tableHeaders[i].field === key) {
+            return Number(i)+1;
+        }
+    }
+}
+
 function handleDropSettings(e) {
     if (e.stopPropagation) {
         e.stopPropagation(); // stops the browser from redirecting.
@@ -1814,12 +1851,111 @@ function handleDropSettings(e) {
             }
         });
     }
+    selectedForChangeOrder = -1;
 
     return false;
 }
 
 function handleDragEndSettings(e) {
     var cols = document.querySelectorAll('#tbSettingsHeaders_head th[draggable="true"]');
+    this.style.opacity = '1';
+
+    [].forEach.call(cols, function (col) {
+        col.classList.remove('over');
+    });
+}
+
+function handleDragStartSettings_dfot(e) {
+    selectedForChangeOrder = Number(this.innerHTML)-1;
+    this.style.opacity = '0.6';
+}
+
+function handleDropSettings_dfot(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    var target = Number(this.innerHTML)-1;
+    if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
+        var reoderedArr = [];
+        for (var i in tableHeaders) {
+            if (i == target) {
+                reoderedArr.push(tableHeaders[selectedForChangeOrder]);
+                reoderedArr.push(tableHeaders[i]);
+            } else
+            if (i != selectedForChangeOrder) {
+                reoderedArr.push(tableHeaders[i]);
+            }
+        }
+        tableHeaders = reoderedArr;
+
+        showDataTable(tableHeaders, tableData);
+        showSettingsDataTable(settingsTableHeaders, settingsTableData);
+
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            success: function () {
+                //
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
+    selectedForChangeOrder = -1;
+
+    return false;
+}
+
+function handleDragEndSettings_dfot(e) {
+    var cols = document.querySelectorAll('#tbSettingsData_body button[draggable="true"]');
+    this.style.opacity = '1';
+
+    [].forEach.call(cols, function (col) {
+        col.classList.remove('over');
+    });
+}
+
+function handleDropSettings_rows(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    var target = this.dataset.order;
+    if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
+        var reoderedArr = [];
+        for (var i in settingsTableData) {
+            if (i == target) {
+                reoderedArr.push(settingsTableData[selectedForChangeOrder]);
+                reoderedArr.push(settingsTableData[i]);
+            } else
+            if (i != selectedForChangeOrder) {
+                reoderedArr.push(settingsTableData[i]);
+            }
+        }
+        settingsTableData = reoderedArr;
+
+        showSettingsDataTable(settingsTableHeaders, settingsTableData);
+
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/changeSettingsRowOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            success: function () {
+                //
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
+    selectedForChangeOrder = -1;
+
+    return false;
+}
+
+function handleDragEndSettings_rows(e) {
+    var cols = document.querySelectorAll('#tbSettingsData_body td[draggable="true"]');
     this.style.opacity = '1';
 
     [].forEach.call(cols, function (col) {

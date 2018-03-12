@@ -76,6 +76,14 @@
         #tbSettingsHeaders_head .over {
             border-left: 3px dashed #000;;
         }
+
+        #tbSettingsData_body button.over {
+            border: 3px dashed #000;;
+        }
+
+        #tbSettingsData_body td.over {
+            border-top: 3px dashed #000;;
+        }
     </style>
 
     @stack('styles')

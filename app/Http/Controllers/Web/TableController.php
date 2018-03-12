@@ -478,6 +478,66 @@ class TableController extends Controller
         }
     }
 
+    public function changeSettingsRowOrder(Request $request)
+    {
+        if (Auth::user()) {
+            $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+
+            //if user don`t have correct order in 'tb_settings_display.sql' for current table -> repair
+            $columnsCnt = DB::connection('mysql_data')
+                ->table('tb_settings_display')
+                ->where('tb_id', '=', $table_meta->id)
+                ->groupBy('rows_ord')
+                ->get();
+
+            $settingsCnt = DB::connection('mysql_data')
+                ->table('tb_settings_display')
+                ->where('tb_id', '=', $table_meta->id)
+                ->orderBy('rows_ord')
+                ->orderBy('id');
+
+            if (count($columnsCnt) != $settingsCnt->count()) {
+                $settingsCnt = $settingsCnt->get();
+                for ($i = 0; $i < count($settingsCnt); $i++) {
+                    DB::connection('mysql_data')->table('tb_settings_display')->where('id', '=', $settingsCnt[$i]->id)->update([
+                        'rows_ord' => $i,
+                    ]);
+                }
+            }
+
+            $rows = DB::connection('mysql_data')
+                ->table('tb_settings_display')
+                ->where('tb_id', '=', $table_meta->id)
+                ->orderBy('rows_ord')
+                ->orderBy('id')
+                ->get();
+
+            //set selected column before target column
+            $reoderedArr = [];
+            for ($i = 0; $i < count($rows); $i++) {
+                if ($i == $request->target) {
+                    $reoderedArr[] = ($rows[$request->select]);
+                    $reoderedArr[] = ($rows[$i]);
+                } else
+                    if ($i != $request->select) {
+                        $reoderedArr[] = ($rows[$i]);
+                    }
+            }
+            $rows = $reoderedArr;
+
+            for ($i = 0; $i < count($rows); $i++) {
+                DB::connection('mysql_data')
+                    ->table('tb_settings_display')
+                    ->where('id', '=', $rows[$i]->id)
+                    ->update([ 'rows_ord' => $i+1 ]);
+            }
+
+            return ['status' => 'success'];
+        } else {
+            return [];
+        }
+    }
+
     public function createTable(Request $request)
     {
         $columns = $request->columns;

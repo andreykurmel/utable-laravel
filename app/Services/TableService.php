@@ -162,6 +162,9 @@ class TableService {
             });
         }
 
+        if ($tableName == 'tb_settings_display' && !$fromMainData) {
+            $sql->orderBy($tableName.'.rows_ord');
+        }
         $sql->orderBy($tableName.'.id');
         $result = $sql->get();
 
