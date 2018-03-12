@@ -590,12 +590,14 @@ function toggleFavoriteRow(idx, elem) {
                 url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Inactive'
             });
             $(i).removeClass('fa-star').addClass('fa-star-o');
+            tableData[idx].is_favorited = 0;
         } else {
             $.ajax({
                 method: 'GET',
                 url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Active'
             });
             $(i).removeClass('fa-star-o').addClass('fa-star');
+            tableData[idx].is_favorited = 1;
         }
     } else {
         var i = $(elem).find('i');
@@ -705,6 +707,7 @@ function showList() {
     $("#map_view").hide();
     $("#settings_view").hide();
     $('.showhidemenu').show();
+    selectedForChangeOrder = -1;
 }
 
 function showFavorite() {
@@ -731,6 +734,7 @@ function showSettings() {
     $("#map_view").hide();
     $('.showhidemenu').hide();
     $('#showHideColumnsList').hide();
+    selectedForChangeOrder = -1;
 }
 
 function detailsShowMap() {
@@ -1319,17 +1323,17 @@ function changeFavoritePage(page) {
 }
 
 function showFavoriteDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "",
+    var tableData = "", tbHiddenData = "", tbCheckRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
 
     for(var i = 0; i < data.length; i++) {
         if (i === 0) { //first row with checkboxes
-            tableData += "<tr>";
-            tableData += '<td></td><td></td><td></td>';
+            tbCheckRow += "<tr>";
+            tbCheckRow += '<td></td> <td></td> <td></td>';
             for(key in headers) {
                 d_key = headers[key].field;
                 if ($.inArray(d_key, arrAddFieldsInData) == -1) {
-                    tableData += '<td ' +
+                    tbCheckRow += '<td ' +
                         'data-key="' + headers[key].field + '"' +
                         'style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                             '<input ' +
@@ -1340,7 +1344,7 @@ function showFavoriteDataTable(headers, data) {
                         '</td>';
                 }
             }
-            tableData += "</tr>";
+            tbCheckRow += "</tr>";
         }
 
         tableData += "<tr>";
@@ -1399,9 +1403,11 @@ function showFavoriteDataTable(headers, data) {
 
     $('#tbFavoriteHeaders_header').html(tbDataHeaders);
     $('#tbFavoriteData_header').html(tbDataHeaders);
+    $('#tbFavoriteCheckRow_header').html(tbDataHeaders);
 
     $('#tbFavoriteHeaders_body').html(tbHiddenData);
     $('#tbFavoriteData_body').html(tableData);
+    $('#tbFavoriteCheckRow_body').html(tbCheckRow + tbHiddenData);
 }
 
 function showFavoriteTableFooter() {
@@ -1634,7 +1640,7 @@ function changeSettingsPage(page) {
 }
 
 function showSettingsDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", key, d_key,
+    var tableData = "", tbHiddenData = "", key, d_key, tbSettingsHeaders = "",
         lsettingsEntries = settingsEntries == 'All' ? 0 : settingsEntries;
 
     for(var i = 0; i < data.length; i++) {
@@ -1685,8 +1691,42 @@ function showSettingsDataTable(headers, data) {
         }
         tbHiddenData += "</tr>";
     }
+
+    //recreate headers for main data
+    tbSettingsHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
+    for(var $hdr in headers) {
+        tbSettingsHeaders += '<th ' +
+            'draggable="true" ' +
+            'class="sorting nowrap" ' +
+            'data-key="' + headers[$hdr].field + '" ' +
+            'data-order="' + $hdr + '" ' +
+            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+            (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
+            (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
+            '">' +
+            ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+            '</th>';
+    }
+    tbSettingsHeaders += "</tr>";
+
+    $('#tbSettingsHeaders_head').html(tbSettingsHeaders);
+    $('#tbSettingsData_head').html(tbSettingsHeaders);
+
     $('#tbSettingsHeaders_body').html(tbHiddenData);
     $('#tbSettingsData_body').html(tableData);
+
+    //add drag listeners for table headers
+    if (authUser) {
+        var cols = document.querySelectorAll('#tbSettingsHeaders_head th[draggable="true"]');
+        [].forEach.call(cols, function(col) {
+            col.addEventListener('dragstart', handleDragStart, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
+            col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('drop', handleDropSettings, false);
+            col.addEventListener('dragend', handleDragEndSettings, false);
+        });
+    }
 }
 
 function showSettingsTableFooter() {
@@ -1740,6 +1780,51 @@ function showSettingsTableFooter() {
         }
     }
     $('#paginate_settings_btns_span').html(paginateHTML);
+}
+
+function handleDropSettings(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // stops the browser from redirecting.
+    }
+
+    var target = this.dataset.order;
+    if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
+        var reoderedArr = [];
+        for (var i in settingsTableHeaders) {
+            if (i == target) {
+                reoderedArr.push(settingsTableHeaders[selectedForChangeOrder]);
+                reoderedArr.push(settingsTableHeaders[i]);
+            } else
+            if (i != selectedForChangeOrder) {
+                reoderedArr.push(settingsTableHeaders[i]);
+            }
+        }
+        settingsTableHeaders = reoderedArr;
+
+        showSettingsDataTable(settingsTableHeaders, settingsTableData);
+
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/changeOrder?tableName='+settingsTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            success: function () {
+                //
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
+
+    return false;
+}
+
+function handleDragEndSettings(e) {
+    var cols = document.querySelectorAll('#tbSettingsHeaders_head th[draggable="true"]');
+    this.style.opacity = '1';
+
+    [].forEach.call(cols, function (col) {
+        col.classList.remove('over');
+    });
 }
 
 function searchSettingsKeywordChanged() {

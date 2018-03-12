@@ -293,7 +293,19 @@
                                     <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;" onclick="favoritesCopyToClipboard()">copy</button>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
-                                    <table class="table dataTable" id="tbFavoriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
+                                    <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
+                                        <thead id="tbFavoriteCheckRow_header">
+                                        <tr>
+                                            @foreach($headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbFavoriteCheckRow_body">
+                                        </tbody>
+                                    </table>
+                                    <table class="table dataTable" id="tbFavoriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:36px;">
                                         <thead id="tbFavoriteHeaders_header">
                                         <tr>
                                             <th class="sorting nowrap">#</th>
@@ -306,7 +318,7 @@
                                         <tbody style="visibility: hidden;" id="tbFavoriteHeaders_body">
                                         </tbody>
                                     </table>
-                                    <div style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:32px;" class="table_body_viewport">
+                                    <div style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:68px;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" id="tbFavoriteData" style="margin-bottom: 0; margin-top: -32px;">
                                             <thead id="tbFavoriteData_header">
                                             <tr>
@@ -389,7 +401,7 @@
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" style="margin-bottom: 0;">
-                                        <thead>
+                                        <thead id="tbSettingsHeaders_head">
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsHeaders as $hdr)
@@ -403,7 +415,7 @@
                                     </table>
                                     <div style="top: 32px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                         <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
-                                            <thead>
+                                            <thead id="tbSettingsData_head">
                                             <tr>
                                                 <th class="sorting nowrap">#</th>
                                                 @foreach($settingsHeaders as $hdr)

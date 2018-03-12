@@ -72,7 +72,8 @@
             overflow: hidden;
         }
 
-        #tbHeaders_header .over {
+        #tbHeaders_header .over,
+        #tbSettingsHeaders_head .over {
             border-left: 3px dashed #000;;
         }
     </style>
