@@ -29,7 +29,11 @@ class AppController extends Controller
             if ($this->tableExist($subdomain, NULL)) {
                 return view('table', $this->getVariables($subdomain));
             } else {
-                return view();
+                if (Auth::user()) {
+                    return view('errors.404');
+                } else {
+                    return redirect()->to( route('login') );
+                }
             }
         }
 
