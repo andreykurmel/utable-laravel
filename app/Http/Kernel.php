@@ -59,5 +59,6 @@ class Kernel extends HttpKernel
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'database.change' => \Vanguard\Http\Middleware\DatabaseChange::class,
+        'test.subdomain' => \Vanguard\Http\Middleware\TestSubdomain::class,
     ];
 }

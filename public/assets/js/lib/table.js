@@ -1142,10 +1142,11 @@ function updateRowModal() {
 
     $('.js-editmodal').hide();
 
-    var idx = $('.js-editmodal').data('idx');
+    var idx = $('.js-editmodal').data('idx'), d_key;
     for(var key in ltableHeaders) {
-        if (key != 'id') {
-            ltableData[idx][key] = $('#modals_inp_'+key).val();
+        d_key = ltableHeaders[key].field;
+        if (d_key != 'id') {
+            ltableData[idx][d_key] = $('#modals_inp_'+key).val();
         }
     }
 
@@ -1187,9 +1188,10 @@ function editSelectedData(idx) {
         $('#modal_btn_add').show();
     }
 
-    var html = "";
+    var html = "", d_key;
     for(var key in ltableHeaders) {
-        if (key != 'id' && key != 'is_favorited') {
+        d_key = ltableHeaders[key].field;
+        if (d_key != 'id' && d_key != 'is_favorited') {
             html += "<tr>";
             html +=
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
@@ -1215,8 +1217,9 @@ function editSelectedData(idx) {
 
     //set current values for editing
     if (idx > -1) {
-        for(var key in ltableData[idx]) {
-            $('#modals_inp_'+key).val( ltableData[idx][key] );
+        for(var key in ltableHeaders) {
+            d_key = ltableHeaders[key].field;
+            $('#modals_inp_'+key).val( ltableData[idx][d_key] );
         }
     }
 
@@ -1231,11 +1234,13 @@ function addData() {
         addRowInline();
     } else {
         var lv = $('#list_view').is(':visible'),
-            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
+            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders),
+            d_key;
 
         emptyDataObject = {};
         for (var key in ltableHeaders) {
-            emptyDataObject[key] = "";
+            d_key = ltableHeaders[key].field;
+            emptyDataObject[d_key] = "";
         }
 
         editSelectedData(-1);
@@ -1256,11 +1261,13 @@ function addRowInline() {
 function checkboxAddToggle() {
     if ($('#addingIsInline').is(':checked')) {
         var lv = $('#list_view').is(':visible'),
-            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders);
+            ltableHeaders = (lv ? tableHeaders : settingsTableHeaders),
+            d_key;
 
         emptyDataObject = {};
         for (var key in ltableHeaders) {
-            emptyDataObject[key] = "";
+            d_key = ltableHeaders[key].field;
+            emptyDataObject[d_key] = "";
         }
 
         $('#tbAddRow').show();
@@ -1331,7 +1338,11 @@ function showFavoriteDataTable(headers, data) {
     for(var i = 0; i < data.length; i++) {
         if (i === 0) { //first row with checkboxes
             tbCheckRow += "<tr>";
-            tbCheckRow += '<td></td> <td></td> <td></td>';
+            tbCheckRow += '<td></td> <td></td> ';
+            tbCheckRow += '<td style="padding: 4px;">' +
+                'R:<input type="checkbox" id="favCheckAllRow" onchange="favCheckAll(\'row\')"> ' +
+                'H:<input type="checkbox" id="favCheckAllCol" onchange="favCheckAll(\'col\')">' +
+                '</td>';
             for(key in headers) {
                 d_key = headers[key].field;
                 if ($.inArray(d_key, arrAddFieldsInData) == -1) {
@@ -1340,8 +1351,9 @@ function showFavoriteDataTable(headers, data) {
                         'style="text-align: center;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                             '<input ' +
                             'type="checkbox" ' +
-                            'class="js-favoriteCheckboxRow" ' +
+                            'class="js-favoriteColsChecked" ' +
                             'data-key="' + headers[key].field + '"' +
+                            'onchange="favTestCheckAll(\'col\')"' +
                             '>' +
                         '</td>';
                 }
@@ -1359,7 +1371,7 @@ function showFavoriteDataTable(headers, data) {
             '</a></td>';
         //checkbox for selecting
         tableData += '<td style="text-align: center;">' +
-            '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '">' +
+            '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '" onchange="favTestCheckAll(\'row\')">' +
             '</td>';
         for(key in headers) {
             d_key = headers[key].field;
@@ -1465,6 +1477,26 @@ function showFavoriteTableFooter() {
     $('#favorite_paginate_btns_span').html(paginateHTML);
 }
 
+function favCheckAll(type) {
+    var cls = type == 'row' ? '.js-favoriteRowsChecked' : '.js-favoriteColsChecked',
+        id = type == 'row' ? '#favCheckAllRow' : '#favCheckAllCol';
+    if ($(id).is(':checked')) {
+        $(cls).prop("checked", true);
+    } else {
+        $(cls).prop("checked", false);
+    }
+}
+
+function favTestCheckAll(type) {
+    var cls = type == 'row' ? '.js-favoriteRowsChecked' : '.js-favoriteColsChecked',
+        id = type == 'row' ? '#favCheckAllRow' : '#favCheckAllCol';
+    if ($(cls).not(':checked').length) {
+        $(id).prop("checked", false);
+    } else {
+        $(id).prop("checked", true);
+    }
+}
+
 function removeFavoriteRow(idx, elem) {
     if (authUser) {
         for(var j = 0; j < tableData.length; j++) {
@@ -1486,7 +1518,7 @@ function removeFavoriteRow(idx, elem) {
 function favoritesCopyToClipboard() {
     if (authUser) {
         var selectedColumns = [];
-        $('.js-favoriteCheckboxRow:checked').each(function (i, elem) {
+        $('.js-favoriteColsChecked:checked').each(function (i, elem) {
             selectedColumns.push( $(elem).data('key') );
         });
         console.log(selectedColumns);
@@ -1547,7 +1579,7 @@ function selectElementContents(el) {
 
 
 
-/* ------------------------ Settings / tab 'Display' ----------------------------*/
+/* ------------------------ Display / tab 'Settings' ----------------------------*/
 
 function selectSettingsTable() {
     $('.loadingFromServer').show();
@@ -2067,7 +2099,7 @@ function settingsTabShowDisplay() {
 
 
 
-/* ------------------------ Settings / tab 'DDL' ----------------------------*/
+/* ------------------------ DDL / tab 'Settings' ----------------------------*/
 
 var settingsDDLs,
     settingsDDL_hdr,
@@ -2354,7 +2386,7 @@ function saveSettingsDDLRow(tableName) {
 
 
 
-/* ------------------------ Settings / tab 'Rights' ----------------------------*/
+/* ------------------------ Rights / tab 'Settings' ----------------------------*/
 
 var settingsRights,
     settingsRights_hdr,

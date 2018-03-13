@@ -21,6 +21,18 @@ class AppController extends Controller
             $_SERVER['HTTP_REFERER'] = "";
         }
 
+        $subdomain = "";
+        if( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST'], $subdomain) ) {
+            $subdomain = $subdomain[1];
+        }
+        if ($subdomain) {
+            if ($this->tableExist($subdomain, NULL)) {
+                return view('table', $this->getVariables($subdomain));
+            } else {
+                return view();
+            }
+        }
+
         if (Auth::guest() || ($_SERVER['HTTP_REFERER'] != config('app.url')."/")) {
             $socialProviders = config('auth.social.providers');
             return view('landing', compact('socialProviders'));
@@ -153,19 +165,30 @@ class AppController extends Controller
         return $tb->nbr_entry_listing;
     }
 
-    private function tableExist($tableName, $group) {
-        if ($group) {
-            $cnt = DB::connection('mysql_data')->table('tb')->join('group', 'group.id', '=', 'tb.group_id')
-                ->where('tb.db_tb', '=', $tableName)
-                ->where('group.www_add', '=', $group)
-                ->first();
-        } else {
-            $cnt = DB::connection('mysql_data')->table('tb')
-                ->where('db_tb', '=', $tableName)
-                ->where('group_id', '=', '')
-                ->first();
+    private function tableExist($tableName, $group = NULL) {
+        $cnt = DB::connection('mysql_data')->table('tb')
+            ->leftJoin('group', 'group.id', '=', 'tb.group_id')
+            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
+            ->where('tb.db_tb', '=', $tableName);
+        if ($group !== NULL) {
+            $cnt->where('group.www_add', '=', $group ? $group : NULL);
         }
-        return $cnt;
+
+        if (!Auth::user()) {
+            //guest - get public data
+            $cnt->where('tb.access', '=', 'public');
+        } else {
+            if (Auth::user()->role_id != 1) {
+                //user - get user`s data, favourites and public data in the current folder
+                $cnt->where(function ($qt) {
+                    $qt->where('tb.access', '=', 'public');
+                    $qt->orWhere('tb.owner', '=', Auth::user()->id);
+                    $qt->orWhere('rights.user_id', '=', Auth::user()->id);
+                });
+            }
+            //admin - get all data
+        }
+        return $cnt->count();
     }
 
     public function showSettingsForCreateTable(Request $request) {
