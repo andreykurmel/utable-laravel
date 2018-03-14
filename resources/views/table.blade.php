@@ -21,13 +21,6 @@
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
                 <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
-                    @if(Auth::user())
-                        <div style="display: inline-block;">
-                            <a href="javascript:void(0)" style="padding: 15px;" onclick="$('.tableCreateForm').show()" title="Create table">
-                                <i id="favourite_star" class="fa fa-upload" style="font-size: 1.5em;"></i>
-                            </a>
-                        </div>
-                    @endif
                     <div class="showhidemenu" style='width:150px;display:inline-block'>
                         <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
@@ -77,8 +70,11 @@
                         @if($tableName == 'st')
                             <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                         @endif
-                        @if(Auth::user())
+                        @if(Auth::user() && $tableName)
                             <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
+                        @endif
+                        @if($owner)
+                        <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                         @endif
                     </ul>
 
@@ -643,6 +639,191 @@
                         </div>
                         @endif
 
+                        @if($owner)
+                        <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
+                            <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: auto;">
+                                <div class="container">
+                                    <div class="row form-group">
+                                        <div class="col-xs-1"><label for="csv">Your csv file</label></div>
+                                        <div class="col-xs-11">
+                                            <input type="file" name="csv" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend()">
+                                        </div>
+                                    </div>
+                                </div>
+                                <form method="post" action="{{ route('createTable') }}">
+                                    <input type="hidden" value="<?= csrf_token() ?>" name="_token">
+                                    <input type="hidden" id="import_data_csv" name="data_csv" value="">
+                                    <div class="container">
+                                        <br>
+                                        <div class="row">
+                                            <div class="col-xs-4">
+                                                <div class="row form-group">
+                                                    <div class="col-xs-5"><label>Table name:</label></div>
+                                                    <div class="col-xs-7"><input type="text" class="form-control" id="import_table_name" name="table_name" value="{{ $tableMeta ? $tableMeta->name : '' }}"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-5"><label>Database name:</label></div>
+                                                    <div class="col-xs-7"><input type="text" class="form-control" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-5"><label>Data status:</label></div>
+                                                    <div class="col-xs-7"><select class="form-control" name="table_access" value="{{ $tableMeta ? $tableMeta->access : 'public' }}">
+                                                        <option>public</option>
+                                                        <option>private</option>
+                                                    </select></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-9"><label>Add to a table group:</label></div>
+                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_type_group_check" onchange="import_show_type_group()" {{ $tableMeta && $tableMeta->group_id ? 'checked' : '' }}></div>
+                                                </div>
+                                                <div class="row form-group" id="import_type_group" style="{{ $tableMeta && $tableMeta->group_id ? '' : 'display: none;' }}">
+                                                    <div class="col-xs-5"><label>Add to an existing or new group:</label></div>
+                                                    <div class="col-xs-7"><select class="form-control" value="existing" onchange="import_changed_type_group()">
+                                                        <option>existing</option>
+                                                        <option>new</option>
+                                                    </select></div>
+                                                </div>
+                                                <div class="row form-group" id="import_exist_group" style="{{ $tableMeta && $tableMeta->group_id ? '' : 'display: none;' }}">
+                                                    <div class="col-xs-5"><label>Select an existing group:</label></div>
+                                                    <div class="col-xs-7"><select class="form-control" name="table_exist_group" value="{{ $tableMeta ? $tableMeta->group_id : '' }}">
+                                                        @foreach($groupList as $grL)
+                                                            <option value="{{ $grL->id }}">{{ $grL->name }}</option>
+                                                        @endforeach
+                                                    </select></div>
+                                                </div>
+                                                <div class="row form-group" id="import_new_group" style="display: none;">
+                                                    <div class="col-xs-6"><label>Name:</label></div>
+                                                    <div class="col-xs-6"><label>www address:</label></div>
+                                                    <div class="col-xs-6"><input type="text" class="form-control" name="table_group_name" value=""></div>
+                                                    <div class="col-xs-6"><input type="text" class="form-control" name="table_group_www" value=""></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                @if(!$tableName)
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>First row as headers:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_first_headers"></div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>Second row as fields:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_second_fields"></div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>Third row as data type:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_third_type"></div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>Fourth row as max. size:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_fourth_size"></div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>Fifth row as default value:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_fifth_default"></div>
+                                                    </div>
+                                                    <div class="row form-group">
+                                                        <div class="col-xs-9"><label>Sixth row as inclusion:</label></div>
+                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_sixth_required"></div>
+                                                    </div>
+                                                @endif
+                                                <div class="row form-group">
+                                                    <div class="col-xs-5"><label>Starting row of data:</label></div>
+                                                    <div class="col-xs-7"><input type="number" class="form-control" name="csv_start_data"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-5"><label>Ending row of data:</label></div>
+                                                    <div class="col-xs-7"><input type="number" class="form-control" name="csv_end_data"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                <div class="row form-group">
+                                                    <div class="col-xs-9"><label>Replace Accents/Diacriticals:</label></div>
+                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-9"><label>Treat all Quoting Characted as data:</label></div>
+                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_quote_char"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-9"><label>Input CSV Quoting Characted is Apostrophe:</label></div>
+                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_quote_apostrophe"></div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-xs-9"><label>CSV contains backslash escaping like \n, \t and \.:</label></div>
+                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_backslash"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <div class="form-group">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Table Header</th>
+                                                                <th>tb Field</th>
+                                                                <th>Type</th>
+                                                                <th>Max. Size</th>
+                                                                <th>Default Value</th>
+                                                                <th>Required</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        <tbody id="import_table_body">
+                                                        @foreach($importHeaders as $hdr)
+                                                            <tr>
+                                                                <td>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto ? 'disabled' : ''}}>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'disabled' : ''}}>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-control" name="columns[{{ $loop->index }}][type]" value="{{ $hdr->type }}" {{ $hdr->auto ? 'disabled' : ''}}>
+                                                                        <option value="int">Integer</option>
+                                                                        <option value="str">String</option>
+                                                                        <option value="date">Date</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control" name="columns[{{ $loop->index }}][size]" {{ $hdr->auto ? 'disabled' : ''}}>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][default]" {{ $hdr->auto ? 'disabled value="auto"' : ''}}>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="checkbox" class="form-control" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'checked disabled' : ''}}>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <div class="form-group">
+                                                    <input type="button" class="btn btn-primary" onclick="import_add_table_row()" value="Add">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <div class="form-group">
+                                                    <input type="submit" class="btn btn-success" value="Save">
+                                                    <a href="{{ route('homepage') }}" class="btn btn-default">Cancel</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        @endif
+
                     </div>
 
                 </div>
@@ -747,7 +928,7 @@
         </div>
 
         {{-- Table create form --}}
-        <div class="tableCreateForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+        <!--<div class="tableCreateForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                     <div class="form-wrap">
@@ -785,7 +966,7 @@
                 </div>
             </div>
         </div>
-        <div class="tableCreateForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.tableCreateForm').hide()"></div>
+        <div class="tableCreateForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.tableCreateForm').hide()"></div>-->
     </div>
 
     <div class="div-print" id="div-print"></div>

@@ -379,7 +379,7 @@ function showDataTable(headers, data) {
 
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
         visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" checked > ' +
-                            '<label class="labels" for="{{ $hdr->field }}_visibility"> ' + headers[$hdr].name + ' </label>';
+                            '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
         visibleColumns += '</li>';
     }
     tbDataHeaders += "</tr>";
@@ -687,12 +687,14 @@ function handleDragEnd(e) {
 
 function showMap() {
     $("#li_list_view").removeClass("active");
+    $("#li_import_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
     $("#li_favorite_view").removeClass("active");
     $("#li_map_view").addClass("active");
     $("#list_view").hide();
     $("#favorite_view").hide();
     $("#settings_view").hide();
+    $("#import_view").hide();
     $("#map_view").show();
     initMap();
     $('.showhidemenu').hide();
@@ -701,6 +703,7 @@ function showMap() {
 
 function showList() {
     $("#li_list_view").addClass("active");
+    $("#li_import_view").removeClass("active");
     $("#li_favorite_view").removeClass("active");
     $("#li_map_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
@@ -708,12 +711,14 @@ function showList() {
     $("#favorite_view").hide();
     $("#map_view").hide();
     $("#settings_view").hide();
+    $("#import_view").hide();
     $('.showhidemenu').show();
     selectedForChangeOrder = -1;
 }
 
 function showFavorite() {
     $("#li_favorite_view").addClass("active");
+    $("#li_import_view").removeClass("active");
     $("#li_list_view").removeClass("active");
     $("#li_map_view").removeClass("active");
     $("#li_settings_view").removeClass("active");
@@ -721,12 +726,30 @@ function showFavorite() {
     $("#list_view").hide();
     $("#map_view").hide();
     $("#settings_view").hide();
+    $("#import_view").hide();
     $('.showhidemenu').show();
     changeFavoritePage(1);
 }
 
+function showImport() {
+    $("#li_import_view").addClass("active");
+    $("#li_settings_view").removeClass("active");
+    $("#li_favorite_view").removeClass("active");
+    $("#li_list_view").removeClass("active");
+    $("#li_map_view").removeClass("active");
+    $("#import_view").show();
+    $("#settings_view").hide();
+    $("#favorite_view").hide();
+    $("#list_view").hide();
+    $("#map_view").hide();
+    $('.showhidemenu').hide();
+    $('#showHideColumnsList').hide();
+    selectedForChangeOrder = -1;
+}
+
 function showSettings() {
     $("#li_settings_view").addClass("active");
+    $("#li_import_view").removeClass("active");
     $("#li_favorite_view").removeClass("active");
     $("#li_list_view").removeClass("active");
     $("#li_map_view").removeClass("active");
@@ -734,6 +757,7 @@ function showSettings() {
     $("#favorite_view").hide();
     $("#list_view").hide();
     $("#map_view").hide();
+    $("#import_view").hide();
     $('.showhidemenu').hide();
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
@@ -2597,6 +2621,110 @@ function toggleAllrights(idx, status) {
             alert("Server error");
         }
     });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ------------------- Import tab ----------------------- */
+
+function import_show_type_group() {
+    if ($('#import_type_group_check').is(':checked')) {
+        $('#import_type_group').find('select').val('existing');
+        $('#import_type_group').show();
+        $('#import_exist_group').show();
+    } else {
+        $('#import_type_group').hide();
+        $('#import_exist_group').hide();
+        $('#import_new_group').hide();
+    }
+}
+
+function import_changed_type_group() {
+    if ($('#import_type_group').find('select').val() == 'existing') {
+        $('#import_exist_group').show();
+        $('#import_new_group').hide();
+    } else {
+        $('#import_exist_group').hide();
+        $('#import_new_group').show();
+    }
+}
+
+function sent_csv_to_backend() {
+    var data = new FormData();
+    jQuery.each(jQuery('#import_csv')[0].files, function(i, file) {
+        data.append('csv', file);
+    });
+
+    jQuery.ajax({
+        url: baseHttpUrl+'/settingsForCreate',
+        data: data,
+        cache: false,
+        contentType: false,
+        processData: false,
+        method: 'POST',
+        success: function(resp){
+            $('#import_data_csv').val(resp.data_csv);
+            $('#import_table_name').val(resp.filename);
+            $('#import_table_db_tb').val(resp.filename);
+
+            var fieldlist = [];
+            fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1});
+            $.each(resp.headers, function(i, hdr) {
+                fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':'int', 'auto':0});
+            });
+            fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1});
+            fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1});
+            fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1});
+            fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1});
+
+            var html = '';
+            $.each(fieldlist, function(i, hdr) {
+                html += '<tr>'+
+                    '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'disabled' : '')+'></td>' +
+                    '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'disabled' : '')+'></td>' +
+                    '<td><select class="form-control" name="columns['+i+'][type]" value="'+hdr.type+'" '+(hdr.auto ? 'disabled' : '')+'>' +
+                        '<option value="int">Integer</option><option value="str">String</option><option value="date">Date</option>' +
+                    '</select></td>' +
+                    '<td><input type="number" class="form-control" name="columns['+i+'][size]" '+(hdr.auto ? 'disabled' : '')+'></td>' +
+                    '<td><input type="text" class="form-control" name="columns['+i+'][default]" '+(hdr.auto ? 'disabled value="auto"' : '')+'></td>' +
+                    '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.auto ? 'checked disabled' : '')+'></td>' +
+                    '</tr>';
+            });
+            $('#import_table_body').html(html);
+        }
+    });
+}
+
+function import_add_table_row() {
+    var i = $('#import_row_count').val();
+    var html = '<tr>'+
+        '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
+        '<td><input type="text" class="form-control" name="columns['+i+'][field]" value=""></td>' +
+        '<td><select class="form-control" name="columns['+i+'][type]" value="int">' +
+            '<option value="int">Integer</option><option value="str">String</option><option value="date">Date</option>' +
+        '</select></td>' +
+        '<td><input type="number" class="form-control" name="columns['+i+'][size]"></td>' +
+        '<td><input type="text" class="form-control" name="columns['+i+'][default]"></td>' +
+        '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]"></td>' +
+        '</tr>';
+    $('#import_table_body').append(html);
+    $('#import_row_count').val(i+1);
 }
 
 

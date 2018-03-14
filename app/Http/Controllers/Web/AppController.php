@@ -70,14 +70,45 @@ class AppController extends Controller
     }
 
     private function getVariables($tableName = "", $group = "") {
-
         $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
         $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
+        $importHeaders = $tableName ? $this->tableService->getHeaders($tableName) : $this->emptyTBHeaders();
+        foreach ($importHeaders as &$imp) {
+            if (in_array($imp->field, ['id','createdBy','createdOn','createdBy','modifiedBy','modifiedOn'])) {
+                $imp->auto = 1;
+                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'date' : 'int');
+            } else {
+                $imp->auto = 0;
+                $imp->type = 'int';
+            }
+        }
+
+        $tableMeta = $tableName
+            ?
+            DB::connection('mysql_data')->table('tb')->leftJoin('group', 'tb.group_id', '=', 'group.id')
+                ->where('db_tb', '=', $tableName)->select('tb.*', 'group.name as grname', 'group.www_add')->first()
+            :
+            '';
+
+        $groupList = DB::connection('mysql_data')->table('group')->get();
+
+        if ($tableName) {
+            $owner = (
+                Auth::user()
+                &&
+                (Auth::user()->role_id == 1 || Auth::user()->id == $tableMeta->owner)
+            ) ? true : false;
+        } else {
+            $owner = Auth::user() ? true : false;
+        }
+
         return [
             'socialProviders' => config('auth.social.providers'),
             'listTables' => $this->getListTables($group),
+            'tableMeta' => $tableMeta,
             'tableName' => $tableName,
             'headers' => $tableName ? $this->tableService->getHeaders($tableName) : [],
+            'importHeaders' => $importHeaders,
             'settingsHeaders' => $tableName ? $this->tableService->getHeaders('tb_settings_display') : [],
             'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
             'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
@@ -86,8 +117,20 @@ class AppController extends Controller
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'group' => $group,
+            'groupList' => $groupList,
             'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
-            'favourite' => $tableName ? $this->getFavourite($tableName) : ""
+            'favourite' => $tableName ? $this->getFavourite($tableName) : "",
+            'owner' => $owner
+        ];
+    }
+
+    private function emptyTBHeaders() {
+        return [
+            (object) ['field' => 'id', 'name' => 'ID', 'type' => 'int'],
+            (object) ['field' => 'createdBy', 'name' => 'Created By', 'type' => 'int'],
+            (object) ['field' => 'createdOn', 'name' => 'Created On', 'type' => 'data'],
+            (object) ['field' => 'modifiedBy', 'name' => 'Modified By', 'type' => 'int'],
+            (object) ['field' => 'modifiedOn', 'name' => 'Modified On', 'type' => 'data']
         ];
     }
 
@@ -225,11 +268,11 @@ class AppController extends Controller
             }
         }
 
-        $to_view = $this->getVariables();
+        //$to_view = $this->getVariables();
         $to_view['filename'] = $filename;
         $to_view['headers'] = $headers;
-        $to_view['with_headers'] = $request->with_headers;
+        //$to_view['with_headers'] = $request->with_headers;
         $to_view['data_csv'] = $tmp_csv;
-        return view('createTable', $to_view);
+        return $to_view;
     }
 }

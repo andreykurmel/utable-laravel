@@ -541,7 +541,7 @@ class TableController extends Controller
     public function createTable(Request $request)
     {
         $columns = $request->columns;
-        $filename = $request->filename;
+        $filename = $request->table_db_tb;
 
         //create table
         try {
@@ -549,20 +549,22 @@ class TableController extends Controller
                 $table->increments('id');
 
                 foreach ($columns as $col) {
-                    if ($col['type'] == 'date') {
-                        $t = $table->string($col['field'], $col['size'] > 0 ? $col['field'] : 255);
-                    } elseif ($col['type'] == 'str') {
-                        $t = $table->dateTime($col['field']);
-                    } else {
-                        $t = $table->integer($col['field']);
-                    }
+                    if (!in_array($col['field'], ['id','createdBy','createdOn','createdBy','modifiedBy','modifiedOn'])) {
+                        if ($col['type'] == 'date') {
+                            $t = $table->string($col['field'], $col['size'] > 0 ? $col['field'] : 255);
+                        } elseif ($col['type'] == 'str') {
+                            $t = $table->dateTime($col['field']);
+                        } else {
+                            $t = $table->integer($col['field']);
+                        }
 
-                    if (empty($col['required'])) {
-                        $t->nullable();
-                    }
+                        if (empty($col['required'])) {
+                            $t->nullable();
+                        }
 
-                    if (!empty($col['default'])) {
-                        $t->default($col['default']);
+                        if (!empty($col['default'])) {
+                            $t->default($col['default']);
+                        }
                     }
                 }
 
@@ -575,11 +577,25 @@ class TableController extends Controller
             return "Seems that your table schema is incorrect!<br>".$e->getMessage();
         }
 
+        if ($request->table_group_name && $request->table_group_www) {
+            DB::connection('mysql_data')->table('group')->insert([
+                'name' => $request->table_group_name,
+                'www_add' => $request->table_group_www,
+                'createdBy' => Auth::user()->id,
+                'createdOn' => now(),
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
+            $gr_id = DB::connection('mysql_data')->getPdo()->lastInsertId();
+        } else {
+            $gr_id = $request->table_exist_group ? $request->table_exist_group : '';
+        }
+
         DB::connection('mysql_data')->table('tb')->insert([
-            'name' => $filename,
+            'name' => $request->table_name,
             'owner' => Auth::user()->id,
-            'access' => 'private',
-            'group_id' => '',
+            'access' => $request->table_access,
+            'group_id' => $gr_id,
             'nbr_entry_listing' => 20,
             'source' => 'mysql',
             'db_tb' => $filename,
@@ -624,7 +640,7 @@ class TableController extends Controller
 
             $insert = [];
             foreach ($data as $idx => $val) {
-                $insert[ $columns[$idx]['field'] ] = $val;
+                $insert[ $columns[$idx+1]['field'] ] = $val;
             }
             $insert['createdBy'] = Auth::user()->id;
             $insert['createdOn'] = now();
