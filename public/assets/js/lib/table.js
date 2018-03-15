@@ -1170,7 +1170,7 @@ function updateRowModal() {
     for(var key in ltableHeaders) {
         d_key = ltableHeaders[key].field;
         if (d_key != 'id') {
-            ltableData[idx][d_key] = $('#modals_inp_'+key).val();
+            ltableData[idx][d_key] = $('#modals_inp_'+d_key).val();
         }
     }
 
@@ -1221,17 +1221,17 @@ function editSelectedData(idx) {
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
                 '<td>';
             if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
-                html += '<input id="modals_inp_'+key+'" type="text" class="form-control" />';
+                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
             } else
             if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
-                html += '<select class="form-control" id="modals_inp_'+key+'" class="form-control" style="margin-bottom: 5px">';
+                html += '<select class="form-control" id="modals_inp_'+d_key+'" class="form-control" style="margin-bottom: 5px">';
                 for(var i in ltableDDLs[key]) {
                     html += '<option val="'+ltableDDLs[key][i]+'">'+ltableDDLs[key][i]+'</option>';
                 }
                 html += '</select>';
             }
             else {
-                html += '<input id="modals_inp_'+key+'" type="text" class="form-control" readonly/>';
+                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
             }
             html += '</td>';
             html += "</tr>";
@@ -1243,7 +1243,7 @@ function editSelectedData(idx) {
     if (idx > -1) {
         for(var key in ltableHeaders) {
             d_key = ltableHeaders[key].field;
-            $('#modals_inp_'+key).val( ltableData[idx][d_key] );
+            $('#modals_inp_'+d_key).val( ltableData[idx][d_key] );
         }
     }
 
@@ -1273,8 +1273,10 @@ function addData() {
 
 function addRowInline() {
     emptyDataObject = {};
+    var d_key;
     for(var key in tableHeaders) {
-        emptyDataObject[key] = $('#' + tableHeaders[key].field + 0 + tableHeaders[key].input_type + '_addrow').html();
+        d_key = tableHeaders[key].field;
+        emptyDataObject[d_key] = $('#' + d_key + 0 + tableHeaders[key].input_type + '_addrow').html();
     }
     tableData.push(emptyDataObject);
 
@@ -2678,53 +2680,86 @@ function sent_csv_to_backend() {
         contentType: false,
         processData: false,
         method: 'POST',
-        success: function(resp){
-            $('#import_data_csv').val(resp.data_csv);
-            $('#import_table_name').val(resp.filename);
-            $('#import_table_db_tb').val(resp.filename);
+        success: function(resp) {
+            if (!selectedTableName) {
+                $('#import_data_csv').val(resp.data_csv);
+                $('#import_table_name').val(resp.filename);
+                $('#import_table_db_tb').val(resp.filename);
 
-            var fieldlist = [];
-            fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1});
-            $.each(resp.headers, function(i, hdr) {
-                fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':'int', 'auto':0});
-            });
-            fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1});
-            fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1});
-            fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1});
-            fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1});
+                var fieldlist = [];
+                fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1});
+                $.each(resp.headers, function(i, hdr) {
+                    fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':'str', 'auto':0});
+                });
+                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1});
+                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1});
+                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1});
 
-            var html = '';
-            $.each(fieldlist, function(i, hdr) {
-                html += '<tr>'+
-                    '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'disabled' : '')+'></td>' +
-                    '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'disabled' : '')+'></td>' +
-                    '<td><select class="form-control" name="columns['+i+'][type]" value="'+hdr.type+'" '+(hdr.auto ? 'disabled' : '')+'>' +
-                        '<option value="int">Integer</option><option value="str">String</option><option value="date">Date</option>' +
-                    '</select></td>' +
-                    '<td><input type="number" class="form-control" name="columns['+i+'][size]" '+(hdr.auto ? 'disabled' : '')+'></td>' +
-                    '<td><input type="text" class="form-control" name="columns['+i+'][default]" '+(hdr.auto ? 'disabled value="auto"' : '')+'></td>' +
-                    '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.auto ? 'checked disabled' : '')+'></td>' +
-                    '</tr>';
-            });
-            $('#import_table_body').html(html);
+                var html = '';
+                $.each(fieldlist, function(i, hdr) {
+                    html += '<tr id="import_columns_'+i+'">'+
+                        '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<option '+(hdr.type == 'str' ? 'selected="selected"' : '')+' value="str">String</option>' +
+                            '<option '+(hdr.type == 'int' ? 'selected="selected"' : '')+' value="int">Integer</option>' +
+                            '<option '+(hdr.type == 'dec' ? 'selected="selected"' : '')+' value="dec">Decimal</option>' +
+                            '<option '+(hdr.type == 'date' ? 'selected="selected"' : '')+' value="date">Date</option>' +
+                            '<option '+(hdr.type == 'datetime' ? 'selected="selected"' : '')+' value="datetime">Date Time</option>' +
+                        '</select></td>' +
+                        '<td><input type="number" class="form-control" name="columns['+i+'][size]" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control" name="columns['+i+'][default]" '+(hdr.auto ? 'readonly value="auto"' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.auto ? 'checked readonly' : '')+'></td>' +
+                        '<td>' +
+                            '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
+                            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+                $('#import_table_body').html(html);
+            }
         }
     });
 }
 
 function import_add_table_row() {
     var i = $('#import_row_count').val();
-    var html = '<tr>'+
+    var html = '<tr id="import_columns_'+i+'">'+
         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
         '<td><input type="text" class="form-control" name="columns['+i+'][field]" value=""></td>' +
         '<td><select class="form-control" name="columns['+i+'][type]" value="int">' +
-            '<option value="int">Integer</option><option value="str">String</option><option value="date">Date</option>' +
+            '<option value="str">String</option><option value="int">Integer</option><option value="dec">Decimal</option><option value="date">Date</option><option value="datetime">Date Time</option>' +
         '</select></td>' +
         '<td><input type="number" class="form-control" name="columns['+i+'][size]"></td>' +
         '<td><input type="text" class="form-control" name="columns['+i+'][default]"></td>' +
         '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]"></td>' +
+        '<td>' +
+            '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
+            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+        '</td>' +
         '</tr>';
     $('#import_table_body').append(html);
     $('#import_row_count').val(i+1);
+}
+
+function import_del_row(idx) {
+    $('#import_columns_'+idx).hide();
+    $('#import_columns_deleted_'+idx).val('del');
+}
+
+function import_show_csv_tab() {
+    $('#import_li_csv_tab').addClass('active');
+    $('#import_li_col_tab').removeClass('active');
+    $('#import_csv_tab').show();
+    $('#import_col_tab').hide();
+}
+
+function import_show_col_tab() {
+    $('#import_li_col_tab').addClass('active');
+    $('#import_li_csv_tab').removeClass('active');
+    $('#import_col_tab').show();
+    $('#import_csv_tab').hide();
 }
 
 

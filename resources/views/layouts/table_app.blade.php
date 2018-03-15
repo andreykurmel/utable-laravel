@@ -84,6 +84,22 @@
         #tbSettingsData_body td.over {
             border-top: 3px dashed #000;;
         }
+
+        #import_view .row label,
+        #import_view .row .col-xs-3 {
+            height: 34px;
+            display: flex;
+            align-items: center;
+        }
+
+        #import_view .form-control {
+            height: initial;
+        }
+
+        #import_view tbody > tr > td {
+            padding: 0;
+            text-align: center;
+        }
     </style>
 
     @stack('styles')

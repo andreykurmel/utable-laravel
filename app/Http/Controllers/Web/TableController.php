@@ -548,12 +548,24 @@ class TableController extends Controller
             Schema::connection('mysql_data')->create($filename, function (Blueprint $table) use ($columns) {
                 $table->increments('id');
 
-                foreach ($columns as $col) {
-                    if (!in_array($col['field'], ['id','createdBy','createdOn','createdBy','modifiedBy','modifiedOn'])) {
-                        if ($col['type'] == 'date') {
-                            $t = $table->string($col['field'], $col['size'] > 0 ? $col['field'] : 255);
-                        } elseif ($col['type'] == 'str') {
+                $presentCols = [];
+                foreach ($columns as &$col) {
+                    if ($col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        //prevent error if we have two the same names for columns
+                        if (in_array($col['field'], $presentCols)) {
+                            $col['field'] = $col['field']."_1";
+                        }
+                        $presentCols[] = $col['field'];
+
+                        //add column
+                        if ($col['type'] == 'str') {
+                            $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
+                        } elseif ($col['type'] == 'date') {
+                            $t = $table->date($col['field']);
+                        } elseif ($col['type'] == 'datetime') {
                             $t = $table->dateTime($col['field']);
+                        } elseif ($col['type'] == 'dec') {
+                            $t = $table->decimal($col['field']);
                         } else {
                             $t = $table->integer($col['field']);
                         }
@@ -577,6 +589,7 @@ class TableController extends Controller
             return "Seems that your table schema is incorrect!<br>".$e->getMessage();
         }
 
+        //add group if it`s exists
         if ($request->table_group_name && $request->table_group_www) {
             DB::connection('mysql_data')->table('group')->insert([
                 'name' => $request->table_group_name,
@@ -588,9 +601,10 @@ class TableController extends Controller
             ]);
             $gr_id = DB::connection('mysql_data')->getPdo()->lastInsertId();
         } else {
-            $gr_id = $request->table_exist_group ? $request->table_exist_group : '';
+            $gr_id = $request->table_exist_group && $request->import_type_group_check ? $request->table_exist_group : '';
         }
 
+        //add record to 'tb'
         DB::connection('mysql_data')->table('tb')->insert([
             'name' => $request->table_name,
             'owner' => Auth::user()->id,
@@ -610,37 +624,164 @@ class TableController extends Controller
         ]);
         $tb_id = DB::connection('mysql_data')->getPdo()->lastInsertId();
 
+        //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
-            DB::connection('mysql_data')->table('tb_settings_display')->insert([
-                'tb_id' => $tb_id,
-                'field' => $col['field'],
-                'name' => $col['header'],
-                'web' => 'Yes',
-                'filter' => 'No',
-                'sum' => 'No',
-                'input_type' => 'Input',
-                'min_wth' => 0,
-                'max_wth' => 0,
+            if ($col['field']) {
+                DB::connection('mysql_data')->table('tb_settings_display')->insert([
+                    'tb_id' => $tb_id,
+                    'field' => $col['field'],
+                    'name' => $col['header'],
+                    'web' => 'Yes',
+                    'filter' => 'No',
+                    'sum' => 'No',
+                    'input_type' => 'Input',
+                    'min_wth' => 0,
+                    'max_wth' => 0,
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
+
+        //import data
+        if ($request->data_csv) {
+            $this->importDataToTable($request, $filename, $columns);
+        }
+
+        return redirect()->to( "/data/all/".$filename );
+    }
+
+    public function modifyTable(Request $request)
+    {
+        $columns = $request->columns;
+        $filename = $request->table_db_tb;
+
+        $tableMeta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $filename)->first();
+
+        //modify table
+        try {
+            Schema::connection('mysql_data')->table($filename, function (Blueprint $table) use ($columns) {
+                //for deleting columns
+                foreach ($columns as $col) {
+                    if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        //del column
+                        $table->dropColumn($col['field']);
+                    }
+                }
+                //for adding columns
+                foreach ($columns as $col) {
+                    if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        //add column
+                        if ($col['type'] == 'str') {
+                            $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
+                        } elseif ($col['type'] == 'date') {
+                            $t = $table->date($col['field']);
+                        } elseif ($col['type'] == 'datetime') {
+                            $t = $table->dateTime($col['field']);
+                        } elseif ($col['type'] == 'dec') {
+                            $t = $table->decimal($col['field']);
+                        } else {
+                            $t = $table->integer($col['field']);
+                        }
+
+                        if (empty($col['required'])) {
+                            $t->nullable();
+                        }
+
+                        if (!empty($col['default'])) {
+                            $t->default($col['default']);
+                        }
+                    }
+                }
+            });
+        } catch (\Exception $e) {
+            return "Seems that your table schema is incorrect!<br>".$e->getMessage();
+        }
+
+        //add group if it`s exists
+        if ($request->table_group_name && $request->table_group_www) {
+            DB::connection('mysql_data')->table('group')->insert([
+                'name' => $request->table_group_name,
+                'www_add' => $request->table_group_www,
                 'createdBy' => Auth::user()->id,
                 'createdOn' => now(),
                 'modifiedBy' => Auth::user()->id,
                 'modifiedOn' => now()
             ]);
+            $gr_id = DB::connection('mysql_data')->getPdo()->lastInsertId();
+        } else {
+            $gr_id = $request->table_exist_group && $request->import_type_group_check ? $request->table_exist_group : '';
         }
 
+        //modify record in the 'tb'
+        DB::connection('mysql_data')->table('tb')->where('id', '=', $tableMeta->id)->update([
+            'name' => $request->table_name,
+            'access' => $request->table_access,
+            'group_id' => $gr_id,
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
+        //add settings to 'tb_settings_display'
+        foreach ($columns as $col) {
+            //for deleting columns
+            if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                //del column
+                DB::connection('mysql_data')->table('tb_settings_display')->where('tb_id', '=', $tableMeta->id)->where('field', '=', $col['field'])->delete();
+            }
+            //for adding columns
+            if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                //add column
+                DB::connection('mysql_data')->table('tb_settings_display')->insert([
+                    'tb_id' => $tableMeta->id,
+                    'field' => $col['field'],
+                    'name' => $col['header'],
+                    'web' => 'Yes',
+                    'filter' => 'No',
+                    'sum' => 'No',
+                    'input_type' => 'Input',
+                    'min_wth' => 0,
+                    'max_wth' => 0,
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
+
+        //import data
+        if ($request->data_csv) {
+            $this->importDataToTable($request, $filename, $columns);
+        }
+
+        return redirect($_SERVER['HTTP_REFERER']);
+    }
+
+    private function importDataToTable($request, $filename, $columns) {
         $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
-        $first = true;
+        $start = $end = $cur = 0;
+        if ($request->csv_first_headers) { $start = 2; }
+        if ($request->csv_second_fields) { $start = 3; }
+        if ($request->csv_third_type) { $start = 4; }
+        if ($request->csv_fourth_size) { $start = 5; }
+        if ($request->csv_fifth_default) { $start = 6; }
+        if ($request->csv_sixth_required) { $start = 7; }
+        if ($request->csv_start_data) { $start = $request->csv_start_data > $start ? $request->csv_start_data : $start; }
+        if ($request->csv_end_data) { $end = $request->csv_end_data; }
         while (($data = fgetcsv($fileHandle)) !== FALSE) {
-            if ($first) {
-                $first = false;
-                if ($request->with_headers) {
-                    continue;
-                }
+            $cur++;
+            if ($cur < $start || ($end && $cur > $end)) {
+                continue;
             }
 
             $insert = [];
             foreach ($data as $idx => $val) {
-                $insert[ $columns[$idx+1]['field'] ] = $val;
+                if (!in_array($columns[$idx+1]['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    $insert[ $columns[$idx+1]['field'] ] = $val;
+                }
             }
             $insert['createdBy'] = Auth::user()->id;
             $insert['createdOn'] = now();
@@ -648,7 +789,5 @@ class TableController extends Controller
             $insert['modifiedOn'] = now();
             DB::connection('mysql_data')->table($filename)->insert($insert);
         }
-
-        return redirect()->to( route('homepage')."/".$filename );
     }
 }

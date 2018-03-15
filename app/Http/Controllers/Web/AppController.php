@@ -72,16 +72,6 @@ class AppController extends Controller
     private function getVariables($tableName = "", $group = "") {
         $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
         $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
-        $importHeaders = $tableName ? $this->tableService->getHeaders($tableName) : $this->emptyTBHeaders();
-        foreach ($importHeaders as &$imp) {
-            if (in_array($imp->field, ['id','createdBy','createdOn','createdBy','modifiedBy','modifiedOn'])) {
-                $imp->auto = 1;
-                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'date' : 'int');
-            } else {
-                $imp->auto = 0;
-                $imp->type = 'int';
-            }
-        }
 
         $tableMeta = $tableName
             ?
@@ -91,6 +81,39 @@ class AppController extends Controller
             '';
 
         $groupList = DB::connection('mysql_data')->table('group')->get();
+
+        $importHeadersMeta = $tableName
+            ?
+            DB::connection('mysql_schema')
+                ->table('COLUMNS')
+                ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
+                ->where('TABLE_NAME', '=', $tableName)
+                ->get()
+            :
+            [];
+        $importHeaders = $tableName ? $this->tableService->getHeaders($tableName) : $this->emptyTBHeaders();
+        foreach ($importHeaders as &$imp) {
+            if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                $imp->auto = 1;
+                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'date' : 'int');
+                $imp->default = 'auto';
+                $imp->required = 1;
+                $imp->maxlen = '';
+            } else {
+                $curval = [];
+                foreach ($importHeadersMeta as $imeta) {
+                    if ($imeta->COLUMN_NAME == $imp->field) {
+                        $curval = $imeta;
+                        break;
+                    }
+                }
+                $imp->auto = 0;
+                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'int' : ($curval && $curval->DATETIME_PRECISION ? 'date' : 'str'));
+                $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
+                $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
+                $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+            }
+        }
 
         if ($tableName) {
             $owner = (

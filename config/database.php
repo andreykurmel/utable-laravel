@@ -63,6 +63,21 @@ return [
             'engine'    => 'InnoDB'
         ],
 
+        'mysql_schema' => [
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', 'localhost'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => 'information_schema',
+            'username'  => env('DB_USERNAME', 'root'),
+            'password'  => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix'    => env('DB_PREFIX', ''),
+            'strict'    => false,
+            'engine'    => 'InnoDB'
+        ],
+
     ],
 
     /*
