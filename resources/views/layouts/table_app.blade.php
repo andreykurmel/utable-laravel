@@ -100,6 +100,11 @@
             padding: 0;
             text-align: center;
         }
+
+        #import_view .container {
+            max-width: 1170px;
+            width: 100%;
+        }
     </style>
 
     @stack('styles')

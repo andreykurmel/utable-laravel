@@ -2,8 +2,8 @@
 
 @section('content')
     <div class="div-screen">
+        <input type="hidden" id="inpServerName" value="{{ $server }}">
         <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
-        <input type="hidden" id="inpSelectedTableGroup" value="{{ isset($group) ? $group : "" }}">
         <input type="hidden" id="inpSelectedEntries" value="{{ $selectedEntries ? $selectedEntries : 10 }}">
         <input type="hidden" id="inpSettingsEntries" value="{{ $settingsEntries ? $settingsEntries : 10 }}">
         <!-- Prompt IE 6 users to install Chrome Frame -->
@@ -32,10 +32,10 @@
                         <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
                     <div style="padding: 5px;display: inline-block;">
-                        <select id="tableChanger" class="selectcustom" onchange="window.location = '/data/' + $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
-                            <option value=""></option>
+                        <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
+                            <option value="{{ $server.'/data/all' }}"></option>
                             @foreach($listTables as $tb)
-                                <option value="{{ $tb->www_add }}">
+                                <option value="{{ $tb->subdomain ? preg_replace('/\/\//i', '//'.$tb->subdomain.'.', $server) : $server.'/data/'.$tb->www_add }}">
                                     @if(Auth::user())
                                         {{ (Auth::user()->id == $tb->owner ? '&#xf10c; ' : ($tb->right ? '&#xf006; ' : '&#x2003; ')) }}
                                     @endif
@@ -293,7 +293,9 @@
                                             entries
                                         </label>
                                     </div>
-                                    <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;" onclick="favoritesCopyToClipboard()">copy</button>
+                                    <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">copy</button>
+                                    <input id="favourite_copy_with_headers" type="checkbox">
+                                    <label for="favourite_copy_with_headers">headers</label>
                                 </div>
                                 <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                     <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
@@ -667,7 +669,7 @@
                                                 <li id="import_li_col_tab"><a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Columns Settings</a></li>
                                             </ul>
                                         </div>
-                                        <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 10px; right: 10px; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                        <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                             <div class="row">
                                                 <div class="col-xs-4">
                                                     <div class="row">
@@ -749,26 +751,26 @@
                                                 </div>
                                                 <div class="col-xs-4">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><label>Replace Accents/Diacriticals:</label></div>
-                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
+                                                        <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
+                                                        <div class="col-xs-10"><label>Replace Accents/Diacriticals</label></div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-xs-9"><label>Treat all Quoting Characted as data:</label></div>
-                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_quote_char"></div>
+                                                        <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_char"></div>
+                                                        <div class="col-xs-10"><label>Treat all Quoting Characted as data</label></div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-xs-9"><label>Input CSV Quoting Characted is Apostrophe:</label></div>
-                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_quote_apostrophe"></div>
+                                                        <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_apostrophe"></div>
+                                                        <div class="col-xs-10"><label>Input CSV Quoting Characted is Apostrophe</label></div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-xs-9"><label>CSV contains backslash escaping like \n, \t and \.:</label></div>
-                                                        <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_backslash"></div>
+                                                        <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_backslash"></div>
+                                                        <div class="col-xs-10"><label>CSV contains backslash escaping like \n, \t and \.</label></div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 10px; right: 10px; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
+                                        <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                             <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
                                             <div class="row">
                                                 <div class="col-xs-12">

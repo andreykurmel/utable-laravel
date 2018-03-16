@@ -26,10 +26,11 @@ class AppController extends Controller
             $subdomain = $subdomain[1];
         }
         if ($subdomain) {
-            if ($this->tableExist($subdomain, NULL)) {
+            $tableMeta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $subdomain)->first();
+            if ($tableMeta->subdomain && $this->tableExist($subdomain, NULL)) {
                 return view('table', $this->getVariables($subdomain));
             } else {
-                if (Auth::user()) {
+                if (!$tableMeta->subdomain || Auth::user()) {
                     return view('errors.404');
                 } else {
                     return redirect()->to( route('login') );
@@ -126,6 +127,7 @@ class AppController extends Controller
         }
 
         return [
+            'server' => config('app.url'),
             'socialProviders' => config('auth.social.providers'),
             'listTables' => $this->getListTables($group),
             'tableMeta' => $tableMeta,
@@ -139,7 +141,6 @@ class AppController extends Controller
             'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('rights_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
-            'group' => $group,
             'groupList' => $groupList,
             'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favourite' => $tableName ? $this->getFavourite($tableName) : "",

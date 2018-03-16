@@ -12,7 +12,7 @@ $(document).ready(function () {
         $('.js_tableNameST').css('top', '50px');
     }
 
-    $('#tableChanger').val( (selectedTableGroup ? selectedTableGroup+"/" : "all/") + selectedTableName );
+    $('#tableChanger').val( window.location.href  );
 
     if (selectedTableName) {
         selectTable(selectedTableName);
@@ -553,15 +553,17 @@ function showHideColumn(fieldKey) {
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').hide();
         $('#tbData th[data-key="'+fieldKey+'"], #tbData td[data-key="'+fieldKey+'"]').hide();
 
-        $('#tbFavouriteHeaders th[data-key="'+fieldKey+'"], #tbFavouriteHeaders td[data-key="'+fieldKey+'"]').hide();
-        $('#tbFavouriteData th[data-key="'+fieldKey+'"], #tbFavouriteData td[data-key="'+fieldKey+'"]').hide();
+        $('#tbFavoriteHeaders th[data-key="'+fieldKey+'"], #tbFavoriteHeaders td[data-key="'+fieldKey+'"]').hide();
+        $('#tbFavoriteData th[data-key="'+fieldKey+'"], #tbFavoriteData td[data-key="'+fieldKey+'"]').hide();
+        $('#tbFavoriteCheckRow th[data-key="'+fieldKey+'"], #tbFavoriteCheckRow td[data-key="'+fieldKey+'"]').hide();
     } else {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').show();
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').show();
         $('#tbData th[data-key="'+fieldKey+'"], #tbData td[data-key="'+fieldKey+'"]').show();
 
-        $('#tbFavouriteHeaders th[data-key="'+fieldKey+'"], #tbFavouriteHeaders td[data-key="'+fieldKey+'"]').show();
-        $('#tbFavouriteData th[data-key="'+fieldKey+'"], #tbFavouriteData td[data-key="'+fieldKey+'"]').show();
+        $('#tbFavoriteHeaders th[data-key="'+fieldKey+'"], #tbFavoriteHeaders td[data-key="'+fieldKey+'"]').show();
+        $('#tbFavoriteData th[data-key="'+fieldKey+'"], #tbFavoriteData td[data-key="'+fieldKey+'"]').show();
+        $('#tbFavoriteCheckRow th[data-key="'+fieldKey+'"], #tbFavoriteCheckRow td[data-key="'+fieldKey+'"]').show();
     }
 }
 
@@ -1365,7 +1367,7 @@ function changeFavoritePage(page) {
                 alert(response.msg);
             }
 
-            console.log(response);
+            console.log('Favorite', response);
             if (authUser) {
                 favoriteRowsCount = response.rows;
                 favoriteTableData = response.data;
@@ -1571,12 +1573,19 @@ function removeFavoriteRow(idx, elem) {
 function favoritesCopyToClipboard() {
     if (authUser) {
         var selectedColumns = [];
-        $('.js-favoriteColsChecked:checked').each(function (i, elem) {
+        $('.js-favoriteColsChecked:checked:visible').each(function (i, elem) {
             selectedColumns.push( $(elem).data('key') );
         });
         console.log(selectedColumns);
 
         var textToClip = "<table id='tableForCopy'>";
+        if ($('#favourite_copy_with_headers').is(':checked')) {
+            textToClip += "<tr>";
+            for (var j = 0; j < selectedColumns.length; j++) {
+                textToClip += "<td>" + favoriteTableHeaders[j].name + "</td>";
+            }
+            textToClip += "</tr>";
+        }
         $('.js-favoriteRowsChecked:checked').each(function (i, elem) {
             var idx = $(elem).data('idx');
             textToClip += "<tr>";
