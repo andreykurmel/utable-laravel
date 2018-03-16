@@ -35,7 +35,7 @@
                         <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
                             <option value="{{ $server.'/data/all' }}"></option>
                             @foreach($listTables as $tb)
-                                <option value="{{ $tb->subdomain ? preg_replace('/\/\//i', '//'.$tb->subdomain.'.', $server) : $server.'/data/'.$tb->www_add }}">
+                                <option value="{{ $tb->subdomain ? preg_replace('/\/\/www/i', '//www.'.$tb->subdomain, $server) : $server.'/data/'.$tb->www_add }}">
                                     @if(Auth::user())
                                         {{ (Auth::user()->id == $tb->owner ? '&#xf10c; ' : ($tb->right ? '&#xf006; ' : '&#x2003; ')) }}
                                     @endif
@@ -1008,5 +1008,6 @@
     <script>
         canEditSettings = {{ (int)$canEditSettings }};
         authUser = {{ (int)Auth::check() }};
+        userOwner = {{ (int)$owner }};
     </script>
 @endpush

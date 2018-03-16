@@ -400,9 +400,17 @@ class TableController extends Controller
         $users = DB::table('users')
             ->where('username', 'LIKE', $request->q.'%')
             ->orWhere('email', 'LIKE', $request->q.'%')
-            ->select('id', 'username as text')
+            ->orWhere('first_name', 'LIKE', $request->q.'%')
+            ->orWhere('last_name', 'LIKE', $request->q.'%')
             ->limit(5)->get();
-        return ['results' => $users];
+        $res = [];
+        foreach ($users as $usr) {
+            $res[] = [
+                'id' => $usr->id,
+                'text' => $usr->first_name ? $usr->first_name." ".$usr->last_name : $usr->username
+            ];
+        }
+        return ['results' => $res];
     }
 
     public function getFavoritesForTable(Request $request)

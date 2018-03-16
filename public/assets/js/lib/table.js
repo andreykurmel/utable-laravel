@@ -261,9 +261,21 @@ function showDataTable(headers, data) {
 
         //second column ("star")
         if (authUser) {
-            tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
-                '<i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="font-size: 1.5em;color: #FD0;"></i>' +
-                '</a></td>';
+            if (userOwner) {
+                tableData +=
+                    '<td style="font-size: 1.5em; text-align: center;">' +
+                        '<a href="javascript:void(0)" onclick="toggleFavoriteRow(' + i + ',this)">' +
+                            '<i class="fa ' + (data[i].is_favorited ? 'fa-star' : 'fa-star-o') + '" style="color: #FD0;"></i>' +
+                        '</a> | ' +
+                        '<a href="javascript:void(0)" onclick="deleteRow(tableData[' + i + '], ' + i + ')">' +
+                            '<i class="fa fa-remove" style="color: #039;"></i>' +
+                        '</a>' +
+                    '</td>';
+            } else {
+                tableData += '<td style="font-size: 1.5em; text-align: center;"><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
+                    '<i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="color: #FD0;"></i>' +
+                    '</a></td>';
+            }
         } else {
             star_class = 'fa-star-o';
             for (var v = 0; v < favoriteTableData.length; v++) {
@@ -340,7 +352,7 @@ function showDataTable(headers, data) {
         //hidden data for correct columns size
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
-        tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i></td>';
+        tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i>|<i class="fa fa-remove" style="font-size: 1.5em;color: #05B;"></i></td>';
         for(key in headers) {
             d_key = headers[key].field;
             if ($.inArray(d_key, arrAddFieldsInData) == -1) {
@@ -363,7 +375,7 @@ function showDataTable(headers, data) {
 
     //recreate headers for main data
     tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap'><b>Favorite</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap'><b>Actions</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th ' +
             'draggable="true" ' +
