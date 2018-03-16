@@ -132,7 +132,11 @@ class TableService {
 
         //join favourite table for main data
         if($fromMainData) {
-            $sql->leftJoin('favorite as f', $tableName.'.id', '=', 'f.row_id');
+            $sql->leftJoin('favorite as f', function ($q) use ($tableName, $table_meta) {
+                $q->where($tableName.'.id', '=', 'f.row_id');
+                $q->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
+                $q->where('f.table_id', '=', $table_meta->id);
+            });
         }
 
         //if user isn`t admin or owner -> then select only accessible fields

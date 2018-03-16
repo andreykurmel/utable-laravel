@@ -21,6 +21,13 @@
             <!-- Main title -->
             <hgroup id="main-title" class="thin" style='height:50px'>
                 <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
+                    @if($owner && $tableName)
+                        <div style="display: inline-block;">
+                            <a href="javascript:void(0)" style="padding: 15px;" onclick="deleteCurrentTable()" title="Delete table">
+                                <i class="fa fa-remove" style="font-size: 1.5em;"></i>
+                            </a>
+                        </div>
+                    @endif
                     <div class="showhidemenu" style='width:150px;display:inline-block'>
                         <a href="javascript:void(0)" class="button blue-gradient glossy"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                     </div>
@@ -646,7 +653,7 @@
                                     <div class="row form-group">
                                         <div class="col-xs-2"><label for="csv">Your csv file</label></div>
                                         <div class="col-xs-10">
-                                            <input type="file" name="csv" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend()">
+                                            <input type="file" name="csv" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
                                         </div>
                                     </div>
                                 </div>
@@ -708,27 +715,27 @@
                                                     @if(!$tableName)
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>First row as headers:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_first_headers"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c1" name="csv_first_headers" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>Second row as fields:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_second_fields"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c2" name="csv_second_fields" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>Third row as data type:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_third_type"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c3" name="csv_third_type" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>Fourth row as max. size:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_fourth_size"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c4" name="csv_fourth_size" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>Fifth row as default value:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_fifth_default"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c5" name="csv_fifth_default" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-xs-9"><label>Sixth row as inclusion:</label></div>
-                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" name="csv_sixth_required"></div>
+                                                            <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_csv_c6" name="csv_sixth_required" onchange="sent_csv_to_backend(0)"></div>
                                                         </div>
                                                     @endif
                                                     <div class="row">
@@ -771,6 +778,7 @@
                                                                 <tr>
                                                                     <th>Table Header</th>
                                                                     <th>tb Field</th>
+                                                                    <th>Column # in CSV</th>
                                                                     <th>Type</th>
                                                                     <th>Max. Size</th>
                                                                     <th>Default Value</th>
@@ -787,6 +795,9 @@
                                                                     </td>
                                                                     <td>
                                                                         <input type="text" class="form-control" name="columns[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control" name="columns[{{ $loop->index }}][col]" value="{{ $hdr->auto ? '' : $loop->index }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                     </td>
                                                                     <td>
                                                                         <select class="form-control" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>

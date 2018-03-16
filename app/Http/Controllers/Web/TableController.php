@@ -760,6 +760,33 @@ class TableController extends Controller
         return redirect($_SERVER['HTTP_REFERER']);
     }
 
+    public function deleteAllTable(Request $request)
+    {
+        $tableMeta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+
+        //delete table
+        Schema::connection('mysql_data')->table($request->tableName, function (Blueprint $table) {
+            $table->drop();
+        });
+
+        //delete record from the 'tb'
+        DB::connection('mysql_data')->table('tb')->where('id', '=', $tableMeta->id)->delete();
+
+        //delete record from the 'tb_settings_display'
+        DB::connection('mysql_data')->table('tb_settings_display')->where('tb_id', '=', $tableMeta->id)->delete();
+
+        //delete record from the 'ddl'
+        DB::connection('mysql_data')->table('ddl')->where('tb_id', '=', $tableMeta->id)->delete();
+
+        //delete record from the 'favorite'
+        DB::connection('mysql_data')->table('favorite')->where('table_id', '=', $tableMeta->id)->delete();
+
+        //delete record from the 'rights'
+        DB::connection('mysql_data')->table('rights')->where('table_id', '=', $tableMeta->id)->delete();
+
+        return "success";
+    }
+
     private function importDataToTable($request, $filename, $columns) {
         $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
         $start = $end = $cur = 0;
@@ -778,9 +805,10 @@ class TableController extends Controller
             }
 
             $insert = [];
-            foreach ($data as $idx => $val) {
-                if (!in_array($columns[$idx+1]['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
-                    $insert[ $columns[$idx+1]['field'] ] = $val;
+            //fill only those data columns which numbers are setted in 'table columns settings'
+            foreach ($columns as $idx => $col) {
+                if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    $insert[ $col['field'] ] = $data[ $col['col']-1 ];
                 }
             }
             $insert['createdBy'] = Auth::user()->id;

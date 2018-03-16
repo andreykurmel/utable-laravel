@@ -399,6 +399,7 @@ Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
     Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
+    Route::get('/api/deleteAllTable', 'TableController@deleteAllTable')->name('deleteAllTable');
 });
 
 Route::post('/download', 'DownloadController@download')->name('downloader');

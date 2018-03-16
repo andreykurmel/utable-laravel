@@ -262,28 +262,59 @@ class AppController extends Controller
     }
 
     public function showSettingsForCreateTable(Request $request) {
-        $tmp_csv = time()."_".rand().".csv";
-        $request->csv->storeAs('csv', $tmp_csv);
+        if ($request->csv) {
+            $tmp_csv = time()."_".rand().".csv";
+            $request->csv->storeAs('csv', $tmp_csv);
 
-        $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);
-        $filename = preg_replace('/[^\w\d]/i', '_', $filename);
+            $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);
+            $filename = preg_replace('/[^\w\d]/i', '_', $filename);
+        } else {
+            $filename = $request->filename;
+            $tmp_csv = $request->data_csv;
+        }
 
         $columns = 0;
         $headers = [];
         $fileHandle = fopen(storage_path("app/csv/".$tmp_csv), 'r');
+        $row_idx = 0;
         while (($data = fgetcsv($fileHandle)) !== FALSE) {
+            $row_idx++;
             if (!$columns) {
                 $columns = count($data);
             }
-            if (!$headers) {
-                $correct = [];
-                foreach ($data as $d) {
-                    $correct[] = [
-                        'header' => $d,
-                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', $d)),
+
+            if ($row_idx == 1) {
+                foreach ($data as $key => $val) {
+                    $headers[$key] = [
+                        'header' => $request->check_1 ? $val : '',
+                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', ($request->check_2 ? $val : 'col_'.$key) )),
                     ];
                 }
-                $headers = $correct;
+            }
+            if ($row_idx == 2 && $request->check_2) {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['field'] = strtolower(preg_replace('/[^\w\d]/i', '_', $val ));
+                }
+            }
+            if ($row_idx == 3) {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['type'] = $request->check_3 ? $val : 'str';
+                }
+            }
+            if ($row_idx == 4) {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['size'] = $request->check_4 ? (int)$val : '';
+                }
+            }
+            if ($row_idx == 5) {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['default'] = $request->check_5 ? $val : '';
+                }
+            }
+            if ($row_idx == 6) {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['required'] = $request->check_6 && $val ? 1 : 0;
+                }
             }
 
             if ($columns != count($data)) {
@@ -291,10 +322,8 @@ class AppController extends Controller
             }
         }
 
-        //$to_view = $this->getVariables();
         $to_view['filename'] = $filename;
         $to_view['headers'] = $headers;
-        //$to_view['with_headers'] = $request->with_headers;
         $to_view['data_csv'] = $tmp_csv;
         return $to_view;
     }
