@@ -269,7 +269,7 @@ class TableService {
             $header_data = DB::connection('mysql_sys')
                 ->table('tb_settings_display as tsd')
                 ->where('tsd.tb_id', '=', $table_meta->id)
-                ->select('tsd.*', 'tsd.dfot_odr as calc_odr', '1 as showhide')
+                ->selectRaw('tsd.*, tsd.dfot_odr as calc_odr, 1 as is_showed')
                 ->orderBy('tsd.dfot_odr')
                 ->orderBy('tsd.id')
                 ->get();
