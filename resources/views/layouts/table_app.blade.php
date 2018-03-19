@@ -86,7 +86,8 @@
         }
 
         #import_view .row label,
-        #import_view .row .col-xs-3 {
+        #import_view .row .col-xs-3,
+        #import_view .row .col-xs-2 {
             height: 34px;
             display: flex;
             align-items: center;

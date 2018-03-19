@@ -26,7 +26,8 @@ class TableService {
             return $responseArray;
         }
 
-        $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+        $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
+        $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
         if (Auth::user()) {
@@ -37,12 +38,11 @@ class TableService {
                 //not owner
                 $table_meta->owner != Auth::user()->id
             ) {
-                $tmp_fields_set = DB::connection('mysql_data')
-                    ->table('tb')
-                    ->join('rights as r', 'tb.id', '=', 'r.table_id')
+                $tmp_fields_set = DB::connection('mysql_sys')
+                    ->table('rights as r')
                     ->join('rights_fields as rf', 'r.id', '=', 'rf.rights_id')
                     ->where('r.user_id', '=', Auth::user()->id)
-                    ->where('tb.db_tb', '=', $tableName)
+                    ->where('r.table_id', '=', $table_meta->id)
                     ->select('rf.*')
                     ->get();
                 foreach ($tmp_fields_set as $fld) {
@@ -59,8 +59,7 @@ class TableService {
             $this->RepairColOrderForUser($table_meta);
         }
 
-        $forFiltersQuery = "SELECT * FROM $tableName WHERE";
-        $sql = DB::connection('mysql_data')->table($tableName);
+        $sql = DB::connection($mysql_conn)->table($tableName);
 
         if ($query['opt'] == 'address') {
             foreach ($query as $key => $val) {
@@ -133,7 +132,7 @@ class TableService {
         //join favourite table for main data
         if($fromMainData) {
             $sql->leftJoin('favorite as f', function ($q) use ($tableName, $table_meta) {
-                $q->where($tableName.'.id', '=', 'f.row_id');
+                $q->whereRaw($tableName.'.id = f.row_id');
                 $q->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
                 $q->where('f.table_id', '=', $table_meta->id);
             });
@@ -153,17 +152,6 @@ class TableService {
             if($fromMainData) {
                 $sql->select($tableName.'.*', 'f.id as is_favorited');
             }
-        }
-
-        //select favourite table for main data
-        if($fromMainData) {
-            $sql->where(function ($q) use ($table_meta) {
-                $q->where(function ($qq) use ($table_meta) {
-                    $qq->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
-                    $qq->where('f.table_id', '=', $table_meta->id);
-                });
-                $q->orWhereNull('f.id');
-            });
         }
 
         if ($tableName == 'tb_settings_display' && !$fromMainData) {
@@ -187,12 +175,10 @@ class TableService {
                 ) {
                     $selected_filters = $filterData;
                 } else {
-                    $selected_filters = DB::connection('mysql_data')->table('tb_settings_display')
-                        ->join('tb', 'tb.id', '=', 'tb_settings_display.tb_id')
-                        ->select('tb_settings_display.field as field', 'tb_settings_display.name as name')
-                        ->where('tb.db_tb', '=', $tableName)
-                        ->where('tb_settings_display.filter', '=', 'Yes')
-                        ->select('tb_settings_display.field as key', 'tb_settings_display.name')
+                    $selected_filters = DB::connection('mysql_sys')->table('tb_settings_display')
+                        ->where('tb_id', '=', $table_meta->id)
+                        ->where('filter', '=', 'Yes')
+                        ->select('field as key', 'name')
                         ->get();
                 }
 
@@ -203,7 +189,7 @@ class TableService {
                     //get filters if data was changed or it is first load
                     foreach ($selected_filters as $sf) {
                         //get values for each filter
-                        $filter_vals = DB::connection('mysql_data')->table($tableName)
+                        $filter_vals = DB::connection($mysql_conn)->table($tableName)
                             ->select($sf->key." as value")
                             ->distinct();
                         $data_items = (clone $resultSQL)
@@ -211,7 +197,7 @@ class TableService {
                             ->distinct();
                         //if user switched off some filters -> then display it in the result data
                         if ($filter_vals->count() == $data_items->count()) {
-                            $filter_vals = DB::connection('mysql_data')->table($tableName)
+                            $filter_vals = DB::connection($mysql_conn)->table($tableName)
                                 ->select($sf->key." as value")
                                 ->selectRaw("true as checked")
                                 ->distinct()->get();
@@ -222,7 +208,7 @@ class TableService {
                                 'checkAll' => true
                             ];
                         } else {
-                            $filter_vals = DB::connection('mysql_data')->select("
+                            $filter_vals = DB::connection($mysql_conn)->select("
                                 SELECT DISTINCT `$tableName`.`".$sf->key."` as value, IF(SUM(t2.id) is null, false, true) as checked
                                 FROM `$tableName` LEFT JOIN ( ".$rawResultSQL." ) as t2 on t2.id = `$tableName`.id
                                 GROUP BY `$tableName`.`".$sf->key."`
@@ -240,11 +226,10 @@ class TableService {
             }
 
 
-            $ddls = DB::connection('mysql_data')->table('tb')
-                ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
+            $ddls = DB::connection('mysql_sys')->table('tb_settings_display as ts')
                 ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
                 ->select('ts.field', 'di.option')
-                ->where('tb.db_tb', '=', $tableName)
+                ->where('ts.tb_id', '=', $table_meta->id)
                 ->whereNotNull('di.option')
                 ->get();
 
@@ -254,14 +239,14 @@ class TableService {
 
             $blet = [];
             if ($post->tableSelected) {
-                $blet = DB::connection('mysql_data')->table('ddl')
+                $blet = DB::connection('mysql_sys')->table('ddl')
                     ->join('tb', 'tb.id', '=', 'ddl.tb_id')
                     ->where('tb.db_tb', '=', $post->tableSelected)
                     ->select('ddl.*')
                     ->get();
             } else {
                 if ($tableName == 'tb_settings_display')
-                $blet = DB::connection('mysql_data')->table('ddl')->get();
+                $blet = DB::connection('mysql_sys')->table('ddl')->get();
             }
             $respDDLs['ddl_id'] = [];
             foreach ($blet as $item) {
@@ -271,19 +256,20 @@ class TableService {
 
         //--------------------------------------------------- get headers --------------------------------------------
         if (Auth::user()) {
-            $header_data = DB::connection('mysql_data')
+            $header_data = DB::connection('mysql_sys')
                 ->select("
-                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr 
+                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr, IF(sh.showhide IS NULL, 1, sh.showhide) as is_showed
                     FROM `tb_settings_display` as tsd 
                     LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
+                    LEFT JOIN `showhide` as sh ON (sh.user_id = ".Auth::user()->id." AND sh.table_id = ".$table_meta->id." AND tsd.field = sh.column_key)
                     WHERE tsd.tb_id = ".$table_meta->id."
                     ORDER BY calc_odr, tsd.id
                 ");
         } else {
-            $header_data = DB::connection('mysql_data')
+            $header_data = DB::connection('mysql_sys')
                 ->table('tb_settings_display as tsd')
                 ->where('tsd.tb_id', '=', $table_meta->id)
-                ->select('tsd.*', 'tsd.dfot_odr as calc_odr')
+                ->select('tsd.*', 'tsd.dfot_odr as calc_odr', '1 as showhide')
                 ->orderBy('tsd.dfot_odr')
                 ->orderBy('tsd.id')
                 ->get();
@@ -313,15 +299,6 @@ class TableService {
         $responseArray["headers"] = $headers;
         if (count($result)) {
             $responseArray["data"] = $result;
-            /*if ($query['opt'] == 'settings') {
-                $responseArray["ddl_names_for_settings"] = array();
-                foreach ($responseArray["data"] as $item) {
-                    if (!empty($item->ddl_id)) {
-                        $ddl_name = DB::connection('mysql_data')->table('ddl')->where('id', '=', $item->ddl_id)->first();
-                        $responseArray["ddl_names_for_settings"][$ddl_name->id] = $ddl_name->name;
-                    }
-                }
-            }*/
         } else {
             $data = [];
             foreach ($headers as $hdr) {
@@ -336,9 +313,9 @@ class TableService {
     }
 
     public function getHeaders($tableName) {
-        $table_meta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+        $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
         if (Auth::user()) {
-            $header_data = DB::connection('mysql_data')
+            $header_data = DB::connection('mysql_sys')
                 ->select("
                     SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr 
                     FROM `tb_settings_display` as tsd 
@@ -347,7 +324,7 @@ class TableService {
                     ORDER BY calc_odr, tsd.id
                 ");
         } else {
-            $header_data = DB::connection('mysql_data')
+            $header_data = DB::connection('mysql_sys')
                 ->table('tb_settings_display as tsd')
                 ->where('tsd.tb_id', '=', $table_meta->id)
                 ->select('tsd.*', 'tsd.dfot_odr as calc_odr')
@@ -365,24 +342,24 @@ class TableService {
 
     public function RepairColOrderForUser($table_meta) {
         //if user don`t have correct order in 'orders.sql' for current table -> repair
-        $columnsCnt = DB::connection('mysql_data')
+        $columnsCnt = DB::connection('mysql_sys')
             ->table('orders')
             ->where('user_id', '=', Auth::user()->id)
             ->where('table_id', '=', $table_meta->id)
             ->groupBy('order')
             ->get();
 
-        $settingsCnt = DB::connection('mysql_data')
+        $settingsCnt = DB::connection('mysql_sys')
             ->table('tb_settings_display')
             ->where('tb_id', '=', $table_meta->id)
             ->orderBy('dfot_odr')
             ->orderBy('id');
 
         if (count($columnsCnt) != $settingsCnt->count()) {
-            DB::connection('mysql_data')->table('orders')->where('user_id', '=', Auth::user()->id)->where('table_id', '=', $table_meta->id)->delete();
+            DB::connection('mysql_sys')->table('orders')->where('user_id', '=', Auth::user()->id)->where('table_id', '=', $table_meta->id)->delete();
             $settingsCnt = $settingsCnt->get();
             for ($i = 0; $i < count($settingsCnt); $i++) {
-                DB::connection('mysql_data')->table('orders')->insert([
+                DB::connection('mysql_sys')->table('orders')->insert([
                     'user_id' => Auth::user()->id,
                     'table_id' => $table_meta->id,
                     'column_key' => $settingsCnt[$i]->field,

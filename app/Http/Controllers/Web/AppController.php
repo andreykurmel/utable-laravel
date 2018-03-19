@@ -26,7 +26,7 @@ class AppController extends Controller
             $subdomain = $subdomain[1];
         }
         if ($subdomain) {
-            $tableMeta = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $subdomain)->first();
+            $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $subdomain)->first();
             if ($tableMeta->subdomain && $this->tableExist($subdomain, NULL)) {
                 return view('table', $this->getVariables($subdomain));
             } else {
@@ -76,12 +76,12 @@ class AppController extends Controller
 
         $tableMeta = $tableName
             ?
-            DB::connection('mysql_data')->table('tb')->leftJoin('group', 'tb.group_id', '=', 'group.id')
+            DB::connection('mysql_sys')->table('tb')->leftJoin('group', 'tb.group_id', '=', 'group.id')
                 ->where('db_tb', '=', $tableName)->select('tb.*', 'group.name as grname', 'group.www_add')->first()
             :
             '';
 
-        $groupList = DB::connection('mysql_data')->table('group')->get();
+        $groupList = DB::connection('mysql_sys')->table('group')->get();
 
         $importHeadersMeta = $tableName
             ?
@@ -162,7 +162,7 @@ class AppController extends Controller
         $canEdit = false;
         if (Auth::user()) {
             if (Auth::user()->role_id != 1) {
-                $tb = DB::connection('mysql_data')->table('tb');
+                $tb = DB::connection('mysql_sys')->table('tb');
                 $tb->where('tb.db_tb', '=', $tableName);
                 $tb->where('tb.owner', '=', Auth::user()->id);
                 //if user have rights for edit table (owner or right='All')
@@ -180,7 +180,7 @@ class AppController extends Controller
     private function getFavourite($tableName = "") {
         $status = false;
         if ($tableName && Auth::user()) {
-            if (DB::connection('mysql_data')
+            if (DB::connection('mysql_sys')
                 ->table('rights')
                 ->join('tb', 'table_id', '=', 'tb.id')
                 ->where('db_tb', '=', $tableName)
@@ -196,10 +196,11 @@ class AppController extends Controller
     }
     
     private function getListTables($tableGroup = "") {
-        $tb = DB::connection('mysql_data')
+        $tb = DB::connection('mysql_sys')
             ->table('tb')
             ->leftJoin('group as g', 'g.id', '=', 'tb.group_id')
-            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
+            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
+            ->where('tb.is_system', '!=', 1);
         if ($tableGroup) {
             //get tables only for current group
             $tb->where('tb.access', '=', 'public');
@@ -232,12 +233,12 @@ class AppController extends Controller
     }
 
     private function getSelectedEntries($tableName) {
-        $tb = DB::connection('mysql_data')->table('tb')->where('db_tb', '=', $tableName)->first();
+        $tb = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
         return $tb->nbr_entry_listing;
     }
 
     private function tableExist($tableName, $group = NULL) {
-        $cnt = DB::connection('mysql_data')->table('tb')
+        $cnt = DB::connection('mysql_sys')->table('tb')
             ->leftJoin('group', 'group.id', '=', 'tb.group_id')
             ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
             ->where('tb.db_tb', '=', $tableName);

@@ -33,7 +33,7 @@ class DatabaseChange
             abort(403, "Forbidden.");
         } else {
             if ($this->auth->user()->role_id != 1) {
-                $tb = DB::connection('mysql_data')
+                $tb = DB::connection('mysql_sys')
                     ->table('tb')
                     ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
                 $tb->where(function ($q) {

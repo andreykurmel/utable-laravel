@@ -299,7 +299,7 @@ function showDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
                 if (d_key === 'ddl_id') {
@@ -327,7 +327,7 @@ function showDataTable(headers, data) {
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
                         (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
-                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                        'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                         (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                         (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '"></td>';
                     /*if (d_key == 'id') {
@@ -359,7 +359,7 @@ function showDataTable(headers, data) {
                 tbHiddenData +=
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
                 if (d_key === 'ddl_id') {
@@ -382,7 +382,7 @@ function showDataTable(headers, data) {
             'class="sorting nowrap" ' +
             'data-key="' + headers[$hdr].field + '" ' +
             'data-order="' + $hdr + '" ' +
-            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+            'style="' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;' : '') +
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
@@ -390,7 +390,7 @@ function showDataTable(headers, data) {
             '</th>';
 
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
-        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" checked > ' +
+        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
                             '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
         visibleColumns += '</li>';
     }
@@ -560,6 +560,7 @@ function showHideColumnsList() {
 }
 
 function showHideColumn(fieldKey) {
+    var status;
     if (!$('#'+fieldKey+'_visibility').is(':checked')) {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').hide();
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').hide();
@@ -568,6 +569,8 @@ function showHideColumn(fieldKey) {
         $('#tbFavoriteHeaders th[data-key="'+fieldKey+'"], #tbFavoriteHeaders td[data-key="'+fieldKey+'"]').hide();
         $('#tbFavoriteData th[data-key="'+fieldKey+'"], #tbFavoriteData td[data-key="'+fieldKey+'"]').hide();
         $('#tbFavoriteCheckRow th[data-key="'+fieldKey+'"], #tbFavoriteCheckRow td[data-key="'+fieldKey+'"]').hide();
+
+        status = 'Hide';
     } else {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').show();
         $('#tbHeaders th[data-key="'+fieldKey+'"], #tbHeaders td[data-key="'+fieldKey+'"]').show();
@@ -576,23 +579,13 @@ function showHideColumn(fieldKey) {
         $('#tbFavoriteHeaders th[data-key="'+fieldKey+'"], #tbFavoriteHeaders td[data-key="'+fieldKey+'"]').show();
         $('#tbFavoriteData th[data-key="'+fieldKey+'"], #tbFavoriteData td[data-key="'+fieldKey+'"]').show();
         $('#tbFavoriteCheckRow th[data-key="'+fieldKey+'"], #tbFavoriteCheckRow td[data-key="'+fieldKey+'"]').show();
-    }
-}
 
-function favouriteToggle() {
-    if ($('#favourite_star').hasClass('fa-star')) {
-        $.ajax({
-            method: 'GET',
-            url: baseHttpUrl + '/favouriteToggle?tableName=' + selectedTableName + '&status=Inactive'
-        });
-        $('#favourite_star').removeClass('fa-star').addClass('fa-star-o');
-    } else {
-        $.ajax({
-            method: 'GET',
-            url: baseHttpUrl + '/favouriteToggle?tableName=' + selectedTableName + '&status=Active'
-        });
-        $('#favourite_star').removeClass('fa-star-o').addClass('fa-star');
+        status = 'Show';
     }
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/showHideColumnToggle?tableName=' + selectedTableName + '&col_key=' + fieldKey + '&status=' + status
+    })
 }
 
 function toggleFavoriteRow(idx, elem) {
@@ -1219,7 +1212,8 @@ function editSelectedData(idx) {
         ltableDDLs = (lv ? tableDDLs : settingsTableDDLs);
 
     if (idx > -1) {
-        $('#modal_btn_delete, #modal_btn_update').show();
+        lv ? $('#modal_btn_delete').show() : $('#modal_btn_delete').hide();
+        $('#modal_btn_update').show();
         $('#modal_btn_add').hide();
     } else {
         $('#modal_btn_delete, #modal_btn_update').hide();
@@ -2725,6 +2719,11 @@ function sent_csv_to_backend(is_upload) {
     }
 
     if (is_upload) {
+        $('.js-import_chb').each(function (i, elem) {
+            $(elem).prop('disabled', false);
+        });
+        $('.js-import_column-orders').show();
+
         jQuery.each(jQuery('#import_csv')[0].files, function(i, file) {
             data.append('csv', file);
         });
@@ -2764,7 +2763,7 @@ function sent_csv_to_backend(is_upload) {
                 fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
 
                 var html = '';
-                $.each(fieldlist, function(i, hdr) {console.log(hdr);
+                $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'">'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
