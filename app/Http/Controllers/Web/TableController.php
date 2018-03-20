@@ -153,7 +153,33 @@ class TableController extends Controller
         ];
     }
 
-    public function favouriteToggleRow(Request $request) {
+    public function favoriteToggleTable(Request $request) {
+        if (Auth::user()) {
+            $table_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->select('id')->first();
+            //if need to activate favourite -> then add row into 'favorite' table
+            if ($request->status == "Active") {
+                DB::connection('mysql_sys')
+                    ->table('favorite_tables')
+                    ->insert([
+                        'user_id' => Auth::user()->id,
+                        'table_id' => $table_id->id,
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+            //if need to inactive favourite -> then delete from 'favorite' table
+            } else {
+                DB::connection('mysql_sys')
+                    ->table('favorite_tables')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('table_id', '=', $table_id->id)
+                    ->delete();
+            }
+        }
+    }
+
+    public function favoriteToggleRow(Request $request) {
         if (Auth::user()) {
             $table_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->select('id')->first();
             //if need to activate favourite -> then add row into 'favorite' table

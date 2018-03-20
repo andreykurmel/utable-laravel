@@ -22,8 +22,69 @@
     {!! HTML::style('assets/css/app.css') !!}
     {!! HTML::style('css/table.css') !!}
     {!! HTML::style('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css') !!}
+    {!! HTML::style('assets/plugins/jstree/themes/default/style.min.css') !!}
 
     <style>
+        .open-menu {
+            padding: 10px;
+            width: 40px;
+            cursor: pointer;
+            position: fixed;
+            top: 60px;
+            right: 0;
+        }
+        .open-menu > span {
+            display: block;
+            width: 20px;
+            height: 17px;
+            overflow: hidden;
+            background: url(/img/standard/sprites.png) no-repeat 0 0;
+        }
+        .open-menu:hover > span {
+            background-position: -20px 0;
+        }
+        .menu-hidden > span {
+            background-position: 0 -17px;
+        }
+        .menu-hidden:hover > span {
+            background-position: -20px -17px;
+        }
+
+        .menu {
+            border-left: 1px solid #666666;
+            border-right: 1px solid #666666;
+        }
+        .menu header {
+            padding: 11px 12px;
+            color: #bfbfbf;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-family: Corbel, Lucida Grande, Lucida Sans Unicode, Lucida Sans, DejaVu Sans, Bitstream Vera Sans, Liberation Sans, Verdana;
+        }
+
+        .menu-content {
+            background: #575d62;
+        }
+
+        .left-menu .open-menu {
+            left: 0;
+        }
+        .left-menu .open-menu > span {
+            background-position: 0 -17px;
+        }
+        .left-menu .open-menu:hover > span {
+            background-position: -20px -17px;
+        }
+        .left-menu .menu-hidden > span {
+            background-position: 0 0;
+        }
+        .left-menu .menu-hidden:hover > span {
+            background-position: -20px 0;
+        }
+        .left-menu .menu header {
+            text-align: right;
+        }
+
         #pswd_info {
             display:none;
 
@@ -105,6 +166,10 @@
         #import_view .container {
             max-width: 1170px;
             width: 100%;
+        }
+
+        .standard-tabs > .tabs > li.active > a {
+            background: none;
         }
     </style>
 
@@ -367,6 +432,7 @@
 {!! HTML::script('assets/js/lib/developr.input.js') !!}
 {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
 {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js') !!}
+{!! HTML::script('assets/plugins/jstree/jstree.min.js') !!}
 {!! HTML::script('assets/js/lib/table.js') !!}
 
 {{-- Login scripts --}}

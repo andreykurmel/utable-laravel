@@ -50,13 +50,31 @@ $(document).ready(function () {
 
     $(document).keydown(function (e) {
         if (e.keyCode == 37) {
-            var left = document.getElementById('div_for_horizontal_scroll');
-            left.scrollLeft -= 40;
+            if (e.ctrlKey) {
+                showHideTableLib();
+            } else {
+                var left = document.getElementById('div_for_horizontal_scroll');
+                left.scrollLeft -= 40;
+            }
         }
         if (e.keyCode == 39) {
-            var left = document.getElementById('div_for_horizontal_scroll');
-            left.scrollLeft += 40;
+            if (e.ctrlKey) {
+                showHideMenu();
+            } else {
+                var left = document.getElementById('div_for_horizontal_scroll');
+                left.scrollLeft += 40;
+            }
         }
+    });
+
+    $('#tablebar_public_div').jstree().on("select_node.jstree", function (e, data) {
+        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+    });
+    $('#tablebar_private_div').jstree().on("select_node.jstree", function (e, data) {
+        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+    });
+    $('#tablebar_favorite_div').jstree().on("select_node.jstree", function (e, data) {
+        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
     });
 });
 
@@ -75,7 +93,7 @@ var baseHttpUrl = "/api",
     filterMaxHeight = 150,
     changedFilter = changedSearchKeyword = false,
     searchKeyword = "",
-    filterMenuHide = false,
+    filterMenuHide = TableLibHide = false,
     markerBounds = {top:0, left:0, right:0, bottom:0},
     tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
 
@@ -515,8 +533,59 @@ function filterCheckAll(idx, status) {
     changePage(1);
 }
 
+function showHideTableLib() {
+    TableLibHide = !TableLibHide;
+
+    if (TableLibHide) {
+        $('#showTableLibBtn').addClass('menu-hidden');
+        $('#showTableLibBody').css('width', '0');
+    } else {
+        $('#showTableLibBtn').removeClass('menu-hidden');
+        $('#showTableLibBody').css('width', '260px');
+    }
+
+    $(".js-table_lib_hide").css("left", TableLibHide ? "20px" : "280px");
+    $("#showTableLibBody .standard-tabs").css("display", TableLibHide ? "none" : "");
+}
+
+function tablebar_show_public() {
+    $("#tablebar_li_public").addClass("active");
+    $("#tablebar_li_private").removeClass("active");
+    $("#tablebar_li_favorite").removeClass("active");
+    $("#tablebar_public_div").show();
+    $("#tablebar_private_div").hide();
+    $("#tablebar_favorite_div").hide();
+}
+
+function tablebar_show_private() {
+    $("#tablebar_li_private").addClass("active");
+    $("#tablebar_li_public").removeClass("active");
+    $("#tablebar_li_favorite").removeClass("active");
+    $("#tablebar_private_div").show();
+    $("#tablebar_public_div").hide();
+    $("#tablebar_favorite_div").hide();
+}
+
+function tablebar_show_favorite() {
+    $("#tablebar_li_favorite").addClass("active");
+    $("#tablebar_li_private").removeClass("active");
+    $("#tablebar_li_public").removeClass("active");
+    $("#tablebar_favorite_div").show();
+    $("#tablebar_private_div").hide();
+    $("#tablebar_public_div").hide();
+}
+
 function showHideMenu() {
     filterMenuHide = !filterMenuHide;
+
+    if (filterMenuHide) {
+        $('#showHideMenuBtn').addClass('menu-hidden');
+        $('#showHideMenuBody').css('width', '0');
+    } else {
+        $('#showHideMenuBtn').removeClass('menu-hidden');
+        $('#showHideMenuBody').css('width', '260px');
+    }
+
     var right_scr = filterMenuHide ? "26px" : "286px";
     var right = filterMenuHide ? "20px" : "280px";
     var right_2 = filterMenuHide ? "570px" : "830px";
@@ -588,20 +657,39 @@ function showHideColumn(fieldKey) {
     })
 }
 
+function toggleFavoriteTable(elem) {
+    if (authUser) {
+        var i = $(elem).find('i');
+        if ($(i).hasClass('fa-star')) {
+            $.ajax({
+                method: 'GET',
+                url: baseHttpUrl + '/favoriteToggleTable?tableName=' + selectedTableName + '&status=Inactive'
+            });
+            $(i).removeClass('fa-star').addClass('fa-star-o');
+        } else {
+            $.ajax({
+                method: 'GET',
+                url: baseHttpUrl + '/favoriteToggleTable?tableName=' + selectedTableName + '&status=Active'
+            });
+            $(i).removeClass('fa-star-o').addClass('fa-star');
+        }
+    }
+}
+
 function toggleFavoriteRow(idx, elem) {
     if (authUser) {
         var i = $(elem).find('i');
         if ($(i).hasClass('fa-star')) {
             $.ajax({
                 method: 'GET',
-                url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Inactive'
+                url: baseHttpUrl + '/favoriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Inactive'
             });
             $(i).removeClass('fa-star').addClass('fa-star-o');
             tableData[idx].is_favorited = 0;
         } else {
             $.ajax({
                 method: 'GET',
-                url: baseHttpUrl + '/favouriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Active'
+                url: baseHttpUrl + '/favoriteToggleRow?tableName=' + selectedTableName + '&row_id=' + tableData[idx].id + '&status=Active'
             });
             $(i).removeClass('fa-star-o').addClass('fa-star');
             tableData[idx].is_favorited = 1;

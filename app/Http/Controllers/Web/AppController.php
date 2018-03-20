@@ -143,7 +143,7 @@ class AppController extends Controller
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             'groupList' => $groupList,
             'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
-            'favourite' => $tableName ? $this->getFavourite($tableName) : "",
+            'favorite' => $tableName ? $this->isFavorite($tableName) : "",
             'owner' => $owner
         ];
     }
@@ -177,19 +177,19 @@ class AppController extends Controller
         return $canEdit;
     }
 
-    private function getFavourite($tableName = "") {
+    private function isFavorite($tableName = "") {
         $status = false;
         if ($tableName && Auth::user()) {
             if (DB::connection('mysql_sys')
-                ->table('rights')
-                ->join('tb', 'table_id', '=', 'tb.id')
-                ->where('db_tb', '=', $tableName)
-                ->where('user_id', '=', Auth::user()->id)
+                ->table('tb')
+                ->join('favorite_tables as ft', 'ft.table_id', '=', 'tb.id')
+                ->where('ft.user_id', '=', Auth::user()->id)
+                ->where('tb.db_tb', '=', $tableName)
                 ->count()
             ) {
                 $status = "Active";
             } else {
-                $status = "Inactive";
+                $status = "";
             }
         }
         return $status;
@@ -199,31 +199,24 @@ class AppController extends Controller
         $tb = DB::connection('mysql_sys')
             ->table('tb')
             ->leftJoin('group as g', 'g.id', '=', 'tb.group_id')
-            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
+            ->leftJoin('favorite_tables as ft', function ($q) {
+                $q->whereRaw('ft.table_id = tb.id');
+                $q->where('ft.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
+            })
             ->where('tb.is_system', '!=', 1);
-        if ($tableGroup) {
-            //get tables only for current group
+        if (!Auth::user()) {
+            //guest - get public data
             $tb->where('tb.access', '=', 'public');
-            $tb->where('g.www_add', '=', $tableGroup);
         } else {
-            if (!Auth::user()) {
-                //guest - get public data
+            if (Auth::user()->role_id != 1) {
+                //user - get user`s data, favourites and public data
                 $tb->where('tb.access', '=', 'public');
-                $tb->where('g.www_add', '=', null);
-            } else {
-                if (Auth::user()->role_id != 1) {
-                    //user - get user`s data, favourites and public data in the current folder
-                    $tb->where('g.www_add', '=', null);
-                    $tb->where(function ($qt) {
-                        $qt->where('tb.access', '=', 'public');
-                        $qt->orWhere('tb.owner', '=', Auth::user()->id);
-                        $qt->orWhere('rights.user_id', '=', Auth::user()->id);
-                    });
-                }
-                //admin - get all data
+                $tb->orWhere('tb.owner', '=', Auth::user()->id);
+                $tb->orWhereNotNull('ft.id');
             }
+            //admin - get all data
         }
-        $tb->select('tb.*', 'g.www_add', 'rights.id as right')->groupBy('tb.id');
+        $tb->select('tb.*', 'g.www_add', 'ft.id as is_favorited')->groupBy('tb.id');
         $tb = $tb->get();
         foreach ($tb as &$item) {
             $item->www_add = ($item->www_add ? $item->www_add."/".$item->db_tb : "all/".$item->db_tb);

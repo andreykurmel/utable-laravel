@@ -380,7 +380,8 @@ Route::get('install/error', [
 Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
 Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
 Route::get('/api/loadFilter', 'TableController@loadFilter')->name('loadFilter');
-Route::get('/api/favouriteToggleRow', 'TableController@favouriteToggleRow')->name('favouriteToggleRow');
+Route::get('/api/favoriteToggleTable', 'TableController@favoriteToggleTable')->name('favoriteToggleTable');
+Route::get('/api/favoriteToggleRow', 'TableController@favoriteToggleRow')->name('favoriteToggleRow');
 Route::get('/api/showHideColumnToggle', 'TableController@showHideColumnToggle')->name('showHideColumnToggle');
 Route::get('/api/getDDLdatas', 'TableController@getDDLdatas')->name('getDDLdatas');
 Route::get('/api/getRightsDatas', 'TableController@getRightsDatas')->name('getRightsDatas');
