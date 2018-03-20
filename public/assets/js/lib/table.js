@@ -2878,6 +2878,67 @@ function sent_csv_to_backend(is_upload) {
     });
 }
 
+function import_test_db_connect() {
+    jQuery.ajax({
+        url: baseHttpUrl+'/settingsForCreateMySQL',
+        data: {
+            'host': $('#import_mysql_host').val(),
+            'user': $('#import_mysql_login').val(),
+            'pass': $('#import_mysql_pass').val(),
+            'db': $('#import_mysql_db').val(),
+            'table': $('#import_mysql_table').val(),
+        },
+        method: 'GET',
+        success: function(resp) {
+            if (!resp.error && !selectedTableName) {
+                $('#import_table_name').val(resp.filename);
+                $('#import_table_db_tb').val(resp.filename);
+
+                var fieldlist = [];
+                fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                $.each(resp.headers, function(i, hdr) {
+                    fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':hdr.type, 'auto':0, 'size':hdr.size, 'default':hdr.default, 'required':hdr.required});
+                });
+                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+
+                var html = '';
+                $.each(fieldlist, function(i, hdr) {
+                    html += '<tr id="import_columns_'+i+'">'+
+                        '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="number" class="form-control" name="columns['+i+'][col]" value="'+(hdr.auto ? '' : i)+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<option '+(hdr.type == 'str' ? 'selected="selected"' : '')+' value="str">String</option>' +
+                            '<option '+(hdr.type == 'int' ? 'selected="selected"' : '')+' value="int">Integer</option>' +
+                            '<option '+(hdr.type == 'dec' ? 'selected="selected"' : '')+' value="dec">Decimal</option>' +
+                            '<option '+(hdr.type == 'date' ? 'selected="selected"' : '')+' value="date">Date</option>' +
+                            '<option '+(hdr.type == 'datetime' ? 'selected="selected"' : '')+' value="datetime">Date Time</option>' +
+                        '</select></td>' +
+                        '<td><input type="number" class="form-control" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td>' +
+                            '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
+                            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+                $('#import_table_body').html(html);
+
+                swal("Success!", "", "success");
+            } else {
+                swal("Connection error!", "", "error");
+            }
+        },
+        error: function (e) {
+            swal("Connection error!", "", "error");
+        }
+    });
+}
+
 function import_add_table_row() {
     var i = $('#import_row_count').val();
     var html = '<tr id="import_columns_'+i+'">'+
@@ -2916,6 +2977,19 @@ function import_show_col_tab() {
     $('#import_li_csv_tab').removeClass('active');
     $('#import_col_tab').show();
     $('#import_csv_tab').hide();
+}
+
+function changeImportStyle(sel) {
+    var style = $(sel).val();
+    if (style == 'csv') {
+        $('.js-import_mysql_style').hide();
+        $('.js-import_csv_style').show();
+        $('#import_li_csv_tab > a').html('CSV Settings');
+    } else {
+        $('.js-import_csv_style').hide();
+        $('.js-import_mysql_style').show();
+        $('#import_li_csv_tab > a').html('MySQL Settings');
+    }
 }
 
 

@@ -3,6 +3,7 @@
 namespace Vanguard\Http\Controllers\Web;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Vanguard\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -320,6 +321,69 @@ class AppController extends Controller
         $to_view['filename'] = $filename;
         $to_view['headers'] = $headers;
         $to_view['data_csv'] = $tmp_csv;
+        return $to_view;
+    }
+
+    public function showSettingsForCreateTableMySQL(Request $request) {
+        Config::set('database.connections.mysql_import.host', $request->host);
+        Config::set('database.connections.mysql_import.username', $request->user);
+        Config::set('database.connections.mysql_import.password', $request->pass);
+        Config::set('database.connections.mysql_import.database', 'information_schemas');
+
+        try {
+            $columns = DB::connection('mysql_import')->table('COLUMNS')->where('TABLE_SCHEMA', '=', $request->db)->where('TABLE_NAME', '=', $request->table)->get();
+            $full_info = true;
+        } catch (\Exception $e) {}
+
+        if (empty($columns)) {
+            DB::disconnect('mysql_import');
+            Config::set('database.connections.mysql_import2.host', $request->host);
+            Config::set('database.connections.mysql_import2.username', $request->user);
+            Config::set('database.connections.mysql_import2.password', $request->pass);
+            Config::set('database.connections.mysql_import2.database', $request->db);
+
+            try {
+                $columns = DB::connection('mysql_import2')->table($request->table)->first();
+                $full_info = false;
+            } catch (\Exception $e) {}
+        }
+
+        if (!empty($columns)) {
+            $headers = [];
+            $idx = 1;
+            if (!empty($full_info)) {
+                foreach ($columns as $key => $col) {
+                    if (!in_array($col->COLUMN_NAME, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        $headers[$idx] = [
+                            'header' => $col->COLUMN_NAME,
+                            'field' => $col->COLUMN_NAME,
+                            'type' => ($col->NUMERIC_PRECISION ? 'int' : ($col->DATETIME_PRECISION ? 'date' : 'str')),
+                            'size' => ($col->CHARACTER_MAXIMUM_LENGTH ? $col->CHARACTER_MAXIMUM_LENGTH : ''),
+                            'default' => ($col->COLUMN_DEFAULT ? $col->COLUMN_DEFAULT : ''),
+                            'required' => ($col->IS_NULLABLE != 'YES' ? 1 : 0)
+                        ];
+                        $idx ++;
+                    }
+                }
+            } else {
+                for ($idx = 1; $idx <= count((array)$columns); $idx++) {
+                    $headers[$idx] = [
+                        'header' => 'Col '.$idx,
+                        'field' => 'col_'.$idx,
+                        'type' => 'str',
+                        'size' => '',
+                        'default' => '',
+                        'required' => 0
+                    ];
+                }
+            }
+        } else {
+            return ['error' => true];
+        }
+
+        $to_view['filename'] = $request->table;
+        $to_view['headers'] = $headers;
+        $to_view['data_csv'] = '';
         return $to_view;
     }
 }

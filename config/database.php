@@ -93,6 +93,34 @@ return [
             'engine'    => 'InnoDB'
         ],
 
+        'mysql_import' => [
+            'driver'    => 'mysql',
+            'host'      => '',
+            'port'      => '3306',
+            'database'  => '',
+            'username'  => '',
+            'password'  => '',
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'strict'    => false,
+            'engine'    => 'InnoDB'
+        ],
+
+        'mysql_import2' => [
+            'driver'    => 'mysql',
+            'host'      => '',
+            'port'      => '3306',
+            'database'  => '',
+            'username'  => '',
+            'password'  => '',
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'strict'    => false,
+            'engine'    => 'InnoDB'
+        ],
+
     ],
 
     /*

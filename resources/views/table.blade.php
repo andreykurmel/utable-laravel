@@ -709,7 +709,19 @@
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <div class="container">
                                 <div class="row form-group">
-                                    <input type="file" name="csv" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
+                                    <select class="form-control" onchange="changeImportStyle(this)" style="width: 20%; display: inline-block; float: left;">
+                                        <option selected value="csv">CSV import</option>
+                                        <option value="mysql">MySQL import</option>
+                                    </select>
+                                    <input type="file" name="csv" id="import_csv" class="form-control js-import_csv_style" style="width: 75%; display: inline-block; float: right;" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
+                                    <div class="js-import_mysql_style" style="width: 75%; display: none; float: right;">
+                                        <input id="import_mysql_host" name="import_host" type="text" class="form-control" style="width: 16%; display: inline-block;" placeholder="HOST">
+                                        <input id="import_mysql_login" name="import_login" type="text" class="form-control" style="width: 16%; display: inline-block;" placeholder="LOGIN">
+                                        <input id="import_mysql_pass" name="import_pass" type="text" class="form-control" style="width: 16%; display: inline-block;" placeholder="PASS">
+                                        <input id="import_mysql_db" name="import_db" type="text" class="form-control" style="width: 16%; display: inline-block;" placeholder="DB">
+                                        <input id="import_mysql_table" name="import_table" type="text" class="form-control" style="width: 16%; display: inline-block;" placeholder="TABLE">
+                                        <input type="button" class="btn btn-success" style="width: 15%; display: inline-block;" value="Connect" onclick="import_test_db_connect()">
+                                    </div>
                                 </div>
                             </div>
                             <form method="post" action="{{ $tableName ? route('modifyTable') : route('createTable') }}">
@@ -766,7 +778,7 @@
                                                     <div class="col-xs-6"><input type="text" class="form-control" name="table_group_www" value=""></div>
                                                 </div>
                                             </div>
-                                            <div class="col-xs-4">
+                                            <div class="col-xs-4 js-import_csv_style">
                                                 @if(!$tableName)
                                                     <div class="row">
                                                         <div class="col-xs-9"><label>First row as headers:</label></div>
@@ -802,7 +814,7 @@
                                                     <div class="col-xs-7"><input type="number" class="form-control" name="csv_end_data"></div>
                                                 </div>
                                             </div>
-                                            <div class="col-xs-4">
+                                            <div class="col-xs-4 js-import_csv_style">
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
                                                     <div class="col-xs-10"><label>Replace Accents/Diacriticals</label></div>

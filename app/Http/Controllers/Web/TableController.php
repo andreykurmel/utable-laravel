@@ -697,7 +697,7 @@ class TableController extends Controller
         }
 
         //import data
-        if ($request->data_csv) {
+        if ($request->data_csv || $request->import_host) {
             $this->importDataToTable($request, $filename, $columns);
         }
 

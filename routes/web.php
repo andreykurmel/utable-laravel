@@ -393,6 +393,7 @@ Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxS
 Route::get('/api/getFavoritesForTable', 'TableController@getFavoritesForTable')->name('getFavoritesForTable');
 Route::get('/api/changeOrder', 'TableController@changeOrder')->name('changeOrder');
 Route::get('/api/changeSettingsRowOrder', 'TableController@changeSettingsRowOrder')->name('changeSettingsRowOrder');
+Route::get('/api/settingsForCreateMySQL', 'AppController@showSettingsForCreateTableMySQL')->name('showSettingsForCreateTableMySQL');
 Route::post('/api/settingsForCreate', 'AppController@showSettingsForCreateTable')->name('showSettingsForCreateTable');
 Route::post('/api/createTable', 'TableController@createTable')->name('createTable');
 Route::post('/api/modifyTable', 'TableController@modifyTable')->name('modifyTable');
