@@ -51,15 +51,15 @@ class AppController extends Controller
         return view('table', $this->getVariables());
     }
 
-    public function homepageTable($tableName) {
-        if ($this->tableExist($tableName, "")) {
-            return view('table', $this->getVariables($tableName));
+    public function homepageTable($table) {
+        if ($this->tableExist($table, "")) {
+            return view('table', $this->getVariables($table));
         } else {
             return redirect( route('homepage') );
         }
     }
 
-    public function homepageGroup($group) {
+    /*public function homepageGroup($group) {
         return view('table', $this->getVariables("", $group));
     }
 
@@ -69,20 +69,21 @@ class AppController extends Controller
         } else {
             return redirect( route('homepage') );
         }
-    }
+    }*/
 
-    private function getVariables($tableName = "", $group = "") {
+    private function getVariables($tablePath = "") {
+        $pathElems = explode('/', $tablePath);
+        $tableName = end($pathElems);
+        $pathCount = count($pathElems) - 1;
+
         $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
         $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
 
         $tableMeta = $tableName
             ?
-            DB::connection('mysql_sys')->table('tb')->leftJoin('group', 'tb.group_id', '=', 'group.id')
-                ->where('db_tb', '=', $tableName)->select('tb.*', 'group.name as grname', 'group.www_add')->first()
+            DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first()
             :
             '';
-
-        $groupList = DB::connection('mysql_sys')->table('group')->get();
 
         $importHeadersMeta = $tableName
             ?
@@ -130,7 +131,7 @@ class AppController extends Controller
         return [
             'server' => config('app.url'),
             'socialProviders' => config('auth.social.providers'),
-            'listTables' => $this->getListTables($group),
+            'treeTables' => $this->getTreeTables(),
             'tableMeta' => $tableMeta,
             'tableName' => $tableName,
             'headers' => $tableName ? $this->tableService->getHeaders($tableName) : [],
@@ -142,7 +143,6 @@ class AppController extends Controller
             'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('rights_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
-            'groupList' => $groupList,
             'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favorite' => $tableName ? $this->isFavorite($tableName) : "",
             'owner' => $owner
@@ -196,34 +196,86 @@ class AppController extends Controller
         return $status;
     }
     
-    private function getListTables($tableGroup = "") {
-        $tb = DB::connection('mysql_sys')
-            ->table('tb')
-            ->leftJoin('group as g', 'g.id', '=', 'tb.group_id')
-            ->leftJoin('favorite_tables as ft', function ($q) {
-                $q->whereRaw('ft.table_id = tb.id');
-                $q->where('ft.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
-            })
-            ->where('tb.is_system', '!=', 1);
-        if (!Auth::user()) {
-            //guest - get public data
-            $tb->where('tb.access', '=', 'public');
+    private function getTreeTables($tab = 'public') {
+        $folders = DB::connection('mysql_sys')->table('menutree')->get();
+
+        $res_arr = (object)['id' => 0, 'title' => $tab ,'tables' => [], 'children' => $this->buildTree( $folders )];
+
+        if ($tab == 'favorite') {
+            $tables = DB::connection('mysql_sys')->table('tb')
+                ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
+                ->where('is_system', '=', 0)
+                ->where('access', '=', 'public')
+                ->select('tb.*','m2t.menutree_id')
+                ->get();
         } else {
-            if (Auth::user()->role_id != 1) {
-                //user - get user`s data, favourites and public data
-                $tb->where('tb.access', '=', 'public');
-                $tb->orWhere('tb.owner', '=', Auth::user()->id);
-                $tb->orWhereNotNull('ft.id');
-            }
-            //admin - get all data
-        }
-        $tb->select('tb.*', 'g.www_add', 'ft.id as is_favorited')->groupBy('tb.id');
-        $tb = $tb->get();
-        foreach ($tb as &$item) {
-            $item->www_add = ($item->www_add ? $item->www_add."/".$item->db_tb : "all/".$item->db_tb);
+            $tables = DB::connection('mysql_sys')->table('tb')
+                ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
+                ->where('is_system', '=', 0)
+                //->where('access', '=', $tab)
+                ->select('tb.*','m2t.menutree_id')
+                ->get();
         }
 
-        return $tb;
+        foreach ($tables as $tb) {
+            $this->add_tb($tb, $res_arr);
+        }
+
+        //dd($res_arr);
+
+        return '<ul>'.$this->buildHTMLTree($res_arr, '/data/').'</ul>';
+    }
+
+    private function add_tb($tb, &$res_arr) {
+        if ($res_arr->id == $tb->menutree_id) {
+            $res_arr->tables[] = $tb;
+            return;
+        }
+        if ($res_arr->children) {
+            foreach ($res_arr->children as &$ch) {
+                $this->add_tb($tb, $ch);
+            }
+        }
+    }
+
+    private function buildHTMLTree($res_arr, $url) {
+        $html = "<li>".$res_arr->title;
+        if ($res_arr->tables || $res_arr->children) {
+            $html .= '<ul>';
+            if ($res_arr->tables) {
+                foreach ($res_arr->tables as $table) {
+                    $html .= '<li><a href="'.$url.$table->db_tb.'">'.$table->name.'</a></li>';
+                }
+            }
+            if ($res_arr->children) {
+                foreach ($res_arr->children as $child) {
+                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/');
+                }
+            }
+            $html .= '</ul>';
+        }
+        $html .= '</li>';
+
+        return $html;
+    }
+
+    private function buildTree($elements, $parentId = 0) {
+        $branch = array();
+
+        foreach ($elements as $element) {
+            if ($element->parent_id == $parentId) {
+                $children = $this->buildTree($elements, $element->id);
+                if ($children) {
+                    $element->children = $children;
+                } else {
+                    $element->children = [];
+                }
+                $element->tables = [];
+                $branch[] = $element;
+            }
+        }
+
+        return $branch;
     }
 
     private function getSelectedEntries($tableName) {
@@ -231,14 +283,15 @@ class AppController extends Controller
         return $tb->nbr_entry_listing;
     }
 
-    private function tableExist($tableName, $group = NULL) {
+    private function tableExist($tablePath) {
+        $pathElems = explode('/', $tablePath);
+        $tableName = end($pathElems);
+        $pathCount = count($pathElems) - 1;
+
+        //find table
         $cnt = DB::connection('mysql_sys')->table('tb')
-            ->leftJoin('group', 'group.id', '=', 'tb.group_id')
             ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
             ->where('tb.db_tb', '=', $tableName);
-        if ($group !== NULL) {
-            $cnt->where('group.www_add', '=', $group ? $group : NULL);
-        }
 
         if (!Auth::user()) {
             //guest - get public data
@@ -254,7 +307,20 @@ class AppController extends Controller
             }
             //admin - get all data
         }
-        return $cnt->count();
+        $tb = $cnt->select('tb.*')->first();
+        $tb_id = $tb ? $tb->id : 0;
+
+        //find 'menutree' path
+        $menutree_id = 0;
+        if ($pathCount) {
+            for ($i = 0; $i < $pathCount; $i++) {
+                $menutree = DB::connection('mysql_sys')->table('menutree')->where('title', '=', $pathElems[$i])->where('parent_id', '=', $menutree_id)->first();
+                $menutree_id = $menutree ? $menutree->id : -1;
+            }
+        }
+
+        //exists if exist table and exist 'menutree' path
+        return DB::connection('mysql_sys')->table('menutree_2_tb')->where('tb_id', '=', $tb_id)->where('menutree_id', '=', $menutree_id)->count();
     }
 
     public function showSettingsForCreateTable(Request $request) {
@@ -385,5 +451,9 @@ class AppController extends Controller
         $to_view['headers'] = $headers;
         $to_view['data_csv'] = '';
         return $to_view;
+    }
+
+    public function alltable(Request $request) {
+        dd($request);
     }
 }

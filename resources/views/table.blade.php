@@ -26,38 +26,16 @@
                     </ul>
 
                     <div id="tablebar_public_div" class="tab-content" style="position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
-                        <ul>
-                            @foreach($listTables as $tb)
-                                @if($tb->access == 'public')
-                                    <li><a href="{{ $tb->subdomain ? preg_replace('/\/\/www/i', '//www.'.$tb->subdomain, $server) : $server.'/data/'.$tb->www_add }}">
-                                            {{ $tb->name }}
-                                        </a></li>
-                                @endif
-                            @endforeach
-                        </ul>
+                        {!! $treeTables !!}
                     </div>
 
                     <div id="tablebar_private_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                         <ul>
-                            @foreach($listTables as $tb)
-                                @if(Auth::user() && $tb->access == 'private')
-                                    <li><a href="{{ $tb->subdomain ? preg_replace('/\/\/www/i', '//www.'.$tb->subdomain, $server) : $server.'/data/'.$tb->www_add }}">
-                                        {{ $tb->name }}
-                                    </a></li>
-                                @endif
-                            @endforeach
                         </ul>
                     </div>
 
                     <div id="tablebar_favorite_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                         <ul>
-                            @foreach($listTables as $tb)
-                                @if(Auth::user() && $tb->is_favorited)
-                                    <li><a href="{{ $tb->subdomain ? preg_replace('/\/\/www/i', '//www.'.$tb->subdomain, $server) : $server.'/data/'.$tb->www_add }}">
-                                        {{ $tb->name }}
-                                    </a></li>
-                                @endif
-                            @endforeach
                         </ul>
                     </div>
                 </div>
@@ -89,21 +67,6 @@
                 <div class="showhidemenu" style='width:150px;display:inline-block'>
                     <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                 </div>
-                @if(Auth::user())
-                    <div style="padding: 5px;display: inline-block;">
-                        <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
-                            <option value="{{ $server.'/data/all' }}"></option>
-                            @foreach($listTables as $tb)
-                                @if($tb->is_favorited)
-                                    <option value="{{ $tb->subdomain ? preg_replace('/\/\/www/i', '//www.'.$tb->subdomain, $server) : $server.'/data/'.$tb->www_add }}">
-                                        &#xf006; {{ ''/*(Auth::user()->id == $tb->owner ? '&#xf10c; ' : ($tb->is_favorited ? '&#xf006; ' : '&#x2003; '))*/ }}
-                                        {{ $tb->name }}
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
                 <div style="display: inline-block;margin-left: 8px;">
                     <form action="{{ route('downloader') }}" method="post" id="downloader_form">
                         {{ csrf_field() }}
@@ -751,31 +714,6 @@
                                                         <option>public</option>
                                                         <option>private</option>
                                                     </select></div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-xs-9"><label>Add to a table group:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control" id="import_type_group_check" onchange="import_show_type_group()" {{ $tableMeta && $tableMeta->group_id ? 'checked' : '' }}></div>
-                                                </div>
-                                                <div class="row" id="import_type_group" style="{{ $tableMeta && $tableMeta->group_id ? '' : 'display: none;' }}">
-                                                    <div class="col-xs-5"><label>Add to an existing or new group:</label></div>
-                                                    <div class="col-xs-7"><select class="form-control" value="existing" onchange="import_changed_type_group()">
-                                                        <option>existing</option>
-                                                        <option>new</option>
-                                                    </select></div>
-                                                </div>
-                                                <div class="row" id="import_exist_group" style="{{ $tableMeta && $tableMeta->group_id ? '' : 'display: none;' }}">
-                                                    <div class="col-xs-5"><label>Select an existing group:</label></div>
-                                                    <div class="col-xs-7"><select class="form-control" name="table_exist_group" value="{{ $tableMeta ? $tableMeta->group_id : '' }}">
-                                                        @foreach($groupList as $grL)
-                                                            <option value="{{ $grL->id }}">{{ $grL->name }}</option>
-                                                        @endforeach
-                                                    </select></div>
-                                                </div>
-                                                <div class="row" id="import_new_group" style="display: none;">
-                                                    <div class="col-xs-6"><label>Name:</label></div>
-                                                    <div class="col-xs-6"><label>www address:</label></div>
-                                                    <div class="col-xs-6"><input type="text" class="form-control" name="table_group_name" value=""></div>
-                                                    <div class="col-xs-6"><input type="text" class="form-control" name="table_group_www" value=""></div>
                                                 </div>
                                             </div>
                                             <div class="col-xs-4 js-import_csv_style">

@@ -675,6 +675,16 @@ class TableController extends Controller
         ]);
         $tb_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
 
+        //add table into the root of 'menutree'
+        DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
+            'tb_id' => $tb_id,
+            'menutree_id' => 0,
+            'createdBy' => Auth::user()->id,
+            'createdOn' => now(),
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
         //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
             if ($col['field']) {
@@ -839,34 +849,62 @@ class TableController extends Controller
     }
 
     private function importDataToTable($request, $filename, $columns) {
-        $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
-        $start = $end = $cur = 0;
-        if ($request->csv_first_headers) { $start = 2; }
-        if ($request->csv_second_fields) { $start = 3; }
-        if ($request->csv_third_type) { $start = 4; }
-        if ($request->csv_fourth_size) { $start = 5; }
-        if ($request->csv_fifth_default) { $start = 6; }
-        if ($request->csv_sixth_required) { $start = 7; }
-        if ($request->csv_start_data) { $start = $request->csv_start_data > $start ? $request->csv_start_data : $start; }
-        if ($request->csv_end_data) { $end = $request->csv_end_data; }
-        while (($data = fgetcsv($fileHandle)) !== FALSE) {
-            $cur++;
-            if ($cur < $start || ($end && $cur > $end)) {
-                continue;
-            }
-
-            $insert = [];
-            //fill only those data columns which numbers are setted in 'table columns settings'
-            foreach ($columns as $idx => $col) {
-                if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
-                    $insert[ $col['field'] ] = $data[ $col['col']-1 ];
+        if ($request->data_csv) {
+            $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
+            $start = $end = $cur = 0;
+            if ($request->csv_first_headers) { $start = 2; }
+            if ($request->csv_second_fields) { $start = 3; }
+            if ($request->csv_third_type) { $start = 4; }
+            if ($request->csv_fourth_size) { $start = 5; }
+            if ($request->csv_fifth_default) { $start = 6; }
+            if ($request->csv_sixth_required) { $start = 7; }
+            if ($request->csv_start_data) { $start = $request->csv_start_data > $start ? $request->csv_start_data : $start; }
+            if ($request->csv_end_data) { $end = $request->csv_end_data; }
+            while (($data = fgetcsv($fileHandle)) !== FALSE) {
+                $cur++;
+                if ($cur < $start || ($end && $cur > $end)) {
+                    continue;
                 }
+
+                $insert = [];
+                //fill only those data columns which numbers are setted in 'table columns settings'
+                foreach ($columns as $idx => $col) {
+                    if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        $insert[ $col['field'] ] = $data[ $col['col']-1 ];
+                    }
+                }
+                $insert['createdBy'] = Auth::user()->id;
+                $insert['createdOn'] = now();
+                $insert['modifiedBy'] = Auth::user()->id;
+                $insert['modifiedOn'] = now();
+                DB::connection('mysql_data')->table($filename)->insert($insert);
             }
-            $insert['createdBy'] = Auth::user()->id;
-            $insert['createdOn'] = now();
-            $insert['modifiedBy'] = Auth::user()->id;
-            $insert['modifiedOn'] = now();
-            DB::connection('mysql_data')->table($filename)->insert($insert);
+        } elseif ($request->host) {
+            Config::set('database.connections.mysql_import2.host', $request->host);
+            Config::set('database.connections.mysql_import2.username', $request->user);
+            Config::set('database.connections.mysql_import2.password', $request->pass);
+            Config::set('database.connections.mysql_import2.database', $request->db);
+
+            try {
+                $all_rows = DB::connection('mysql_import2')->table($request->table)->get();
+
+                foreach ($all_rows as $row) {
+                    $row = (array)$row;
+                    $insert = [];
+
+                    foreach ($columns as $col) {
+                        if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                            $insert[ $col['field'] ] = !empty($row[ $col['field'] ]) ? $row[ $col['field'] ] : null;
+                        }
+                    }
+
+                    $insert['createdBy'] = Auth::user()->id;
+                    $insert['createdOn'] = now();
+                    $insert['modifiedBy'] = Auth::user()->id;
+                    $insert['modifiedOn'] = now();
+                    DB::connection('mysql_data')->table($filename)->insert($insert);
+                }
+            } catch (\Exception $e) {}
         }
     }
 }

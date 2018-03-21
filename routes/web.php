@@ -408,10 +408,11 @@ Route::post('/download', 'DownloadController@download')->name('downloader');
 
 Route::get('/', 'AppController@landing')->name('landing');
 Route::group(['middleware' => 'test.subdomain'], function () {
-    Route::get('/data', function () { return redirect( route('homepage') ); });
-    Route::get('/data/all', 'AppController@homepage')->name('homepage');
-    //Route::get('/data/all', 'AppController@homepage')->name('homepage.all');
-    Route::get('/data/all/{tableName}', 'AppController@homepageTable')->name('homepage.table');
-    Route::get('/data/{group}', 'AppController@homepageGroup')->name('group');
-    Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('group.table');
+//    Route::get('/data', function () { return redirect( route('homepage') ); });
+//    Route::get('/data/all', 'AppController@homepage')->name('homepage.all');
+//    Route::get('/data/all/{tableName}', 'AppController@homepageTable')->name('homepage.table');
+//    Route::get('/data/{group}', 'AppController@homepageGroup')->name('group');
+//    Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('group.table');
+    Route::get('/data', 'AppController@homepage')->name('homepage');
+    Route::get('/data/{table}', 'AppController@homepageTable')->name('homepageTable')->where(['table' => '.+']);
 });

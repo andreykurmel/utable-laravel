@@ -67,9 +67,52 @@ $(document).ready(function () {
         }
     });
 
-    $('#tablebar_public_div').jstree().on("select_node.jstree", function (e, data) {
+    $('#tablebar_public_div').jstree({
+        "plugins": ["contextmenu"],
+        "contextmenu": {
+            "items": function ($node) {
+                return {
+                    "add": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "Add Node",
+                        "action": function (obj) {
+                            // action code here
+                        }
+                    },
+                    "edit": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "Edit",
+                        "action": function (obj) {
+                            // action code here
+                        }
+                    },
+                    "remove": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "Remove",
+                        "action": function (obj) {
+                            // action code here
+                        }
+                    }
+                };
+            }
+        }
+    })
+    .on("select_node.jstree", function (e, data) {
+        //only for left click
+        var evt =  window.event || event;
+        var button = evt.which || evt.button;
+
+        if( button != 1 && ( typeof button != "undefined")) return false;
+
         location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+    })
+    .on('ready.jstree', function() {
+        $("#tablebar_public_div").jstree('open_all');
     });
+
     $('#tablebar_private_div').jstree().on("select_node.jstree", function (e, data) {
         location.href = data.instance.get_node(data.node, true).children('a').attr('href');
     });
