@@ -67,58 +67,8 @@ $(document).ready(function () {
         }
     });
 
-    $('#tablebar_public_div').jstree({
-        "plugins": ["contextmenu"],
-        "contextmenu": {
-            "items": function ($node) {
-                return {
-                    "add": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Add Node",
-                        "action": function (obj) {
-                            // action code here
-                        }
-                    },
-                    "edit": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Edit",
-                        "action": function (obj) {
-                            // action code here
-                        }
-                    },
-                    "remove": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Remove",
-                        "action": function (obj) {
-                            // action code here
-                        }
-                    }
-                };
-            }
-        }
-    })
-    .on("select_node.jstree", function (e, data) {
-        //only for left click
-        var evt =  window.event || event;
-        var button = evt.which || evt.button;
+    jsTreeBuild('public');
 
-        if( button != 1 && ( typeof button != "undefined")) return false;
-
-        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
-    })
-    .on('ready.jstree', function() {
-        $("#tablebar_public_div").jstree('open_all');
-    });
-
-    $('#tablebar_private_div').jstree().on("select_node.jstree", function (e, data) {
-        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
-    });
-    $('#tablebar_favorite_div').jstree().on("select_node.jstree", function (e, data) {
-        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
-    });
 });
 
 /* --------------------- Variables ---------------------- */
@@ -598,6 +548,7 @@ function tablebar_show_public() {
     $("#tablebar_public_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_favorite_div").hide();
+    jsTreeBuild('public');
 }
 
 function tablebar_show_private() {
@@ -607,6 +558,7 @@ function tablebar_show_private() {
     $("#tablebar_private_div").show();
     $("#tablebar_public_div").hide();
     $("#tablebar_favorite_div").hide();
+    jsTreeBuild('private');
 }
 
 function tablebar_show_favorite() {
@@ -616,6 +568,7 @@ function tablebar_show_favorite() {
     $("#tablebar_favorite_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_public_div").hide();
+    jsTreeBuild('favorite');
 }
 
 function showHideMenu() {
@@ -3098,4 +3051,208 @@ $(document).ready(function () {
     }).blur(function() {
         $('#pswd_info').hide();
     });
-})
+});
+
+function jsTreeBuild($tab) {
+    var context_menu =
+        $tab == 'favorite'
+        ?
+            {}
+        :
+            {
+                "plugins": ["contextmenu"],
+                "contextmenu": {
+                    "items": function ($node) {
+                        var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
+                        var menu = {};
+                        if (type == 'folder') {
+                            menu = {
+                                "add": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Add Node",
+                                    "action": function (obj) {
+                                        var elem = obj.reference.prevObject[0];
+                                        var par_id = $(elem).data('menu_id');
+                                        var root_id = $(elem).data('root_id');
+                                        swal({
+                                                title: "New folder",
+                                                text: "Write folder name:",
+                                                type: "input",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top",
+                                                inputPlaceholder: "Folder name"
+                                            },
+                                            function (inputValu) {
+                                                if (inputValu === false) return false;
+
+                                                if (inputValu === "") {
+                                                    swal.showInputError("You need to write something!");
+                                                    return false
+                                                }
+
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&root_id='+root_id+'&text='+inputValu,
+                                                    method: 'GET',
+                                                    success: function (resp) {
+                                                        var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                                        var newNode = {
+                                                            text: inputValu,
+                                                            li_attr: {
+                                                                'data-type':'folder',
+                                                                'data-menu_id':resp.last_id,
+                                                                'data-root_id':root_id ? root_id : (par_id ? par_id : 0)
+                                                            }
+                                                        };
+
+                                                        $('#tablebar_'+$tab+'_div').jstree().create_node(parent, newNode, 'last', false, false);
+                                                    }
+                                                });
+                                            }
+                                        );
+                                    }
+                                },
+                                "edit": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Edit",
+                                    "action": function (obj) {
+                                        var elem = obj.reference.prevObject[0];
+                                        var par_id = $(elem).data('menu_id');
+                                        var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
+                                        swal({
+                                                title: "Change name",
+                                                text: "Write folder name:",
+                                                type: "input",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top",
+                                                inputPlaceholder: "Folder name",
+                                                inputValue: input_text
+                                            },
+                                            function (inputValu) {
+                                                if (inputValu === false) return false;
+
+                                                if (inputValu === "") {
+                                                    swal.showInputError("You need to write something!");
+                                                    return false
+                                                }
+
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+inputValu,
+                                                    method: 'GET',
+                                                    success: function (resp) {/**/}
+                                                });
+                                            }
+                                        );
+                                    }
+                                },
+                                "remove": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Remove",
+                                    "action": function (obj) {
+                                        var elem = obj.reference.prevObject[0];
+                                        var par_id = $(elem).data('menu_id');
+                                        var can_remove = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', can_remove) ) {
+                                            swal('Error', 'You cannot remove folder with children', 'error');
+                                        } else {
+                                            swal({
+                                                    title: "Delete folder",
+                                                    text: "Are you sure?",
+                                                    type: "warning",
+                                                    confirmButtonClass: "btn-danger",
+                                                    confirmButtonText: "Yes, delete it!",
+                                                    showCancelButton: true,
+                                                    closeOnConfirm: true,
+                                                    animation: "slide-from-top"
+                                                },
+                                                function () {
+                                                    var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                                    $.ajax({
+                                                        url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
+                                                        method: 'GET',
+                                                        success: function (resp) {
+                                                            $('#tablebar_'+$tab+'_div').jstree().delete_node(parent);
+                                                        }
+                                                    });
+                                                }
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (type == 'table') {
+                            menu = {
+                                "edit": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Edit",
+                                    "action": function (obj) {
+                                        // action code here
+                                    }
+                                },
+                                "link": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Link to other Tabs",
+                                    "action": function (obj) {
+                                        // action code here
+                                    }
+                                },
+                                "move": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Move to other Tabs",
+                                    "action": function (obj) {
+                                        // action code here
+                                    }
+                                }
+                            }
+                        }
+                        if (type == 'link') {
+                            menu = {
+                                "remove": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Remove",
+                                    "action": function (obj) {
+                                        // action code here
+                                    }
+                                },
+                                "move": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Move to other Tabs",
+                                    "action": function (obj) {
+                                        // action code here
+                                    }
+                                }
+                            }
+                        }
+                        return menu;
+                    }
+                },
+                "core": {
+                    check_callback : true
+                }
+            }
+        ;
+
+    $('#tablebar_'+$tab+'_div').jstree(context_menu)
+    .on("select_node.jstree", function (e, data) {
+        //only for left click
+        var evt =  window.event || event;
+        var button = evt.which || evt.button;
+
+        if( button != 1 && ( typeof button != "undefined")) return false;
+
+        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+    })
+    .on('ready.jstree', function() {
+        $("#tablebar_"+$tab+"_div").jstree('open_all');
+    });
+}

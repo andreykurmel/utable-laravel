@@ -12,9 +12,14 @@ use Vanguard\Services\TableService;
 class AppController extends Controller
 {
     private $tableService;
+    private $subdomain = "";
 
     public function __construct(TableService $tb) {
         $this->tableService = $tb;
+
+        if( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST']/*'www.sub.tabledataplace.com'*/, $subdomain) ) {
+            $this->subdomain = $subdomain[1];
+        }
     }
 
     public function landing() {
@@ -22,14 +27,10 @@ class AppController extends Controller
             $_SERVER['HTTP_REFERER'] = "";
         }
 
-        $subdomain = "";
-        if( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST'], $subdomain) ) {
-            $subdomain = $subdomain[1];
-        }
-        if ($subdomain) {
-            $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $subdomain)->first();
-            if ($tableMeta->subdomain && $this->tableExist($subdomain, NULL)) {
-                return view('table', $this->getVariables($subdomain));
+        if ($this->subdomain) {
+            $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $this->subdomain)->first();
+            if ($tableMeta->subdomain || $this->tableExist($this->subdomain)) {
+                return view('table', $this->getVariables($this->subdomain));
             } else {
                 if (!$tableMeta->subdomain || Auth::user()) {
                     return view('errors.404');
@@ -52,24 +53,12 @@ class AppController extends Controller
     }
 
     public function homepageTable($table) {
-        if ($this->tableExist($table, "")) {
+        if ($this->tableExist($table)) {
             return view('table', $this->getVariables($table));
         } else {
             return redirect( route('homepage') );
         }
     }
-
-    /*public function homepageGroup($group) {
-        return view('table', $this->getVariables("", $group));
-    }
-
-    public function homepageGroupedTable($group, $tableName) {
-        if ($this->tableExist($tableName, $group)) {
-            return view('table', $this->getVariables($tableName, $group));
-        } else {
-            return redirect( route('homepage') );
-        }
-    }*/
 
     private function getVariables($tablePath = "") {
         $pathElems = explode('/', $tablePath);
@@ -195,26 +184,53 @@ class AppController extends Controller
         }
         return $status;
     }
+
+    private function getTreeTables() {
+        return [
+            'public' => '<ul>'.$this->getTreeForTab('public').'</ul>',
+            'private' => '<ul>'.$this->getTreeForTab('private').'</ul>',
+            'favorite' => '<ul><li data-type=\'folder\'>Favorite'.
+                    '<ul>'.$this->getTreeForTab('public',1).'</ul>'.
+                    '<ul>'.$this->getTreeForTab('private',1).'</ul>'.
+                '</li></ul>'
+        ];
+    }
     
-    private function getTreeTables($tab = 'public') {
-        $folders = DB::connection('mysql_sys')->table('menutree')->get();
+    private function getTreeForTab($tab, $for_favorite = 0) {
+        $folders = DB::connection('mysql_sys')->table('menutree')->where('structure', '=', $tab)->get();
 
-        $res_arr = (object)['id' => 0, 'title' => $tab ,'tables' => [], 'children' => $this->buildTree( $folders )];
+        $res_arr = (object)['id' => 0, 'root_id' => 0, 'title' => $tab ,'tables' => [], 'children' => $this->buildTree( $folders )];
 
-        if ($tab == 'favorite') {
-            $tables = DB::connection('mysql_sys')->table('tb')
-                ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
-                ->where('is_system', '=', 0)
-                ->where('access', '=', 'public')
-                ->select('tb.*','m2t.menutree_id')
-                ->get();
+        $tables = DB::connection('mysql_sys')->table('tb')
+            ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
+            ->where('is_system', '=', 0)
+            ->select('tb.*','m2t.menutree_id','m2t.type as link_type');
+
+        if ($for_favorite) {
+            $tables->join('favorite_tables as ft', function ($q) {
+                $q->whereRaw('ft.table_id = tb.id');
+                $q->where('ft.user_id', '=', Auth::user()->id);
+            });
+        }
+        if ($tab == 'private') {
+            if (Auth::user()) {
+                $tables->leftJoin('rights', function ($q) {
+                        $q->where('rights.table_id', '=', 'tb.id');
+                        $q->where('rights.user_id', '=', Auth::user()->id);
+                    })
+                    ->where('access', '=', $tab);
+                if (Auth::user()->role_id != 1) {
+                    $tables->where(function ($qt) {
+                        $qt->where('tb.owner', '=', Auth::user()->id);
+                        $qt->orWhere('rights.user_id', '=', Auth::user()->id);
+                    });
+                }
+                $tables = $tables->groupBy('m2t.id')->get();
+            } else {
+                $tables = [];
+            }
         } else {
-            $tables = DB::connection('mysql_sys')->table('tb')
-                ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
-                ->where('is_system', '=', 0)
-                //->where('access', '=', $tab)
-                ->select('tb.*','m2t.menutree_id')
-                ->get();
+            $tables = $tables->where('access', '=', $tab)->get();
         }
 
         foreach ($tables as $tb) {
@@ -223,7 +239,7 @@ class AppController extends Controller
 
         //dd($res_arr);
 
-        return '<ul>'.$this->buildHTMLTree($res_arr, '/data/').'</ul>';
+        return ($tables ? $this->buildHTMLTree($res_arr, '/data/', $tab) : '');
     }
 
     private function add_tb($tb, &$res_arr) {
@@ -238,18 +254,32 @@ class AppController extends Controller
         }
     }
 
-    private function buildHTMLTree($res_arr, $url) {
-        $html = "<li>".$res_arr->title;
+    private function buildHTMLTree($res_arr, $url, $tab) {
+        $html = "<li data-type='folder' data-menu_id='".$res_arr->id."' data-root_id='".$res_arr->root_id."'>".$res_arr->title;
         if ($res_arr->tables || $res_arr->children) {
             $html .= '<ul>';
             if ($res_arr->tables) {
                 foreach ($res_arr->tables as $table) {
-                    $html .= '<li><a href="'.$url.$table->db_tb.'">'.$table->name.'</a></li>';
+                    if ($table->subdomain) {
+                        $link = preg_replace('/\/\/www/i', '//www.'.$table->subdomain, config('app.url'));
+                    } else {
+                        if ($tab == 'public') {
+                            preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
+                            $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : '';
+                            $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
+                                .preg_replace('/\/data\/'.$pub_subdomain.'\//i', '/data/', $url)
+                                .$table->db_tb;
+                        } else {
+                            $link = config('app.url').$url.$table->db_tb;
+                        }
+                    }
+
+                    $html .= '<li data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' data-type="'.$table->link_type.'"><a href="'.$link.'">'.$table->name.'</a></li>';
                 }
             }
             if ($res_arr->children) {
                 foreach ($res_arr->children as $child) {
-                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/');
+                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab);
                 }
             }
             $html .= '</ul>';
@@ -284,6 +314,10 @@ class AppController extends Controller
     }
 
     private function tableExist($tablePath) {
+        //for subdomains logic changes from 'SUB.tabledataplace.com/data/folder/table' to 'tabledataplace.com/data/SUB/folder/table'
+        if ($this->subdomain) {
+            $tablePath = $this->subdomain.'/'.$tablePath;
+        }
         $pathElems = explode('/', $tablePath);
         $tableName = end($pathElems);
         $pathCount = count($pathElems) - 1;
@@ -308,6 +342,12 @@ class AppController extends Controller
             //admin - get all data
         }
         $tb = $cnt->select('tb.*')->first();
+
+        //exist if table has subdomain eq to the request`s subdomain
+        if ($this->subdomain && $this->subdomain == $tb->subdomain) {
+            return 1;
+        }
+
         $tb_id = $tb ? $tb->id : 0;
 
         //find 'menutree' path

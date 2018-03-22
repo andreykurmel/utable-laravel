@@ -15,10 +15,11 @@ class TestSubdomain
      */
     public function handle($request, Closure $next)
     {
-        if ( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST']) ) {
+        /*if ( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST']) ) {
             return redirect()->to( route('landing') );
         } else {
             return $next($request);
-        }
+        }*/
+        return $next($request);
     }
 }

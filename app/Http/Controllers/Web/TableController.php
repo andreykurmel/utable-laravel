@@ -907,4 +907,59 @@ class TableController extends Controller
             } catch (\Exception $e) {}
         }
     }
+
+    public function menutree_addfolder(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree')->insert([
+            'root_id' => $request->root_id ? $request->root_id : ($request->parent_id ? $request->parent_id : 0),
+            'parent_id' => $request->parent_id,
+            'title' => $request->text,
+            'createdBy' => Auth::user()->id,
+            'createdOn' => now(),
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['last_id'] = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+            $responseArray['msg'] = "Data Inserted Successfully";
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function menutree_renamefolder(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree')->where('id', '=', $request->folder_id)->update([
+            'title' => $request->text,
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = "Data Updated Successfully";
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function menutree_deletefolder(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree')->where('id', '=', $request->folder_id)->delete();
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = "Data Deleted Successfully";
+
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
 }

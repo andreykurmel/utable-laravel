@@ -398,6 +398,9 @@ Route::post('/api/settingsForCreate', 'AppController@showSettingsForCreateTable'
 Route::post('/api/createTable', 'TableController@createTable')->name('createTable');
 Route::post('/api/modifyTable', 'TableController@modifyTable')->name('modifyTable');
 Route::group(['middleware' => 'database.change'], function () {
+    Route::get('/api/menutree_addfolder', 'TableController@menutree_addfolder')->name('menutree_addfolder');
+    Route::get('/api/menutree_renamefolder', 'TableController@menutree_renamefolder')->name('menutree_renamefolder');
+    Route::get('/api/menutree_deletefolder', 'TableController@menutree_deletefolder')->name('menutree_deletefolder');
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
     Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');
