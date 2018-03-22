@@ -209,7 +209,7 @@ class AppController extends Controller
         if ($for_favorite) {
             $tables->join('favorite_tables as ft', function ($q) {
                 $q->whereRaw('ft.table_id = tb.id');
-                $q->where('ft.user_id', '=', Auth::user()->id);
+                $q->where('ft.user_id', '=', Auth::user() ? Auth::user()->id : 0);
             });
         }
         if ($tab == 'private') {
