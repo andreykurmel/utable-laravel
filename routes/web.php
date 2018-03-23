@@ -401,6 +401,9 @@ Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/menutree_addfolder', 'TableController@menutree_addfolder')->name('menutree_addfolder');
     Route::get('/api/menutree_renamefolder', 'TableController@menutree_renamefolder')->name('menutree_renamefolder');
     Route::get('/api/menutree_deletefolder', 'TableController@menutree_deletefolder')->name('menutree_deletefolder');
+    Route::get('/api/menutree_movenode', 'TableController@menutree_movenode')->name('menutree_movenode');
+    Route::get('/api/menutree_createlink', 'TableController@menutree_createlink')->name('menutree_createlink');
+    Route::get('/api/menutree_removelink', 'TableController@menutree_removelink')->name('menutree_removelink');
     Route::get('/api/addTableRow', 'TableController@addTableRow')->name('addTableRow');
     Route::get('/api/updateTableRow', 'TableController@updateTableRow')->name('updateTableRow');
     Route::get('/api/deleteTableRow', 'TableController@deleteTableRow')->name('deleteTableRow');

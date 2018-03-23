@@ -67,7 +67,11 @@ $(document).ready(function () {
         }
     });
 
-    jsTreeBuild('public');
+    if (authUser) {
+        jsTreeBuild('favorite');
+    } else {
+        jsTreeBuild('public');
+    }
 
 });
 
@@ -86,13 +90,15 @@ var baseHttpUrl = "/api",
     filterMaxHeight = 150,
     changedFilter = changedSearchKeyword = false,
     searchKeyword = "",
-    filterMenuHide = TableLibHide = false,
+    filterMenuHide = true,
+    TableLibHide = false,
     markerBounds = {top:0, left:0, right:0, bottom:0},
     tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
 
 var curFilter = "",
     arrAddFieldsInData = ['is_favorited'],
-    selectedForChangeOrder = -1;
+    selectedForChangeOrder = -1,
+    sidebarPrevSelected = '';
 
 var settingsTableName = 'tb_settings_display',
     settingsEntries = $('#inpSettingsEntries').val(),
@@ -548,6 +554,7 @@ function tablebar_show_public() {
     $("#tablebar_public_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_favorite_div").hide();
+    sidebarPrevSelected = '';
     jsTreeBuild('public');
 }
 
@@ -558,6 +565,7 @@ function tablebar_show_private() {
     $("#tablebar_private_div").show();
     $("#tablebar_public_div").hide();
     $("#tablebar_favorite_div").hide();
+    sidebarPrevSelected = '';
     jsTreeBuild('private');
 }
 
@@ -568,6 +576,7 @@ function tablebar_show_favorite() {
     $("#tablebar_favorite_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_public_div").hide();
+    sidebarPrevSelected = '';
     jsTreeBuild('favorite');
 }
 
@@ -1862,11 +1871,7 @@ function showSettingsDataTable(headers, data) {
 
         tbHiddenData += "<tr>";
         tbHiddenData += "<td></td>";
-        if (canEditSettings) {
-            tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
-        } else {
-            tbHiddenData += '<td></td>';
-        }
+        tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
             if (d_key != 'ddl_name') {
@@ -1876,6 +1881,9 @@ function showSettingsDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (d_key === 'ddl_id') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (d_key === 'dfot_odr') {
+                    tbHiddenData += '<button class="btn btn-sm" style="width: 100%">'+ key +'</button>';
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -3055,7 +3063,7 @@ $(document).ready(function () {
 
 function jsTreeBuild($tab) {
     var context_menu =
-        $tab == 'favorite'
+        $tab == 'favorite' || !authUser
         ?
             {}
         :
@@ -3072,9 +3080,10 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Add Node",
                                     "action": function (obj) {
-                                        var elem = obj.reference.prevObject[0];
-                                        var par_id = $(elem).data('menu_id');
-                                        var root_id = $(elem).data('root_id');
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                        var root_id = elem.data ? elem.data.root_id : elem.li_attr['data-root_id'];
                                         swal({
                                                 title: "New folder",
                                                 text: "Write folder name:",
@@ -3093,7 +3102,7 @@ function jsTreeBuild($tab) {
                                                 }
 
                                                 $.ajax({
-                                                    url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&root_id='+root_id+'&text='+inputValu,
+                                                    url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&root_id='+root_id+'&from_tab='+$tab+'&text='+inputValu,
                                                     method: 'GET',
                                                     success: function (resp) {
                                                         var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
@@ -3118,8 +3127,9 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Edit",
                                     "action": function (obj) {
-                                        var elem = obj.reference.prevObject[0];
-                                        var par_id = $(elem).data('menu_id');
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
                                         var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
                                         swal({
                                                 title: "Change name",
@@ -3142,7 +3152,9 @@ function jsTreeBuild($tab) {
                                                 $.ajax({
                                                     url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+inputValu,
                                                     method: 'GET',
-                                                    success: function (resp) {/**/}
+                                                    success: function (resp) {
+                                                        $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, inputValu);
+                                                    }
                                                 });
                                             }
                                         );
@@ -3153,10 +3165,10 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Remove",
                                     "action": function (obj) {
-                                        var elem = obj.reference.prevObject[0];
-                                        var par_id = $(elem).data('menu_id');
-                                        var can_remove = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', can_remove) ) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                        if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ) {
                                             swal('Error', 'You cannot remove folder with children', 'error');
                                         } else {
                                             swal({
@@ -3170,12 +3182,11 @@ function jsTreeBuild($tab) {
                                                     animation: "slide-from-top"
                                                 },
                                                 function () {
-                                                    var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                                     $.ajax({
                                                         url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
                                                         method: 'GET',
                                                         success: function (resp) {
-                                                            $('#tablebar_'+$tab+'_div').jstree().delete_node(parent);
+                                                            $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
                                                         }
                                                     });
                                                 }
@@ -3192,7 +3203,19 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Edit",
                                     "action": function (obj) {
-                                        // action code here
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var table_name = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
+
+                                        $('#sidebar_table_tab').val($tab);
+                                        $('#sidebar_table_name').val(table_name);
+                                        $('#sidebar_table_id').val( elem.data ? elem.data.tb_id : elem.li_attr['data-tb_id'] );
+                                        $('#sidebar_table_db').val( elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'] );
+                                        $('#sidebar_table_access').val( elem.data ? elem.data.tb_access : elem.li_attr['data-tb_access'] );
+                                        $('#sidebar_table_nbr').val( elem.data ? elem.data.tb_nbr : elem.li_attr['data-tb_nbr'] );
+                                        $('#sidebar_table_subdomain').val( elem.data ? elem.data.tb_subdomain : elem.li_attr['data-tb_subdomain'] );
+
+                                        $('.editSidebarTableForm').show(); //function edit_sidebar_table()
                                     }
                                 },
                                 "link": {
@@ -3200,7 +3223,10 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Link to other Tabs",
                                     "action": function (obj) {
-                                        // action code here
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
+                                        sidebarPrevSelected.action = 'link';
+                                        swal('Create link', 'Please select target folder.');
                                     }
                                 },
                                 "move": {
@@ -3208,7 +3234,10 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Move to other Tabs",
                                     "action": function (obj) {
-                                        // action code here
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
+                                        sidebarPrevSelected.action = 'move';
+                                        swal('Move table', 'Please select target folder.');
                                     }
                                 }
                             }
@@ -3220,7 +3249,29 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Remove",
                                     "action": function (obj) {
-                                        // action code here
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var elem_m2t_id = elem.data ? elem.data.m2t_id : elem.li_attr['data-m2t_id'];
+                                        swal({
+                                                title: "Delete link",
+                                                text: "Are you sure?",
+                                                type: "warning",
+                                                confirmButtonClass: "btn-danger",
+                                                confirmButtonText: "Yes, delete it!",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top"
+                                            },
+                                            function () {
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_removelink?m2t_id='+elem_m2t_id,
+                                                    method: 'GET',
+                                                    success: function (resp) {
+                                                        $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+                                                    }
+                                                });
+                                            }
+                                        );
                                     }
                                 },
                                 "move": {
@@ -3228,7 +3279,10 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Move to other Tabs",
                                     "action": function (obj) {
-                                        // action code here
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
+                                        sidebarPrevSelected.action = 'move';
+                                        swal('Move link', 'Please select target folder.');
                                     }
                                 }
                             }
@@ -3247,12 +3301,86 @@ function jsTreeBuild($tab) {
         //only for left click
         var evt =  window.event || event;
         var button = evt.which || evt.button;
-
         if( button != 1 && ( typeof button != "undefined")) return false;
+        //
 
-        location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+        if (sidebarPrevSelected) {
+            var target = data.instance.get_node(data.node);
+            var target_type = target.data ? target.data.type : target.li_attr['data-type'];
+            var target_id = target.data ? target.data.menu_id : target.li_attr['data-menu_id'];
+
+            if (target_type != 'folder') {
+                swal('Error', 'You should select folder', 'error');
+            } else {
+
+                var m2t_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.m2t_id : sidebarPrevSelected.li_attr['data-m2t_id'];
+                //move node
+                if (sidebarPrevSelected.action == 'move') {
+                    $.ajax({
+                        url: baseHttpUrl+'/menutree_movenode?m2t_id='+m2t_id+'&menutree_id='+target_id,
+                        method: 'GET',
+                        success: function (resp) {
+                            $('#tablebar_'+$tab+'_div').jstree('move_node', sidebarPrevSelected, target, 'last', false, false, false, false);
+                        }
+                    });
+                }
+
+                //create link for table
+                if (sidebarPrevSelected.action == 'link') {
+                    var tb_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.tb_id : sidebarPrevSelected.li_attr['data-tb_id'];
+                    $.ajax({
+                        url: baseHttpUrl+'/menutree_createlink?tb_id='+tb_id+'&menutree_id='+target_id,
+                        method: 'GET',
+                        success: function (resp) {
+                            var newNode = {
+                                text: sidebarPrevSelected.text,
+                                icon: "fa fa-table",
+                                li_attr: {
+                                    'data-type': 'link',
+                                    'data-m2t_id': resp.last_id,
+                                    'data-tb_id': tb_id
+                                }
+                            };
+
+                            $('#tablebar_'+$tab+'_div').jstree().create_node(target, newNode, 'last', false, false);
+                        }
+                    });
+                }
+
+            }
+        } else {
+            location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+        }
     })
     .on('ready.jstree', function() {
         $("#tablebar_"+$tab+"_div").jstree('open_all');
+    });
+}
+
+function edit_sidebar_table() {
+    var $tab = $('#sidebar_table_tab').val(),
+        tb_id = $('#sidebar_table_id').val(),
+        tb_name = $('#sidebar_table_name').val(),
+        tb_access = $('#sidebar_table_access').val(),
+        tb_nbr = $('#sidebar_table_nbr').val(),
+        tb_subdomain = $('#sidebar_table_subdomain').val(),
+        strParams = "tableName=tb&id="+tb_id+"&name="+tb_name+"&access="+tb_access+"&nbr_entry_listing="+tb_nbr+"&subdomain="+tb_subdomain;
+
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/updateTableRow?' + strParams,
+        success: function (response) {
+            var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+
+            $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, tb_name);
+            $('#'+elem_id).data('tb_access', tb_access);
+            $('#'+elem_id).data('tb_nbr', tb_nbr);
+            $('#'+elem_id).data('tb_subdomain', tb_subdomain);
+
+            alert(response.msg);
+        },
+        error: function () {
+            alert("Server error");
+        }
     });
 }

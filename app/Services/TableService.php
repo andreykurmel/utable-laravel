@@ -30,7 +30,7 @@ class TableService {
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
-        if (Auth::user()) {
+        if (Auth::user() && $tableName != 'tb_settings_display') {
             if (
                 //not admin
                 Auth::user()->role_id != 1
@@ -255,42 +255,7 @@ class TableService {
         }
 
         //--------------------------------------------------- get headers --------------------------------------------
-        if (Auth::user()) {
-            $header_data = DB::connection('mysql_sys')
-                ->select("
-                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr, IF(sh.showhide IS NULL, 1, sh.showhide) as is_showed
-                    FROM `tb_settings_display` as tsd 
-                    LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
-                    LEFT JOIN `showhide` as sh ON (sh.user_id = ".Auth::user()->id." AND sh.table_id = ".$table_meta->id." AND tsd.field = sh.column_key)
-                    WHERE tsd.tb_id = ".$table_meta->id."
-                    ORDER BY calc_odr, tsd.id
-                ");
-        } else {
-            $header_data = DB::connection('mysql_sys')
-                ->table('tb_settings_display as tsd')
-                ->where('tsd.tb_id', '=', $table_meta->id)
-                ->selectRaw('tsd.*, tsd.dfot_odr as calc_odr, 1 as is_showed')
-                ->orderBy('tsd.dfot_odr')
-                ->orderBy('tsd.id')
-                ->get();
-        }
-
-        $headers = [];
-        foreach ($header_data as $idx => $hdr) {
-            if ($fields_for_select) {
-                if ($fields_for_select === 1) {
-                    $headers[$idx] = $hdr;
-                    $headers[$idx]->can_edit = 1;
-                } else {
-                    if (isset($fields_for_select[$hdr->field])) {
-                        $headers[$idx] = $hdr;
-                        $headers[$idx]->can_edit = $fields_for_select[$hdr->field];
-                    }
-                }
-            } else {
-                $headers[$idx] = $hdr;
-            }
-        }
+        $headers = $this->getHeaders($tableName, $fields_for_select);
 
         $responseArray["data"] = array();
         $responseArray["filters"] = $respFilters;
@@ -312,14 +277,15 @@ class TableService {
         return $responseArray;
     }
 
-    public function getHeaders($tableName) {
+    public function getHeaders($tableName, $fields_for_select = []) {
         $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
         if (Auth::user()) {
             $header_data = DB::connection('mysql_sys')
                 ->select("
-                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr 
+                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr, IF(sh.showhide IS NULL, 1, sh.showhide) as is_showed
                     FROM `tb_settings_display` as tsd 
                     LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
+                    LEFT JOIN `showhide` as sh ON (sh.user_id = ".Auth::user()->id." AND sh.table_id = ".$table_meta->id." AND tsd.field = sh.column_key)
                     WHERE tsd.tb_id = ".$table_meta->id."
                     ORDER BY calc_odr, tsd.id
                 ");
@@ -327,17 +293,29 @@ class TableService {
             $header_data = DB::connection('mysql_sys')
                 ->table('tb_settings_display as tsd')
                 ->where('tsd.tb_id', '=', $table_meta->id)
-                ->select('tsd.*', 'tsd.dfot_odr as calc_odr')
+                ->selectRaw('tsd.*, tsd.dfot_odr as calc_odr, 1 as is_showed')
                 ->orderBy('tsd.dfot_odr')
                 ->orderBy('tsd.id')
                 ->get();
         }
 
-        /*$headers = [];
-        foreach ($header_data as $hdr) {
-            $headers[$hdr->field] = $hdr;
-        }*/
-        return $header_data;
+        $headers = [];
+        if ($fields_for_select && $tableName != 'tb_settings_display') {
+            foreach ($header_data as $idx => $hdr) {
+                if ($fields_for_select === 1) {
+                    $headers[$idx] = $hdr;
+                    $headers[$idx]->can_edit = 1;
+                } else {
+                    if (isset($fields_for_select[$hdr->field])) {
+                        $headers[$idx] = $hdr;
+                        $headers[$idx]->can_edit = $fields_for_select[$hdr->field];
+                    }
+                }
+            }
+        } else {
+            $headers = $header_data;
+        }
+        return $headers;
     }
 
     public function RepairColOrderForUser($table_meta) {

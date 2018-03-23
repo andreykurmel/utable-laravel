@@ -204,33 +204,39 @@ class AppController extends Controller
         $tables = DB::connection('mysql_sys')->table('tb')
             ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
             ->where('is_system', '=', 0)
-            ->select('tb.*','m2t.menutree_id','m2t.type as link_type');
+            ->select('tb.*','m2t.id as m2t_id','m2t.menutree_id','m2t.type as link_type');
 
         if ($for_favorite) {
-            $tables->join('favorite_tables as ft', function ($q) {
-                $q->whereRaw('ft.table_id = tb.id');
-                $q->where('ft.user_id', '=', Auth::user() ? Auth::user()->id : 0);
-            });
-        }
-        if ($tab == 'private') {
             if (Auth::user()) {
-                $tables->leftJoin('rights', function ($q) {
-                        $q->where('rights.table_id', '=', 'tb.id');
-                        $q->where('rights.user_id', '=', Auth::user()->id);
-                    })
-                    ->where('access', '=', $tab);
-                if (Auth::user()->role_id != 1) {
-                    $tables->where(function ($qt) {
-                        $qt->where('tb.owner', '=', Auth::user()->id);
-                        $qt->orWhere('rights.user_id', '=', Auth::user()->id);
-                    });
-                }
-                $tables = $tables->groupBy('m2t.id')->get();
+                $tables->join('favorite_tables as ft', function ($q) {
+                    $q->whereRaw('ft.table_id = tb.id');
+                    $q->where('ft.user_id', '=', Auth::user()->id);
+                });
+                $tables = $tables->where('access', '=', $tab)->get();
             } else {
                 $tables = [];
             }
         } else {
-            $tables = $tables->where('access', '=', $tab)->get();
+            if ($tab == 'private') {
+                if (Auth::user()) {
+                    $tables->leftJoin('rights', function ($q) {
+                        $q->where('rights.table_id', '=', 'tb.id');
+                        $q->where('rights.user_id', '=', Auth::user()->id);
+                    })
+                        ->where('access', '=', $tab);
+                    if (Auth::user()->role_id != 1) {
+                        $tables->where(function ($qt) {
+                            $qt->where('tb.owner', '=', Auth::user()->id);
+                            $qt->orWhere('rights.user_id', '=', Auth::user()->id);
+                        });
+                    }
+                    $tables = $tables->groupBy('m2t.id')->get();
+                } else {
+                    $tables = [];
+                }
+            } else {
+                $tables = $tables->where('access', '=', $tab)->get();
+            }
         }
 
         foreach ($tables as $tb) {
@@ -274,7 +280,17 @@ class AppController extends Controller
                         }
                     }
 
-                    $html .= '<li data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' data-type="'.$table->link_type.'"><a href="'.$link.'">'.$table->name.'</a></li>';
+                    $html .= '<li 
+                        data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' 
+                        data-type="'.$table->link_type.'" 
+                        data-m2t_id="'.$table->m2t_id.'" 
+                        data-tb_id="'.$table->id.'" 
+                        data-tb_name="'.$table->name.'" 
+                        data-tb_db="'.$table->db_tb.'" 
+                        data-tb_access="'.$table->access.'" 
+                        data-tb_nbr="'.$table->nbr_entry_listing.'" 
+                        data-tb_subdomain="'.$table->subdomain.'" 
+                    ><a href="'.$link.'">'.$table->name.'</a></li>';
                 }
             }
             if ($res_arr->children) {

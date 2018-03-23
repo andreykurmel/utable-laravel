@@ -20,12 +20,14 @@
 
                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0; background: #f1f3f4; padding-top: 20px">
                     <ul class="tabs" style="position:relative; left: 10px;">
-                        <li class="active" id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
-                        <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
-                        <li id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Favorite</a></li>
+                        <li {{ Auth::guest() ? 'class=active' : '' }} id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
+                        @if(Auth::user())
+                            <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
+                            <li class="active" id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Favorite</a></li>
+                        @endif
                     </ul>
 
-                    <div id="tablebar_public_div" class="tab-content" style="position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                    <div id="tablebar_public_div" class="tab-content" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                         {!! $treeTables['public'] !!}
                     </div>
 
@@ -33,7 +35,7 @@
                         {!! $treeTables['private'] !!}
                     </div>
 
-                    <div id="tablebar_favorite_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                    <div id="tablebar_favorite_div" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                         {!! $treeTables['favorite'] !!}
                     </div>
                 </div>
@@ -47,7 +49,7 @@
             <noscript class="message black-gradient simpler">Your browser does not support JavaScript! Some features won't work as expected...</noscript>
 
             <!-- Main title -->
-            <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 280px;">
+            <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 20px;">
                 @if($owner && $tableName)
                     <div style="display: inline-block;">
                         <a href="javascript:void(0)" style="padding: 15px;" onclick="deleteCurrentTable()" title="Delete table">
@@ -103,7 +105,7 @@
                 </ul>
 
                 <!-- Content -->
-                <div class="tabs-content js-filterMenuHide js-leftPosition js-table_lib_hide" style="position: fixed; left: 280px; bottom: 10px; top: 100px;right: 280px;">
+                <div class="tabs-content js-filterMenuHide js-leftPosition js-table_lib_hide" style="position: fixed; left: 280px; bottom: 10px; top: 100px;right: 20px;">
 
                     <div id="list_view" style='padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
                         @if($tableName == 'st')
@@ -866,11 +868,11 @@
 
 
         <!-- Filters -->
-        <section class="menu" id="showHideMenuBody" role="complementary" style="position:fixed;top: 59px;bottom: 0;right: -1px;width: 260px;">
+        <section class="menu" id="showHideMenuBody" role="complementary" style="position:fixed;top: 59px;bottom: 0;right: -1px;width: 0;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
                     Filter Results
-                    <a class="open-menu" id="showHideMenuBtn" onclick="showHideMenu()"><span></span></a>
+                    <a class="open-menu menu-hidden" id="showHideMenuBtn" onclick="showHideMenu()"><span></span></a>
                 </header>
                 <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
                 </dl>
@@ -938,7 +940,7 @@
         </div>
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 830px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
+        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 570px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
             <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
@@ -952,35 +954,53 @@
             </div>
         </div>
 
-        {{-- Table create form --}}
-        <!--<div class="tableCreateForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+        {{-- Table edit from sidebar form --}}
+        <div class="editSidebarTableForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
                     <div class="form-wrap">
-                        <h1>Create table</h1>
+                        <h1>Edit table</h1>
+                        <div style="width: 350px;">
+                            <input type="hidden" id="sidebar_table_id">
+                            <input type="hidden" id="sidebar_table_tab">
 
-                        <form role="form" action="<?= route('showSettingsForCreateTable') ?>" method="POST" id="create-table-form" enctype="multipart/form-data" autocomplete="off">
-                            <input type="hidden" value="<?= csrf_token() ?>" name="_token">
-
-                            <div class="form-group password-field input-icon">
-                                <label for="csv">Your csv file</label>
-                                <input type="file" name="csv" id="csv" class="form-control" placeholder="Your csv file" accept=".csv" required>
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_name">Table name</label>
+                                <input type="text" id="sidebar_table_name" class="form-control" placeholder="Table name" required>
                             </div>
 
-                            <div class="form-group password-field input-icon">
-                                <label for="with_headers">Check if first line of your csv file is headers</label>
-                                <input type="checkbox" name="with_headers" id="with_headers" class="form-control">
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_db">Database name</label>
+                                <input type="text" id="sidebar_table_db" class="form-control" readonly>
+                            </div>
+
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_access">Data status</label>
+                                <select id="sidebar_table_access" class="form-control">
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_nbr">Entries per page</label>
+                                <input type="number" id="sidebar_table_nbr" class="form-control">
+                            </div>
+
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_subdomain">Subdomain</label>
+                                <input type="text" id="sidebar_table_subdomain" class="form-control">
                             </div>
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-custom btn-lg btn-block" id="btn-table-create">
-                                    Open settings
+                                <button type="button" class="btn btn-custom btn-lg btn-block" onclick="edit_sidebar_table()">
+                                    Save
                                 </button>
-                                <a href="javascript:void(0)" onclick="$('.tableCreateForm').hide();" class="btn btn-default btn-lg btn-block">
+                                <a href="javascript:void(0)" onclick="$('.editSidebarTableForm').hide();" class="btn btn-default btn-lg btn-block">
                                     Cancel
                                 </a>
                             </div>
-                        </form>
+                        </div>
 
                     </div>
                     <div class="row">
@@ -991,7 +1011,7 @@
                 </div>
             </div>
         </div>
-        <div class="tableCreateForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.tableCreateForm').hide()"></div>-->
+        <div class="editSidebarTableForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.editSidebarTableForm').hide()"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>

@@ -96,7 +96,7 @@ class TableController extends Controller
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
-            if (strpos($key, '/') !== false) {
+            if (strpos($key, '/') !== false || $par == 'null') {
                 unset($params[$key]);
             }
         }
@@ -464,14 +464,51 @@ class TableController extends Controller
 
             $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
-            $headers = $this->tableService->getHeaders($request->tableName);
+            $fields_for_select = [];
+            if (Auth::user()) {
+                if (
+                    //not admin
+                    Auth::user()->role_id != 1
+                    &&
+                    //not owner
+                    $table_meta->owner != Auth::user()->id
+                ) {
+                    $tmp_fields_set = DB::connection('mysql_sys')
+                        ->table('rights as r')
+                        ->join('rights_fields as rf', 'r.id', '=', 'rf.rights_id')
+                        ->where('r.user_id', '=', Auth::user()->id)
+                        ->where('r.table_id', '=', $table_meta->id)
+                        ->select('rf.*')
+                        ->get();
+                    foreach ($tmp_fields_set as $fld) {
+                        if ($fld->view) {
+                            $fields_for_select[$fld->field] = $fld->edit;
+                        }
+                    }
+                    $fields_for_select['id'] = 0;
+                } else {
+                    $fields_for_select = 1;
+                }
+            }
+
+            $headers = $this->tableService->getHeaders($request->tableName, $fields_for_select);
 
             $rows = DB::connection('mysql_data')
                 ->table($request->tableName.' as mt')
                 ->join('favorite as f', 'mt.id', '=', 'f.row_id')
                 ->where('f.user_id', '=', Auth::user()->id)
-                ->where('f.table_id', '=', $table_meta->id)
-                ->select('mt.*');
+                ->where('f.table_id', '=', $table_meta->id);
+
+            //if user isn`t admin or owner -> then select only accessible fields
+            if ($fields_for_select && $fields_for_select !== 1) {
+                $select_cls = [];
+                foreach ($fields_for_select as $key => $fld) {
+                    $select_cls[] = "mt.".$key;
+                }
+                $rows->select($select_cls);
+            } else {
+                $rows->select('mt.*');
+            }
 
             $rowsCount = $rows->count();
             if ($count) {
@@ -913,6 +950,7 @@ class TableController extends Controller
             'root_id' => $request->root_id ? $request->root_id : ($request->parent_id ? $request->parent_id : 0),
             'parent_id' => $request->parent_id,
             'title' => $request->text,
+            'structure' => $request->from_tab,
             'createdBy' => Auth::user()->id,
             'createdOn' => now(),
             'modifiedBy' => Auth::user()->id,
@@ -923,7 +961,6 @@ class TableController extends Controller
             $responseArray['error'] = FALSE;
             $responseArray['last_id'] = DB::connection('mysql_sys')->getPdo()->lastInsertId();
             $responseArray['msg'] = "Data Inserted Successfully";
-
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";
@@ -941,7 +978,6 @@ class TableController extends Controller
         if ($id) {
             $responseArray['error'] = FALSE;
             $responseArray['msg'] = "Data Updated Successfully";
-
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";
@@ -955,7 +991,58 @@ class TableController extends Controller
         if ($id) {
             $responseArray['error'] = FALSE;
             $responseArray['msg'] = "Data Deleted Successfully";
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
 
+    public function menutree_movenode(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree_2_tb')->where('id', '=', $request->m2t_id)->update([
+            'menutree_id' => $request->menutree_id,
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = "Node Moved Successfully";
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function menutree_createlink(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
+            'tb_id' => $request->tb_id,
+            'menutree_id' => $request->menutree_id,
+            'type' => 'link',
+            'createdBy' => Auth::user()->id,
+            'createdOn' => now(),
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['last_id'] = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+            $responseArray['msg'] = "Link Created Successfully";
+        } else {
+            $responseArray['error'] = TRUE;
+            $responseArray['msg'] =  "Server Error";
+        }
+        return $responseArray;
+    }
+
+    public function menutree_removelink(Request $request) {
+        $id = DB::connection('mysql_sys')->table('menutree_2_tb')->where('id', '=', $request->m2t_id)->delete();
+
+        if ($id) {
+            $responseArray['error'] = FALSE;
+            $responseArray['msg'] = "Data Deleted Successfully";
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";
