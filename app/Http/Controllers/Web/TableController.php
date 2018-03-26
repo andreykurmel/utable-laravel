@@ -221,18 +221,18 @@ class TableController extends Controller
             $table_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->select('id')->first();
 
             if (!DB::connection('mysql_sys')
-                ->table('showhide')
+                ->table('tb_settings_display')
                 ->where('user_id', '=', Auth::user()->id)
-                ->where('table_id', '=', $table_id->id)
-                ->where('column_key', '=', $request->col_key)
+                ->where('tb_id', '=', $table_id->id)
+                ->where('field', '=', $request->col_key)
                 ->count()
             ) {
                 DB::connection('mysql_sys')
-                    ->table('showhide')
+                    ->table('tb_settings_display')
                     ->insert([
                         'user_id' => Auth::user()->id,
-                        'table_id' => $table_id->id,
-                        'column_key' => $request->col_key,
+                        'tb_id' => $table_id->id,
+                        'field' => $request->col_key,
                         'showhide' => $request->status == "Show" ? 1 : 0,
                         'createdBy' => Auth::user()->id,
                         'createdOn' => now(),
@@ -241,10 +241,10 @@ class TableController extends Controller
                     ]);
             } else {
                 DB::connection('mysql_sys')
-                    ->table('showhide')
+                    ->table('tb_settings_display')
                     ->where('user_id', '=', Auth::user()->id)
-                    ->where('table_id', '=', $table_id->id)
-                    ->where('column_key', '=', $request->col_key)
+                    ->where('tb_id', '=', $table_id->id)
+                    ->where('field', '=', $request->col_key)
                     ->update([
                         'showhide' => $request->status == "Show" ? 1 : 0,
                         'modifiedBy' => Auth::user()->id,
@@ -337,53 +337,24 @@ class TableController extends Controller
         if (Auth::user()) {
             $tableName= $request->tableName;
 
-            $params = $request->except(['id', 'tableName']);
-            foreach ($params as $key => $par) {
-                if (strpos($key,'/') !== false) {
-                    unset($params[$key]);
-                }
-            }
-            $params['createdBy'] = Auth::user()->id;
-            $params['createdOn'] = now();
-            $params['modifiedBy'] = Auth::user()->id;
-            $params['modifiedOn'] = now();
+            $res = $this->tableService->addRight($request->tableName, [
+                'user_id' => $request->user_id,
+                'table_id' => $request->table_id,
+                'rights_id' => $request->rights_id,
+                'field' => $request->field,
+                'view' => $request->view,
+                'edit' => $request->edit,
+                'notes' => $request->notes,
+            ]);
 
-            if ($request->tableName == 'rights') {
-                DB::connection('mysql_sys')->table('rights')->insert($params);
-
-                $id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
-
-                $rights_fields = DB::connection('mysql_sys')
-                    ->table('tb_settings_display')
-                    ->where('tb_id', '=', $request->table_id)
-                    ->get();
-
-                foreach ($rights_fields as $rf) {
-                    DB::connection('mysql_sys')->table('rights_fields')->insert([
-                        'rights_id' => $id,
-                        'field' => $rf->field,
-                        'view' => 0,
-                        'edit' => 0,
-                        'notes' => '',
-                        'createdBy' => Auth::user()->id,
-                        'createdOn' => now(),
-                        'modifiedBy' => Auth::user()->id,
-                        'modifiedOn' => now()
-                    ]);
-                }
-            }
-            if ($request->tableName == 'rights_fields') {
-                $id = DB::connection('mysql_sys')->table('rights_fields')->insert($params);
-            }
-
-            if ($id) {
+            if ($res['status'] != 'present') {
                 $responseArray['error'] = FALSE;
-                $responseArray['last_id'] = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+                $responseArray['last_id'] = $res['id'];
                 $responseArray['msg'] = "Data Inserted Successfully";
 
             } else {
                 $responseArray['error'] = TRUE;
-                $responseArray['msg'] =  "Server Error";
+                $responseArray['msg'] =  "Data Already Present";
             }
             return $responseArray;
         }
@@ -534,10 +505,11 @@ class TableController extends Controller
             $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
             $orders = DB::connection('mysql_sys')
-                ->table('orders')
+                ->table('tb_settings_display')
                 ->where('user_id', '=', Auth::user()->id)
-                ->where('table_id', '=', $table_meta->id)
+                ->where('tb_id', '=', $table_meta->id)
                 ->orderBy('order')
+                ->orderBy('id')
                 ->get();
 
             //set selected column before target column
@@ -555,7 +527,7 @@ class TableController extends Controller
 
             for ($i = 0; $i < count($orders); $i++) {
                 DB::connection('mysql_sys')
-                    ->table('orders')
+                    ->table('tb_settings_display')
                     ->where('id', '=', $orders[$i]->id)
                     ->update([ 'order' => $i+1 ]);
             }
@@ -574,12 +546,14 @@ class TableController extends Controller
             //if user don`t have correct order in 'tb_settings_display.sql' for current table -> repair
             $columnsCnt = DB::connection('mysql_sys')
                 ->table('tb_settings_display')
+                ->where('user_id', '=', Auth::user()->id)
                 ->where('tb_id', '=', $table_meta->id)
                 ->groupBy('rows_ord')
                 ->get();
 
             $settingsCnt = DB::connection('mysql_sys')
                 ->table('tb_settings_display')
+                ->where('user_id', '=', Auth::user()->id)
                 ->where('tb_id', '=', $table_meta->id)
                 ->orderBy('rows_ord')
                 ->orderBy('id');
@@ -595,6 +569,7 @@ class TableController extends Controller
 
             $rows = DB::connection('mysql_sys')
                 ->table('tb_settings_display')
+                ->where('user_id', '=', Auth::user()->id)
                 ->where('tb_id', '=', $table_meta->id)
                 ->orderBy('rows_ord')
                 ->orderBy('id')
@@ -616,6 +591,7 @@ class TableController extends Controller
             for ($i = 0; $i < count($rows); $i++) {
                 DB::connection('mysql_sys')
                     ->table('tb_settings_display')
+                    ->where('user_id', '=', Auth::user()->id)
                     ->where('id', '=', $rows[$i]->id)
                     ->update([ 'rows_ord' => $i+1 ]);
             }
@@ -726,6 +702,7 @@ class TableController extends Controller
         foreach ($columns as $col) {
             if ($col['field']) {
                 DB::connection('mysql_sys')->table('tb_settings_display')->insert([
+                    'user_id' => Auth::user()->id,
                     'tb_id' => $tb_id,
                     'field' => $col['field'],
                     'name' => $col['header'],
@@ -827,12 +804,16 @@ class TableController extends Controller
             //for deleting columns
             if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                 //del column
-                DB::connection('mysql_sys')->table('tb_settings_display')->where('tb_id', '=', $tableMeta->id)->where('field', '=', $col['field'])->delete();
+                DB::connection('mysql_sys')->table('tb_settings_display')
+                    ->where('tb_id', '=', $tableMeta->id)
+                    ->where('field', '=', $col['field'])
+                    ->delete();
             }
             //for adding columns
             if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                 //add column
                 DB::connection('mysql_sys')->table('tb_settings_display')->insert([
+                    'user_id' => Auth::user()->id,
                     'tb_id' => $tableMeta->id,
                     'field' => $col['field'],
                     'name' => $col['header'],

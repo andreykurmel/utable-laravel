@@ -67,6 +67,18 @@
                 <div class="showhidemenu" style='width:150px;display:inline-block'>
                     <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()">Show/Hide Columns</a>
                 </div>
+                @if(Auth::user())
+                    <div style="padding: 5px;display: inline-block;">
+                        <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
+                            <option value="{{ '/data/all' }}"></option>
+                            @foreach($treeTables['custom_select'] as $tb)
+                                <option value="{{ $tb['li'] }}">
+                                    {{ $tb['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div style="display: inline-block;margin-left: 8px;">
                     <form action="{{ route('downloader') }}" method="post" id="downloader_form">
                         {{ csrf_field() }}
@@ -391,10 +403,10 @@
                         <!-- Tabs -->
                         <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 200px;transform: rotate(-90deg);left: -75px;top: 80px;">
                             <ul class="tabs">
-                                @if($canEditSettings)
+                                @if($owner)
                                     <li id="li_settings_rights" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowRights()" class='with-med-padding'>Rights</a></li>
                                 @endif
-                                @if($canEditSettings)
+                                @if($owner)
                                     <li id="li_settings_ddl" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding'>DDL</a></li>
                                 @endif
                                 <li class="active" id="li_settings_display" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowDisplay()" class='with-med-padding'>Display</a></li>
@@ -630,7 +642,10 @@
                                     <tr>
                                         <th class="sorting nowrap">#</th>
                                         @foreach($settingsRights_Fields_Headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
+                                                {{ $hdr->name }}
+                                                {{ ($hdr->field == 'view edit' ? '<input type="checkbox">' : '') }}
+                                            </th>
                                         @endforeach
                                         <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                     </tr>
@@ -940,7 +955,7 @@
         </div>
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 570px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
+        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 420px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
             <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
@@ -1019,7 +1034,6 @@
 
 @push('scripts')
     <script>
-        canEditSettings = {{ (int)$canEditSettings }};
         authUser = {{ (int)Auth::check() }};
         userOwner = {{ (int)$owner }};
     </script>

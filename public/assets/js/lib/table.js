@@ -16,7 +16,7 @@ $(document).ready(function () {
 
     if (selectedTableName) {
         selectTable(selectedTableName);
-        if (canEditSettings) {
+        if (authUser) {//canEditSettings
             getDDLdatas(selectedTableName);
             getRightsDatas(selectedTableName);
         }
@@ -69,6 +69,7 @@ $(document).ready(function () {
 
     if (authUser) {
         jsTreeBuild('favorite');
+        showHideTableLib();
     } else {
         jsTreeBuild('public');
     }
@@ -593,7 +594,7 @@ function showHideMenu() {
 
     var right_scr = filterMenuHide ? "26px" : "286px";
     var right = filterMenuHide ? "20px" : "280px";
-    var right_2 = filterMenuHide ? "570px" : "830px";
+    var right_2 = filterMenuHide ? "420px" : "680px";
     $(".table_body_viewport > .mCSB_scrollTools").css("right", right_scr);
     $(".js-filterMenuHide").css("right", right);
     $(".js-filterMenuHide_2").css("right", right_2);
@@ -1852,7 +1853,7 @@ function showSettingsDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
-                    (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+canEditSettings+')"' : '') +
+                    (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (d_key === 'ddl_id') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
@@ -2194,7 +2195,7 @@ function updateSettingsRowLocal(idx, key, id) {
         if (val == "Yes") {
             $.ajax({
                 method: 'GET',
-                url: baseHttpUrl + '/loadFilter?tableName=' + selectedTableName + '&field='+ tableHeaders[header_key].field +'&name='+ tableHeaders[header_key].name,
+                url: baseHttpUrl + '/loadFilter?tableName=' + selectedTableName + '&field='+ header_key +'&name='+ settingsTableData[idx]['name'],
                 success: function (response) {
                     filtersData.push(response);
                     showFiltersList(filtersData);

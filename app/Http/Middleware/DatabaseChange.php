@@ -33,7 +33,7 @@ class DatabaseChange
             abort(403, "Forbidden.");
         } else {
             if ($this->auth->user()->role_id != 1) {
-                $tb = DB::connection('mysql_sys')
+                /*$tb = DB::connection('mysql_sys')
                     ->table('tb')
                     ->leftJoin('rights', 'rights.table_id', '=', 'tb.id');
                 $tb->where(function ($q) {
@@ -42,13 +42,12 @@ class DatabaseChange
                 });
                 $tb->where(function ($q) {
                     $q->where('owner', '=', $this->auth->user()->id);
-                    $q->orWhere('rights.right', '=', 'All');
                 });
                 $tb->where('tb.db', '=', $request->tableName);
                 //if user don`t have rights for edit table (owner or right='All') -> abort
                 if ($tb->count() == 0) {
                     abort(403, "Forbidden.");
-                }
+                }*/
             }
         }
 

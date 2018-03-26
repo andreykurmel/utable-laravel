@@ -30,7 +30,7 @@ class TableService {
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
-        if (Auth::user() && $tableName != 'tb_settings_display') {
+        if (Auth::user()) {
             if (
                 //not admin
                 Auth::user()->role_id != 1
@@ -54,9 +54,6 @@ class TableService {
             } else {
                 $fields_for_select = 1;
             }
-
-            //if user don`t have correct order in 'orders.sql' for current table -> repair
-            $this->RepairColOrderForUser($table_meta);
         }
 
         $sql = DB::connection($mysql_conn)->table($tableName);
@@ -76,6 +73,7 @@ class TableService {
             $sql->where($tableName.'.'.'long_dec', '<', ($query['long_dec'] + $dist_long));
         } elseif ($query['opt'] == 'settings' && $query['tb_id']) {
             $sql->where($tableName.'.'.'tb_id', '=', $query['tb_id']);
+            $sql->where($tableName.'.'.'user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner);
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
@@ -176,6 +174,7 @@ class TableService {
                     $selected_filters = $filterData;
                 } else {
                     $selected_filters = DB::connection('mysql_sys')->table('tb_settings_display')
+                        ->where('user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner)
                         ->where('tb_id', '=', $table_meta->id)
                         ->where('filter', '=', 'Yes')
                         ->select('field as key', 'name')
@@ -229,6 +228,7 @@ class TableService {
             $ddls = DB::connection('mysql_sys')->table('tb_settings_display as ts')
                 ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
                 ->select('ts.field', 'di.option')
+                ->where('ts.user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner)
                 ->where('ts.tb_id', '=', $table_meta->id)
                 ->whereNotNull('di.option')
                 ->get();
@@ -277,30 +277,115 @@ class TableService {
         return $responseArray;
     }
 
+    public function addRight($tableName, $fields) {
+        $result = 'undefined';
+
+        //insert rights for all table
+        if ($tableName == 'rights') {
+
+            $present = DB::connection('mysql_sys')->table('rights')
+                ->where('user_id', '=', $fields['user_id'])
+                ->where('table_id', '=', $fields['table_id'])
+                ->first();
+
+            if ($present) {
+                $result = [
+                    'status' => 'present',
+                    'id' => $present->id
+                ];
+            } else {
+                DB::connection('mysql_sys')->table('rights')->insert([
+                    'user_id' => $fields['user_id'],
+                    'table_id' => $fields['table_id'],
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+
+                $id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+                $table_meta = DB::connection('mysql_sys')->table('tb')->where('id', '=', $fields['table_id'])->first();
+
+                $rights_fields = DB::connection('mysql_sys')
+                    ->table('tb_settings_display')
+                    ->where('user_id', '=', $table_meta->owner)
+                    ->where('tb_id', '=', $fields['table_id'])
+                    ->get();
+
+                foreach ($rights_fields as $rf) {
+                    DB::connection('mysql_sys')->table('rights_fields')->insert([
+                        'rights_id' => $id,
+                        'field' => $rf->field,
+                        'view' => 0,
+                        'edit' => 0,
+                        'notes' => '',
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+                }
+                $result = [
+                    'status' => 'inserted',
+                    'id' => $id
+                ];
+            }
+
+        //insert right only for one field
+        } elseif ($tableName == 'rights_fields') {
+
+            $present = DB::connection('mysql_sys')->table('rights_fields')
+                ->where('rights_id', '=', $fields['rights_id'])
+                ->where('field', '=', $fields['field'])
+                ->first();
+
+            if ($present) {
+                $result = [
+                    'status' => 'present',
+                    'id' => $present->id
+                ];
+            } else {
+                DB::connection('mysql_sys')->table('rights_fields')->insert([
+                    'rights_id' => $fields['rights_id'],
+                    'field' => $fields['field'],
+                    'view' => $fields['view'],
+                    'edit' => $fields['edit'],
+                    'notes' => $fields['notes'],
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+                $result = [
+                    'status' => 'inserted',
+                    'id' => DB::connection('mysql_sys')->getPdo()->lastInsertId()
+                ];
+            }
+
+        }
+        return $result;
+    }
+
     public function getHeaders($tableName, $fields_for_select = []) {
+        if ($fields_for_select && is_array($fields_for_select)) {
+            $fields_for_select['tb_id'] = 1;
+        }
         $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
+
         if (Auth::user()) {
-            $header_data = DB::connection('mysql_sys')
-                ->select("
-                    SELECT tsd.*, IF(o.order IS NOT NULL, o.order, tsd.dfot_odr) as calc_odr, IF(sh.showhide IS NULL, 1, sh.showhide) as is_showed
-                    FROM `tb_settings_display` as tsd 
-                    LEFT JOIN `orders` as o ON (o.user_id = ".Auth::user()->id." AND o.table_id = ".$table_meta->id." AND tsd.field = o.column_key)
-                    LEFT JOIN `showhide` as sh ON (sh.user_id = ".Auth::user()->id." AND sh.table_id = ".$table_meta->id." AND tsd.field = sh.column_key)
-                    WHERE tsd.tb_id = ".$table_meta->id."
-                    ORDER BY calc_odr, tsd.id
-                ");
+            $header_data = $this->selectHeaders($table_meta, Auth::user()->id);
+
+            if ($header_data->count() == 0) {
+                $this->CopySettingsForUser($table_meta);
+                $header_data = $this->selectHeaders($table_meta, Auth::user()->id);
+            }
+
         } else {
-            $header_data = DB::connection('mysql_sys')
-                ->table('tb_settings_display as tsd')
-                ->where('tsd.tb_id', '=', $table_meta->id)
-                ->selectRaw('tsd.*, tsd.dfot_odr as calc_odr, 1 as is_showed')
-                ->orderBy('tsd.dfot_odr')
-                ->orderBy('tsd.id')
-                ->get();
+            $header_data = $this->selectHeaders($table_meta, 0);
         }
 
         $headers = [];
-        if ($fields_for_select && $tableName != 'tb_settings_display') {
+        if ($fields_for_select) {
             foreach ($header_data as $idx => $hdr) {
                 if ($fields_for_select === 1) {
                     $headers[$idx] = $hdr;
@@ -318,36 +403,37 @@ class TableService {
         return $headers;
     }
 
-    public function RepairColOrderForUser($table_meta) {
-        //if user don`t have correct order in 'orders.sql' for current table -> repair
-        $columnsCnt = DB::connection('mysql_sys')
-            ->table('orders')
-            ->where('user_id', '=', Auth::user()->id)
-            ->where('table_id', '=', $table_meta->id)
-            ->groupBy('order')
+    private function selectHeaders($table_meta, $user_id) {
+        return DB::connection('mysql_sys')->table('tb_settings_display as tsd')
+            ->where('tsd.user_id', '=', $user_id ? $user_id : $table_meta->owner)
+            ->where('tsd.tb_id', '=', $table_meta->id)
+            ->selectRaw('tsd.*, '.($user_id ? 'tsd.showhide as is_showed' : '1 as is_showed'))
+            ->orderBy('tsd.order')
+            ->orderBy('tsd.id')
             ->get();
+    }
 
-        $settingsCnt = DB::connection('mysql_sys')
-            ->table('tb_settings_display')
-            ->where('tb_id', '=', $table_meta->id)
-            ->orderBy('dfot_odr')
-            ->orderBy('id');
+    private function CopySettingsForUser($table_meta) {
+        $header_data = $this->selectHeaders($table_meta, 0);
 
-        if (count($columnsCnt) != $settingsCnt->count()) {
-            DB::connection('mysql_sys')->table('orders')->where('user_id', '=', Auth::user()->id)->where('table_id', '=', $table_meta->id)->delete();
-            $settingsCnt = $settingsCnt->get();
-            for ($i = 0; $i < count($settingsCnt); $i++) {
-                DB::connection('mysql_sys')->table('orders')->insert([
-                    'user_id' => Auth::user()->id,
-                    'table_id' => $table_meta->id,
-                    'column_key' => $settingsCnt[$i]->field,
-                    'order' => ($i+1),
-                    'createdBy' => Auth::user()->id,
-                    'createdOn' => now(),
-                    'modifiedBy' => Auth::user()->id,
-                    'modifiedOn' => now()
-                ]);
-            }
+        for ($i = 0; $i < count($header_data); $i++) {
+            unset($header_data[$i]->id);
+            unset($header_data[$i]->is_showed);
+            $header_data[$i]->user_id = Auth::user()->id;
+            $header_data[$i]->web = $header_data[$i]->field == 'id' ? 'No' : 'Yes';
+            DB::connection('mysql_sys')->table('tb_settings_display')->insert((array)$header_data[$i]);
         }
+
+        $res = $this->addRight('rights', [
+            'user_id' => Auth::user()->id,
+            'table_id' => 2
+        ]);
+
+        DB::connection('mysql_sys')->table('rights_fields')
+            ->where('rights_id', '=', $res['id'])
+            ->whereIn('field', ['name','web','filter','sum','min_wth','max_wth','order','showhide','notes'])
+            ->update([
+                'view' => 1
+            ]);
     }
 }

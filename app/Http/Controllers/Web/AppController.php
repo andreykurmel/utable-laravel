@@ -13,6 +13,7 @@ class AppController extends Controller
 {
     private $tableService;
     private $subdomain = "";
+    private $links = [];
 
     public function __construct(TableService $tb) {
         $this->tableService = $tb;
@@ -132,7 +133,7 @@ class AppController extends Controller
             'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('rights_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
-            'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
+            //'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favorite' => $tableName ? $this->isFavorite($tableName) : "",
             'owner' => $owner
         ];
@@ -192,7 +193,8 @@ class AppController extends Controller
             'favorite' => '<ul><li data-type=\'folder\'>Favorite'.
                     '<ul>'.$this->getTreeForTab('public',1).'</ul>'.
                     '<ul>'.$this->getTreeForTab('private',1).'</ul>'.
-                '</li></ul>'
+                '</li></ul>',
+            'custom_select' => $this->links
         ];
     }
     
@@ -245,7 +247,7 @@ class AppController extends Controller
 
         //dd($res_arr);
 
-        return ($tables ? $this->buildHTMLTree($res_arr, '/data/', $tab) : '');
+        return ($tables ? $this->buildHTMLTree($res_arr, '/data/', $tab, $for_favorite) : '');
     }
 
     private function add_tb($tb, &$res_arr) {
@@ -260,7 +262,7 @@ class AppController extends Controller
         }
     }
 
-    private function buildHTMLTree($res_arr, $url, $tab) {
+    private function buildHTMLTree($res_arr, $url, $tab, $for_favorite) {
         $html = "<li data-type='folder' data-menu_id='".$res_arr->id."' data-root_id='".$res_arr->root_id."'>".$res_arr->title;
         if ($res_arr->tables || $res_arr->children) {
             $html .= '<ul>';
@@ -291,11 +293,18 @@ class AppController extends Controller
                         data-tb_nbr="'.$table->nbr_entry_listing.'" 
                         data-tb_subdomain="'.$table->subdomain.'" 
                     ><a href="'.$link.'">'.$table->name.'</a></li>';
+
+                    if ($for_favorite) {
+                        $this->links[$table->db_tb] = [
+                            'li' => $link,
+                            'name' => $table->name
+                        ];
+                    }
                 }
             }
             if ($res_arr->children) {
                 foreach ($res_arr->children as $child) {
-                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab);
+                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab, $for_favorite);
                 }
             }
             $html .= '</ul>';
@@ -507,9 +516,5 @@ class AppController extends Controller
         $to_view['headers'] = $headers;
         $to_view['data_csv'] = '';
         return $to_view;
-    }
-
-    public function alltable(Request $request) {
-        dd($request);
     }
 }
