@@ -268,7 +268,7 @@ function changePage(page) {
 }
 
 function showDataTable(headers, data) {
-    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "", visibleColumns = "",
+    var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "", visibleColumns = "", tbHiddenHeaders = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, star_class;
 
     for(var i = 0; i < data.length; i++) {
@@ -392,11 +392,12 @@ function showDataTable(headers, data) {
     }
 
     //recreate headers for main data
-    tbDataHeaders += "<tr><th class='sorting nowrap'><b>#</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap'><b>Actions</b></th>";
+    tbDataHeaders += "<tr><th rowspan='2' class='sorting nowrap'><b>#</b></th>";
+    tbDataHeaders += "<th rowspan='2' class='sorting nowrap'><b>Actions</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th ' +
             'draggable="true" ' +
+            (!headers[$hdr].unit ? 'rowspan="2" ' : '') +
             'class="sorting nowrap" ' +
             'data-key="' + headers[$hdr].field + '" ' +
             'data-order="' + $hdr + '" ' +
@@ -413,10 +414,27 @@ function showDataTable(headers, data) {
         visibleColumns += '</li>';
     }
     tbDataHeaders += "</tr>";
+    //second header row
+    tbDataHeaders += "<tr>";
+    for(var $hdr in headers) {
+        if (headers[$hdr].unit) {
+            tbDataHeaders += '<th ' +
+                'id="' + headers[key].field + $hdr + headers[key].input_type + '_header"' +
+                'data-key="' + headers[$hdr].field + '" ' +
+                'data-idx="' + (headers[$hdr].rows_ord-1) + '"' +
+                'style="position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
+                (headers[$hdr].unit_ddl ? 'onclick="showInlineEdit(\'' + headers[key].field + $hdr + headers[key].input_type + '_header\', \'settings\')"' : '') +
+                '>' +
+                headers[$hdr].unit +
+                '</th>';
+        }
+    }
+    tbDataHeaders += "</tr>";
+    tbHiddenHeaders = tbDataHeaders.replace('id=', 'data-hidden=');
 
-    $('#tbAddRow_header').html(tbDataHeaders);
+    $('#tbAddRow_header').html(tbHiddenHeaders);
     $('#tbHeaders_header').html(tbDataHeaders);
-    $('#tbData_header').html(tbDataHeaders);
+    $('#tbData_header').html(tbHiddenHeaders);
 
     $('#ul-cols-list').html(visibleColumns);
 
@@ -1094,42 +1112,19 @@ function showInlineEdit(id, instant) {
         'onchange="updateSettingsRowLocal('+idx+',\''+key+'\',\''+id+'_inp\')"' :
         'onchange="updateAddRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ';
 
-    /* hardcode for needed fields */
-    /*if (key == 'ddl_id') {
-        var html = '<select class="form-control" ' +
-            'id="'+id+'_inp" ' +
-            'onblur="hideInlineEdit(\''+id+'\')" ' +
-            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-        for(var i in settingsDDLs) {
-            html += '<option value="'+settingsDDLs[i].id+'">'+settingsDDLs[i].name+'</option>';
-        }
-        html += '</select>';
-    } else
-    if (key == 'input_type') {
-        var html = '<select class="form-control" ' +
-            'id="'+id+'_inp" ' +
-            'onblur="hideInlineEdit(\''+id+'\')" ' +
-            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-        html += '<option value="Input">Input</option>';
-        html += '<option value="Selection">Selection</option>';
-        html += '</select>';
-    }
-    else*//*end hardcode */
     if (inp_t == 'Input') {
         var html = '<input ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
-            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
+            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\', \''+instant+'\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
     } else
-    if (inp_t == 'Selection') {
+    if (inp_t == 'Selection' || instant == 'settings') {
         var html = '<select class="form-control" ' +
             'id="'+id+'_inp" ' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
-            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\')" ' : not_instant_func) +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+            (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\', \''+instant+'\')" ' : not_instant_func) +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;z-index: 999;">';
         for(var i in ltableDDls[key]) {
             if (key == 'ddl_id') {
                 html += '<option value="'+i+'">'+ltableDDls[key][i]+'</option>';
@@ -1210,9 +1205,9 @@ function addRow(params) {
     }
 }
 
-function updateRow(params) {
+function updateRow(params, to_change) {
     var lv = $('#list_view').is(':visible'),
-        lselectedTableName = (lv ? selectedTableName : settingsTableName);
+        lselectedTableName = (lv && to_change != 'settings' ? selectedTableName : settingsTableName);
 
     $('.loadingFromServer').show();
 
@@ -1243,16 +1238,26 @@ function updateRow(params) {
     }
 }
 
-function updateRowData(idx, key, id) {
+function updateRowData(idx, key, id, to_change) {
     var lv = $('#list_view').is(':visible'),
-        ltableData = (lv ? tableData : settingsTableData);
+        ltableData = (lv && to_change != 'settings' ? tableData : settingsTableData);
+
+    if (to_change == 'settings') {
+        for (var tb in tableHeaders) {
+            if (tableHeaders[tb].field == key) {
+                key = 'unit';
+                tableHeaders[tb].unit = $('#'+id).val();
+                break;
+            }
+        }
+    }
 
     ltableData[idx][key] = $('#'+id).val();
 
     var par_id = id.substr(0, id.length-4);
     $('#'+id).data('innerHTML', ltableData[idx][key]);
 
-    updateRow(ltableData[idx]);
+    updateRow(ltableData[idx], to_change);
 }
 
 function updateAddRowData(idx, key, id) {
@@ -1275,7 +1280,7 @@ function updateRowModal() {
         }
     }
 
-    updateRow(ltableData[idx]);
+    updateRow(ltableData[idx], 0);
 }
 
 function addRowModal() {
@@ -1400,13 +1405,13 @@ function checkboxAddToggle() {
 
         $('#tbAddRow').show();
         $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', '85px');
+        $('#divTbData').css('top', '117px');
 
         editSelectedData(-1);
     } else {
         $('#tbAddRow').hide();
         $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', '32px');
+        $('#divTbData').css('top', '64px');
     }
 }
 
@@ -2637,7 +2642,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
         }
         tableData += "<td>" +
             (idx == -1 ? check_btn : "") +
-            "<button onclick='deleteSettingsRights(\""+(idx == -1 ? 'rights' : 'rights_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button>" +
+            "<button onclick='deleteSettingsRights(\""+(idx == -1 ? 'permissions' : 'permissions_fields')+"\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button>" +
             "</td>";
         tableData += "</tr>";
 
@@ -2700,7 +2705,7 @@ function updateSettingsRightsItem(key, idx, id) {
 }
 
 function deleteSettingsRights(tableName, rowId, idx) {
-    if (tableName == 'rights') {
+    if (tableName == 'permissions') {
         settingsRights.splice(idx, 1);
         settingsRights_selectedIndex = -1;
         showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);

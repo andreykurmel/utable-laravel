@@ -129,8 +129,8 @@ class AppController extends Controller
             'settingsHeaders' => $tableName ? $this->tableService->getHeaders('tb_settings_display') : [],
             'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
             'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
-            'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('rights') : [],
-            'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('rights_fields') : [],
+            'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('permissions') : [],
+            'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('permissions_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             //'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
@@ -221,15 +221,15 @@ class AppController extends Controller
         } else {
             if ($tab == 'private') {
                 if (Auth::user()) {
-                    $tables->leftJoin('rights', function ($q) {
-                        $q->where('rights.table_id', '=', 'tb.id');
-                        $q->where('rights.user_id', '=', Auth::user()->id);
+                    $tables->leftJoin('permissions', function ($q) {
+                        $q->where('permissions.table_id', '=', 'tb.id');
+                        $q->where('permissions.user_id', '=', Auth::user()->id);
                     })
                         ->where('access', '=', $tab);
                     if (Auth::user()->role_id != 1) {
                         $tables->where(function ($qt) {
                             $qt->where('tb.owner', '=', Auth::user()->id);
-                            $qt->orWhere('rights.user_id', '=', Auth::user()->id);
+                            $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
                         });
                     }
                     $tables = $tables->groupBy('m2t.id')->get();
@@ -349,7 +349,7 @@ class AppController extends Controller
 
         //find table
         $cnt = DB::connection('mysql_sys')->table('tb')
-            ->leftJoin('rights', 'rights.table_id', '=', 'tb.id')
+            ->leftJoin('permissions', 'permissions.table_id', '=', 'tb.id')
             ->where('tb.db_tb', '=', $tableName);
 
         if (!Auth::user()) {
@@ -361,7 +361,7 @@ class AppController extends Controller
                 $cnt->where(function ($qt) {
                     $qt->where('tb.access', '=', 'public');
                     $qt->orWhere('tb.owner', '=', Auth::user()->id);
-                    $qt->orWhere('rights.user_id', '=', Auth::user()->id);
+                    $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
                 });
             }
             //admin - get all data

@@ -39,8 +39,8 @@ class TableService {
                 $table_meta->owner != Auth::user()->id
             ) {
                 $tmp_fields_set = DB::connection('mysql_sys')
-                    ->table('rights as r')
-                    ->join('rights_fields as rf', 'r.id', '=', 'rf.rights_id')
+                    ->table('permissions as r')
+                    ->join('permissions_fields as rf', 'r.id', '=', 'rf.permissions_id')
                     ->where('r.user_id', '=', Auth::user()->id)
                     ->where('r.table_id', '=', $table_meta->id)
                     ->select('rf.*')
@@ -78,8 +78,8 @@ class TableService {
 
         if (!empty($query['searchKeyword']) && $fields) {
             $sql->where(function ($q) use ($fields, $query, $tableName) {
-                foreach ($fields as $field => $val) {
-                    $q->orWhere($tableName.'.'.$field, 'LIKE', "%".$query['searchKeyword']."%");
+                foreach ($fields as $field) {
+                    $q->orWhere($tableName.'.'.$field->field, 'LIKE', "%".$query['searchKeyword']."%");
                 }
             });
         }
@@ -97,6 +97,7 @@ class TableService {
                                     $includedVals[] = $item->value;
                                 }
                             }
+                            $includedVals[] = $changedFilter->val;
                             $sql->WhereIn($tableName.'.'.$filterElem->key, $includedVals);
                         }
                     }
@@ -226,7 +227,9 @@ class TableService {
 
 
             $ddls = DB::connection('mysql_sys')->table('tb_settings_display as ts')
-                ->join('ddl_items as di', 'di.list_id', '=', 'ts.ddl_id')
+                ->join('ddl_items as di', function ($q) {
+                    $q->whereRaw('di.list_id = ts.ddl_id OR di.list_id =ts.unit_ddl');
+                })
                 ->select('ts.field', 'di.option')
                 ->where('ts.user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner)
                 ->where('ts.tb_id', '=', $table_meta->id)
@@ -281,9 +284,9 @@ class TableService {
         $result = 'undefined';
 
         //insert rights for all table
-        if ($tableName == 'rights') {
+        if ($tableName == 'permissions') {
 
-            $present = DB::connection('mysql_sys')->table('rights')
+            $present = DB::connection('mysql_sys')->table('permissions')
                 ->where('user_id', '=', $fields['user_id'])
                 ->where('table_id', '=', $fields['table_id'])
                 ->first();
@@ -294,7 +297,7 @@ class TableService {
                     'id' => $present->id
                 ];
             } else {
-                DB::connection('mysql_sys')->table('rights')->insert([
+                DB::connection('mysql_sys')->table('permissions')->insert([
                     'user_id' => $fields['user_id'],
                     'table_id' => $fields['table_id'],
                     'createdBy' => Auth::user()->id,
@@ -313,8 +316,8 @@ class TableService {
                     ->get();
 
                 foreach ($rights_fields as $rf) {
-                    DB::connection('mysql_sys')->table('rights_fields')->insert([
-                        'rights_id' => $id,
+                    DB::connection('mysql_sys')->table('permissions_fields')->insert([
+                        'permissions_id' => $id,
                         'field' => $rf->field,
                         'view' => 0,
                         'edit' => 0,
@@ -332,10 +335,10 @@ class TableService {
             }
 
         //insert right only for one field
-        } elseif ($tableName == 'rights_fields') {
+        } elseif ($tableName == 'permissions_fields') {
 
-            $present = DB::connection('mysql_sys')->table('rights_fields')
-                ->where('rights_id', '=', $fields['rights_id'])
+            $present = DB::connection('mysql_sys')->table('permissions_fields')
+                ->where('permissions_id', '=', $fields['permissions_id'])
                 ->where('field', '=', $fields['field'])
                 ->first();
 
@@ -345,8 +348,8 @@ class TableService {
                     'id' => $present->id
                 ];
             } else {
-                DB::connection('mysql_sys')->table('rights_fields')->insert([
-                    'rights_id' => $fields['rights_id'],
+                DB::connection('mysql_sys')->table('permissions_fields')->insert([
+                    'permissions_id' => $fields['permissions_id'],
                     'field' => $fields['field'],
                     'view' => $fields['view'],
                     'edit' => $fields['edit'],
@@ -420,17 +423,17 @@ class TableService {
             unset($header_data[$i]->id);
             unset($header_data[$i]->is_showed);
             $header_data[$i]->user_id = Auth::user()->id;
-            $header_data[$i]->web = $header_data[$i]->field == 'id' ? 'No' : 'Yes';
+            $header_data[$i]->web = $header_data[$i]->field == 'id' ? 'No' : $header_data[$i]->field;
             DB::connection('mysql_sys')->table('tb_settings_display')->insert((array)$header_data[$i]);
         }
 
-        $res = $this->addRight('rights', [
+        $res = $this->addRight('permissions', [
             'user_id' => Auth::user()->id,
             'table_id' => 2
         ]);
 
-        DB::connection('mysql_sys')->table('rights_fields')
-            ->where('rights_id', '=', $res['id'])
+        DB::connection('mysql_sys')->table('permissions_fields')
+            ->where('permissions_id', '=', $res['id'])
             ->whereIn('field', ['name','web','filter','sum','min_wth','max_wth','order','showhide','notes'])
             ->update([
                 'view' => 1

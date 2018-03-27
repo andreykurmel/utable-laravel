@@ -284,8 +284,8 @@ class TableController extends Controller
     {
         $Rightsdatas = [];
         if (Auth::user()) {
-            $Rightsdatas['Rights_hdr'] = $this->tableService->getHeaders('rights');
-            $Rightsdatas['Rights_Fields_hdr'] = $this->tableService->getHeaders('rights_fields');
+            $Rightsdatas['Rights_hdr'] = $this->tableService->getHeaders('permissions');
+            $Rightsdatas['Rights_Fields_hdr'] = $this->tableService->getHeaders('permissions_fields');
             $Rightsdatas['table_meta'] = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
             $usrs = DB::table('users')->get();
@@ -294,16 +294,16 @@ class TableController extends Controller
             }
 
             $Rightsdatas['data'] = DB::connection('mysql_sys')
-                ->table('rights')
-                ->join('tb', 'tb.id', '=', 'rights.table_id')
+                ->table('permissions')
+                ->join('tb', 'tb.id', '=', 'permissions.table_id')
                 ->where('tb.db_tb', '=', $request->tableName)
-                ->select('rights.*')
+                ->select('permissions.*')
                 ->get();
 
             foreach ($Rightsdatas['data'] as &$Rights) {
                 $Rights->fields = DB::connection('mysql_sys')
-                    ->table('rights_fields')
-                    ->where('rights_id', '=', $Rights->id)
+                    ->table('permissions_fields')
+                    ->where('permissions_id', '=', $Rights->id)
                     ->get();
             }
         }
@@ -318,7 +318,7 @@ class TableController extends Controller
             $params['modifiedBy'] = Auth::user()->id;
             $params['modifiedOn'] = now();
 
-            $res = DB::connection('mysql_sys')->table('rights_fields')->where('id', '=', $id)->update($params);
+            $res = DB::connection('mysql_sys')->table('permissions_fields')->where('id', '=', $id)->update($params);
 
             if ($res) {
                 $responseArray['error'] = FALSE;
@@ -340,7 +340,7 @@ class TableController extends Controller
             $res = $this->tableService->addRight($request->tableName, [
                 'user_id' => $request->user_id,
                 'table_id' => $request->table_id,
-                'rights_id' => $request->rights_id,
+                'permissions_id' => $request->permissions_id,
                 'field' => $request->field,
                 'view' => $request->view,
                 'edit' => $request->edit,
@@ -367,12 +367,12 @@ class TableController extends Controller
             $id = $request->id;
             $tableName= $request->tableName;
 
-            if ($request->tableName == 'rights') {
-                $res = DB::connection('mysql_sys')->table('rights')->where('id', '=', $id)->delete();
-                $res = DB::connection('mysql_sys')->table('rights_fields')->where('rights_id', '=', $id)->delete();
+            if ($request->tableName == 'permissions') {
+                $res = DB::connection('mysql_sys')->table('permissions')->where('id', '=', $id)->delete();
+                $res = DB::connection('mysql_sys')->table('permissions_fields')->where('permissions_id', '=', $id)->delete();
             }
-            if ($request->tableName == 'rights_fields') {
-                $res = DB::connection('mysql_sys')->table('rights_fields')->where('id', '=', $id)->delete();
+            if ($request->tableName == 'permissions_fields') {
+                $res = DB::connection('mysql_sys')->table('permissions_fields')->where('id', '=', $id)->delete();
             }
 
             if ($res) {
@@ -391,7 +391,7 @@ class TableController extends Controller
     public function toggleAllrights(Request $request)
     {
         if (Auth::user()) {
-            $res = DB::connection('mysql_sys')->table('rights_fields')->where('rights_id', '=', $request->right_id)->update([
+            $res = DB::connection('mysql_sys')->table('permissions_fields')->where('permissions_id', '=', $request->right_id)->update([
                 'view' => $request->r_status,
                 'edit' => $request->r_status
             ]);
@@ -445,8 +445,8 @@ class TableController extends Controller
                     $table_meta->owner != Auth::user()->id
                 ) {
                     $tmp_fields_set = DB::connection('mysql_sys')
-                        ->table('rights as r')
-                        ->join('rights_fields as rf', 'r.id', '=', 'rf.rights_id')
+                        ->table('permissions as r')
+                        ->join('permissions_fields as rf', 'r.id', '=', 'rf.permissions_id')
                         ->where('r.user_id', '=', Auth::user()->id)
                         ->where('r.table_id', '=', $table_meta->id)
                         ->select('rf.*')
@@ -860,8 +860,8 @@ class TableController extends Controller
         //delete record from the 'favorite'
         DB::connection('mysql_sys')->table('favorite')->where('table_id', '=', $tableMeta->id)->delete();
 
-        //delete record from the 'rights'
-        DB::connection('mysql_sys')->table('rights')->where('table_id', '=', $tableMeta->id)->delete();
+        //delete record from the 'permissions'
+        DB::connection('mysql_sys')->table('permissions')->where('table_id', '=', $tableMeta->id)->delete();
 
         return "success";
     }

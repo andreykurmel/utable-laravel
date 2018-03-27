@@ -247,7 +247,7 @@
                                 <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                             </div>
                             <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
-                                <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;display: none;">
+                                <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-64px;z-index: 25;display: none;">
                                     <thead id="tbAddRow_header">
                                     <tr>
                                         @foreach($headers as $hdr)
@@ -271,8 +271,8 @@
                                     <tbody style="visibility: hidden;" id="tbHeaders_body">
                                     </tbody>
                                 </table>
-                                <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:32px;" class="table_body_viewport">
-                                    <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -32px;">
+                                <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:64px;" class="table_body_viewport">
+                                    <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -64px;">
                                         <thead id="tbData_header">
                                         <tr>
                                             @foreach($headers as $hdr)
@@ -401,10 +401,10 @@
                     <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
                         <!-- Tabs -->
-                        <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 200px;transform: rotate(-90deg);left: -75px;top: 80px;">
+                        <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 250px;transform: rotate(-90deg);left: -100px;top: 80px;">
                             <ul class="tabs">
                                 @if($owner)
-                                    <li id="li_settings_rights" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowRights()" class='with-med-padding'>Rights</a></li>
+                                    <li id="li_settings_rights" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowRights()" class='with-med-padding'>Permissions</a></li>
                                 @endif
                                 @if($owner)
                                     <li id="li_settings_ddl" style="float: left;"><a href="javascript:void(0)" onclick="settingsTabShowDDL()" class='with-med-padding'>DDL</a></li>
@@ -597,7 +597,7 @@
                         </div>
 
                         <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
-                            <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Rights list</div>
+                            <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Permissions list</div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
@@ -635,7 +635,7 @@
                                 <a style="position: absolute;top: 4px;right: 10px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addSettingsRights()">Add User</a>
                             </div>
 
-                            <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Right</div>
+                            <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Permission Options of Current Selected User</div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
