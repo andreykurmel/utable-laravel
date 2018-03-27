@@ -391,10 +391,15 @@ class TableController extends Controller
     public function toggleAllrights(Request $request)
     {
         if (Auth::user()) {
-            $res = DB::connection('mysql_sys')->table('permissions_fields')->where('permissions_id', '=', $request->right_id)->update([
-                'view' => $request->r_status,
-                'edit' => $request->r_status
-            ]);
+            $arr = [];
+            if ($request->type == 'all' || $request->type == 'view') {
+                $arr['view'] = $request->r_status;
+            }
+            if ($request->type == 'all' || $request->type == 'edit') {
+                $arr['edit'] = $request->r_status;
+            }
+
+            $res = DB::connection('mysql_sys')->table('permissions_fields')->where('permissions_id', '=', $request->permissions_id)->update($arr);
 
             if ($res) {
                 $responseArray['error'] = FALSE;

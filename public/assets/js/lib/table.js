@@ -2591,6 +2591,7 @@ function getRightsDatas(tableName) {
 
 function showSettingsRightsDataTable(headers, data, idx) {
     var tableData = "", tbHiddenData = "", tbAddRow = "", key, d_key;
+    var edit = true, view = true;
 
     if (idx > -1) {
         data = settingsRights[idx].fields;
@@ -2610,8 +2611,15 @@ function showSettingsRightsDataTable(headers, data, idx) {
                 }
             }
             var check_btn = all ?
-                "<button onclick='toggleAllrights("+i+",false)'><i class='fa fa-close'></i></button>" :
-                "<button onclick='toggleAllrights("+i+",true)'><i class='fa fa-check'></i></button>";
+                "<button onclick='toggleAllrights("+i+", \"all\", false)'><i class='fa fa-close'></i></button>" :
+                "<button onclick='toggleAllrights("+i+", \"all\", true)'><i class='fa fa-check'></i></button>";
+        } else {
+            if (data[i].view == 0) {
+                view = false;
+            }
+            if (data[i].edit == 0) {
+                edit = false;
+            }
         }
 
         tableData += "<tr id='row_" + i + (idx == -1 ? '_settings_Rights' : '_settings_Fields_Rights') + "' class='settings_Rights_rows'>";
@@ -2667,6 +2675,9 @@ function showSettingsRightsDataTable(headers, data, idx) {
     if (idx > -1) {
         $('#tbSettingsRights_Fields_headers').html(tbHiddenData);
         $('#tbSettingsRights_Fields_data').html(tableData);
+
+        $('.rights_fields_check_edit').html('<input type="checkbox" '+(edit ? 'checked' : '')+' onclick="toggleAllrights('+settingsRights_selectedIndex+', \'edit\', '+(!edit ? true : false)+')">');
+        $('.rights_fields_check_view').html('<input type="checkbox" '+(view ? 'checked' : '')+' onclick="toggleAllrights('+settingsRights_selectedIndex+', \'view\', '+(!view ? true : false)+')">');
     } else {
         $('#tbSettingsRights_headers').html(tbHiddenData);
         $('#tbSettingsRights_data').html(tableData);
@@ -2746,12 +2757,12 @@ function addSettingsRights() {
     });
 }
 
-function toggleAllrights(idx, status) {
+function toggleAllrights(idx, type, status) {
     settingsRights_selectedIndex = idx;
     $('.loadingFromServer').show();
     $.ajax({
         method: 'GET',
-        url: baseHttpUrl + '/toggleAllrights?right_id=' + settingsRights[idx].id + '&r_status=' + (status ? 1 : 0),
+        url: baseHttpUrl + '/toggleAllrights?permissions_id=' + settingsRights[idx].id + '&r_status=' + (status ? 1 : 0)+ '&type=' + type,
         success: function (response) {
             $('.loadingFromServer').hide();
             alert(response.msg);
@@ -2763,6 +2774,20 @@ function toggleAllrights(idx, status) {
             alert("Server error");
         }
     });
+}
+
+function settingsPermissionsTabShowColumns() {
+    $('#settings_permissions_cols_tab').show();
+    $('#settings_permissions_rows_tab').hide();
+    $('#li_settings_permissions_cols_tab').addClass('active');
+    $('#li_settings_permissions_rows_tab').removeClass('active');
+}
+
+function settingsPermissionsTabShowRows() {
+    $('#settings_permissions_rows_tab').show();
+    $('#settings_permissions_cols_tab').hide();
+    $('#li_settings_permissions_rows_tab').addClass('active');
+    $('#li_settings_permissions_cols_tab').removeClass('active');
 }
 
 

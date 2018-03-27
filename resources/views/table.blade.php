@@ -636,7 +636,15 @@
                             </div>
 
                             <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Permission Options of Current Selected User</div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <!-- Tabs -->
+                            <div class="standard-tabs" style="position: absolute; width: calc(50% - 30px); right: 15px; top: 51px; z-index: 50;">
+                                <ul class="tabs" style="background-color: #FFF; padding: 5px;">
+                                    <li class="active" id="li_settings_permissions_cols_tab" style="float: left;"><a href="javascript:void(0)" onclick="settingsPermissionsTabShowColumns()" class='with-med-padding'>Columns</a></li>
+                                    <li id="li_settings_permissions_rows_tab" style="float: left;"><a href="javascript:void(0)" onclick="settingsPermissionsTabShowRows()" class='with-med-padding'>Rows</a></li>
+                                </ul>
+                            </div>
+                            <!-- CONTENT -->
+                            <div id="settings_permissions_cols_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;z-index: 100;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -644,7 +652,7 @@
                                         @foreach($settingsRights_Fields_Headers as $hdr)
                                             <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
                                                 {{ $hdr->name }}
-                                                {{ ($hdr->field == 'view edit' ? '<input type="checkbox">' : '') }}
+                                                {!! ($hdr->field == 'view' || $hdr->field == 'edit' ? '<span class="rights_fields_check_'.$hdr->field.'" style="padding-left:10px"></div>' : '') !!}
                                             </th>
                                         @endforeach
                                         <th class="sorting nowrap" style="width: 30px;">Actions</th>
@@ -660,7 +668,10 @@
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsRights_Fields_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
+                                                    {{ $hdr->name }}
+                                                    {!! ($hdr->field == 'view' || $hdr->field == 'edit' ? '<span class="rights_fields_check_'.$hdr->field.'" style="padding-left:10px"></div>' : '') !!}
+                                                </th>
                                             @endforeach
                                             <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
@@ -670,6 +681,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div id="settings_permissions_rows_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff; display: none;z-index: 100;">
+                                Rows
                             </div>
 
                             <div class="dataTables_footer" style="position: absolute; bottom: 25px; right: 0; left: 10px">

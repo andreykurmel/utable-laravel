@@ -184,7 +184,7 @@
         <div id="navbar" class="navbar-collapse">
             <ul class="nav navbar-nav navbar-left" style="float: left;">
                 <li style="display: inline-block">
-                    <a href="{{ route("landing") }}" style="padding: 10px 0;height: 30px;">
+                    <a href="{{ $server }}" style="padding: 10px 0;height: 30px;">
                         <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                     </a>
                 </li>

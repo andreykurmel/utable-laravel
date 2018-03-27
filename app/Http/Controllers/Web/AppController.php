@@ -43,7 +43,8 @@ class AppController extends Controller
 
         if (Auth::guest() || ($_SERVER['HTTP_REFERER'] != config('app.url')."/")) {
             $socialProviders = config('auth.social.providers');
-            return view('landing', compact('socialProviders'));
+            $server = config('app.url');
+            return view('landing', compact('socialProviders', 'server'));
         } else {
             return redirect()->to( route('homepage') );
         }

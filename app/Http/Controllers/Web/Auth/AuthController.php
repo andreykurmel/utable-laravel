@@ -125,7 +125,7 @@ class AuthController extends Controller
             return redirect()->to($request->get('to'));
         }
 
-        return redirect()->intended();
+        return redirect()->to( route('homepage') );
     }
 
     protected function logoutAndRedirectToTokenPage(Request $request, Authenticatable $user)
