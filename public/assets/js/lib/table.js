@@ -320,7 +320,7 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
-                if (d_key === 'ddl_id') {
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
@@ -380,7 +380,7 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
-                if (d_key === 'ddl_id') {
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
@@ -573,7 +573,7 @@ function tablebar_show_public() {
     $("#tablebar_public_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_favorite_div").hide();
-    sidebarPrevSelected = '';
+    //sidebarPrevSelected = '';
     jsTreeBuild('public');
 }
 
@@ -584,7 +584,7 @@ function tablebar_show_private() {
     $("#tablebar_private_div").show();
     $("#tablebar_public_div").hide();
     $("#tablebar_favorite_div").hide();
-    sidebarPrevSelected = '';
+    //sidebarPrevSelected = '';
     jsTreeBuild('private');
 }
 
@@ -595,7 +595,7 @@ function tablebar_show_favorite() {
     $("#tablebar_favorite_div").show();
     $("#tablebar_private_div").hide();
     $("#tablebar_public_div").hide();
-    sidebarPrevSelected = '';
+    //sidebarPrevSelected = '';
     jsTreeBuild('favorite');
 }
 
@@ -1125,10 +1125,12 @@ function showInlineEdit(id, instant) {
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\', \''+instant+'\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;z-index: 999;">';
-        for(var i in ltableDDls[key]) {
-            if (key == 'ddl_id') {
-                html += '<option value="'+i+'">'+ltableDDls[key][i]+'</option>';
-            } else {
+        if (key == 'ddl_id' || key == 'unit_ddl') {
+            for(var i in ltableDDls['ddl_id']) {
+                html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
+            }
+        } else {
+            for(var i in ltableDDls[key]) {
                 html += '<option value="'+ltableDDls[key][i]+'">'+ltableDDls[key][i]+'</option>';
             }
         }
@@ -1860,7 +1862,7 @@ function showSettingsDataTable(headers, data) {
                     'data-settings="true"' +
                     (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (d_key === 'ddl_id') {
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key === 'dfot_odr') {
@@ -1885,7 +1887,7 @@ function showSettingsDataTable(headers, data) {
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
-                if (d_key === 'ddl_id') {
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key === 'dfot_odr') {
@@ -3242,7 +3244,6 @@ function jsTreeBuild($tab) {
                                         $('#sidebar_table_name').val(table_name);
                                         $('#sidebar_table_id').val( elem.data ? elem.data.tb_id : elem.li_attr['data-tb_id'] );
                                         $('#sidebar_table_db').val( elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'] );
-                                        $('#sidebar_table_access').val( elem.data ? elem.data.tb_access : elem.li_attr['data-tb_access'] );
                                         $('#sidebar_table_nbr').val( elem.data ? elem.data.tb_nbr : elem.li_attr['data-tb_nbr'] );
                                         $('#sidebar_table_subdomain').val( elem.data ? elem.data.tb_subdomain : elem.li_attr['data-tb_subdomain'] );
 
@@ -3257,6 +3258,7 @@ function jsTreeBuild($tab) {
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
                                         sidebarPrevSelected.action = 'link';
+                                        sidebarPrevSelected.fromtab = $tab;
                                         swal('Create link', 'Please select target folder.');
                                     }
                                 },
@@ -3268,6 +3270,7 @@ function jsTreeBuild($tab) {
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
                                         sidebarPrevSelected.action = 'move';
+                                        sidebarPrevSelected.fromtab = $tab;
                                         swal('Move table', 'Please select target folder.');
                                     }
                                 }
@@ -3313,6 +3316,7 @@ function jsTreeBuild($tab) {
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
                                         sidebarPrevSelected.action = 'move';
+                                        sidebarPrevSelected.fromtab = $tab;
                                         swal('Move link', 'Please select target folder.');
                                     }
                                 }
@@ -3346,7 +3350,7 @@ function jsTreeBuild($tab) {
 
                 var m2t_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.m2t_id : sidebarPrevSelected.li_attr['data-m2t_id'];
                 //move node
-                if (sidebarPrevSelected.action == 'move') {
+                if (sidebarPrevSelected.action == 'move' && $tab == sidebarPrevSelected.fromtab) {
                     $.ajax({
                         url: baseHttpUrl+'/menutree_movenode?m2t_id='+m2t_id+'&menutree_id='+target_id,
                         method: 'GET',
@@ -3365,7 +3369,7 @@ function jsTreeBuild($tab) {
                         success: function (resp) {
                             var newNode = {
                                 text: sidebarPrevSelected.text,
-                                icon: "fa fa-table",
+                                icon: "fa fa-link",
                                 li_attr: {
                                     'data-type': 'link',
                                     'data-m2t_id': resp.last_id,
@@ -3392,10 +3396,9 @@ function edit_sidebar_table() {
     var $tab = $('#sidebar_table_tab').val(),
         tb_id = $('#sidebar_table_id').val(),
         tb_name = $('#sidebar_table_name').val(),
-        tb_access = $('#sidebar_table_access').val(),
         tb_nbr = $('#sidebar_table_nbr').val(),
         tb_subdomain = $('#sidebar_table_subdomain').val(),
-        strParams = "tableName=tb&id="+tb_id+"&name="+tb_name+"&access="+tb_access+"&nbr_entry_listing="+tb_nbr+"&subdomain="+tb_subdomain;
+        strParams = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr+"&subdomain="+tb_subdomain;
 
     $.ajax({
         method: 'GET',
@@ -3404,7 +3407,6 @@ function edit_sidebar_table() {
             var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
 
             $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, tb_name);
-            $('#'+elem_id).data('tb_access', tb_access);
             $('#'+elem_id).data('tb_nbr', tb_nbr);
             $('#'+elem_id).data('tb_subdomain', tb_subdomain);
 

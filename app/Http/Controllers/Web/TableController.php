@@ -658,27 +658,10 @@ class TableController extends Controller
             return "Seems that your table schema is incorrect!<br>".$e->getMessage();
         }
 
-        //add group if it`s exists
-        if ($request->table_group_name && $request->table_group_www) {
-            DB::connection('mysql_sys')->table('group')->insert([
-                'name' => $request->table_group_name,
-                'www_add' => $request->table_group_www,
-                'createdBy' => Auth::user()->id,
-                'createdOn' => now(),
-                'modifiedBy' => Auth::user()->id,
-                'modifiedOn' => now()
-            ]);
-            $gr_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
-        } else {
-            $gr_id = $request->table_exist_group && $request->import_type_group_check ? $request->table_exist_group : '';
-        }
-
         //add record to 'tb'
         DB::connection('mysql_sys')->table('tb')->insert([
             'name' => $request->table_name,
             'owner' => Auth::user()->id,
-            'access' => $request->table_access,
-            'group_id' => $gr_id,
             'nbr_entry_listing' => 20,
             'source' => 'mysql',
             'db_tb' => $filename,
@@ -780,26 +763,9 @@ class TableController extends Controller
             return "Seems that your table schema is incorrect!<br>".$e->getMessage();
         }
 
-        //add group if it`s exists
-        if ($request->table_group_name && $request->table_group_www) {
-            DB::connection('mysql_sys')->table('group')->insert([
-                'name' => $request->table_group_name,
-                'www_add' => $request->table_group_www,
-                'createdBy' => Auth::user()->id,
-                'createdOn' => now(),
-                'modifiedBy' => Auth::user()->id,
-                'modifiedOn' => now()
-            ]);
-            $gr_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
-        } else {
-            $gr_id = $request->table_exist_group && $request->import_type_group_check ? $request->table_exist_group : '';
-        }
-
         //modify record in the 'tb'
         DB::connection('mysql_sys')->table('tb')->where('id', '=', $tableMeta->id)->update([
             'name' => $request->table_name,
-            'access' => $request->table_access,
-            'group_id' => $gr_id,
             'modifiedBy' => Auth::user()->id,
             'modifiedOn' => now()
         ]);

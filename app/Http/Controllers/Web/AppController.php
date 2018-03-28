@@ -30,7 +30,7 @@ class AppController extends Controller
 
         if ($this->subdomain) {
             $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $this->subdomain)->first();
-            if ($tableMeta->subdomain || $this->tableExist($this->subdomain)) {
+            if ($tableMeta->subdomain && $this->tableExist($this->subdomain)) {
                 return view('table', $this->getVariables($this->subdomain));
             } else {
                 if (!$tableMeta->subdomain || Auth::user()) {
@@ -209,13 +209,17 @@ class AppController extends Controller
             ->where('is_system', '=', 0)
             ->select('tb.*','m2t.id as m2t_id','m2t.menutree_id','m2t.type as link_type');
 
+        if ($tab != 'private' || $for_favorite != 0) {
+            $tables->where('m2t.type', '=', 'link');
+        }
+
         if ($for_favorite) {
             if (Auth::user()) {
                 $tables->join('favorite_tables as ft', function ($q) {
                     $q->whereRaw('ft.table_id = tb.id');
                     $q->where('ft.user_id', '=', Auth::user()->id);
                 });
-                $tables = $tables->where('access', '=', $tab)->get();
+                $tables = $tables->get();
             } else {
                 $tables = [];
             }
@@ -225,8 +229,7 @@ class AppController extends Controller
                     $tables->leftJoin('permissions', function ($q) {
                         $q->where('permissions.table_id', '=', 'tb.id');
                         $q->where('permissions.user_id', '=', Auth::user()->id);
-                    })
-                        ->where('access', '=', $tab);
+                    });
                     if (Auth::user()->role_id != 1) {
                         $tables->where(function ($qt) {
                             $qt->where('tb.owner', '=', Auth::user()->id);
@@ -238,7 +241,7 @@ class AppController extends Controller
                     $tables = [];
                 }
             } else {
-                $tables = $tables->where('access', '=', $tab)->get();
+                $tables = $tables->get();
             }
         }
 
@@ -290,7 +293,6 @@ class AppController extends Controller
                         data-tb_id="'.$table->id.'" 
                         data-tb_name="'.$table->name.'" 
                         data-tb_db="'.$table->db_tb.'" 
-                        data-tb_access="'.$table->access.'" 
                         data-tb_nbr="'.$table->nbr_entry_listing.'" 
                         data-tb_subdomain="'.$table->subdomain.'" 
                     ><a href="'.$link.'">'.$table->name.'</a></li>';
@@ -353,7 +355,7 @@ class AppController extends Controller
             ->leftJoin('permissions', 'permissions.table_id', '=', 'tb.id')
             ->where('tb.db_tb', '=', $tableName);
 
-        if (!Auth::user()) {
+        /*if (!Auth::user()) {
             //guest - get public data
             $cnt->where('tb.access', '=', 'public');
         } else {
@@ -366,7 +368,7 @@ class AppController extends Controller
                 });
             }
             //admin - get all data
-        }
+        }*/
         $tb = $cnt->select('tb.*')->first();
 
         //exist if table has subdomain eq to the request`s subdomain

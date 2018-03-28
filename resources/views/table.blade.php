@@ -644,7 +644,7 @@
                                 </ul>
                             </div>
                             <!-- CONTENT -->
-                            <div id="settings_permissions_cols_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;z-index: 100;">
+                            <div id="settings_permissions_cols_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;z-index: 100; border: 2px solid #AAA; border-radius: 6px 6px 0 0;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -682,7 +682,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div id="settings_permissions_rows_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff; display: none;z-index: 100;">
+                            <div id="settings_permissions_rows_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff; display: none;z-index: 100; border: 2px solid #AAA; border-radius: 6px 6px 0 0;">
                                 Rows
                             </div>
 
@@ -737,13 +737,13 @@
                                                     <div class="col-xs-5"><label>Database name:</label></div>
                                                     <div class="col-xs-7"><input type="text" class="form-control" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}" {{ $tableName ? 'readonly' : '' }}></div>
                                                 </div>
-                                                <div class="row">
+                                                <!--<div class="row">
                                                     <div class="col-xs-5"><label>Data status:</label></div>
-                                                    <div class="col-xs-7"><select class="form-control" name="table_access" value="{{ $tableMeta ? $tableMeta->access : 'public' }}">
+                                                    <div class="col-xs-7"><select class="form-control" name="table_access" value="">
                                                         <option>public</option>
                                                         <option>private</option>
                                                     </select></div>
-                                                </div>
+                                                </div>-->
                                             </div>
                                             <div class="col-xs-4 js-import_csv_style">
                                                 @if(!$tableName)
