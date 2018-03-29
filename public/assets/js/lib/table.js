@@ -3096,7 +3096,7 @@ $(document).ready(function () {
 
 function jsTreeBuild($tab) {
     var context_menu =
-        $tab == 'favorite' || !authUser
+        !authUser || ($tab == 'public' && !isAdmin)
         ?
             {}
         :
@@ -3106,130 +3106,137 @@ function jsTreeBuild($tab) {
                     "items": function ($node) {
                         var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
                         var menu = {};
+                        console.log($node);
                         if (type == 'folder') {
-                            menu = {
-                                "add": {
+                            if ($tab == 'private') {
+                                menu.add_table = {
                                     "separator_before": false,
                                     "separator_after": false,
-                                    "label": "Add Node",
+                                    "label": "Add Table",
                                     "action": function (obj) {
-                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
-                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                        var root_id = elem.data ? elem.data.root_id : elem.li_attr['data-root_id'];
-                                        swal({
-                                                title: "New folder",
-                                                text: "Write folder name:",
-                                                type: "input",
-                                                showCancelButton: true,
-                                                closeOnConfirm: true,
-                                                animation: "slide-from-top",
-                                                inputPlaceholder: "Folder name"
-                                            },
-                                            function (inputValu) {
-                                                if (inputValu === false) return false;
-
-                                                if (inputValu === "") {
-                                                    swal.showInputError("You need to write something!");
-                                                    return false
-                                                }
-
-                                                $.ajax({
-                                                    url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&root_id='+root_id+'&from_tab='+$tab+'&text='+inputValu,
-                                                    method: 'GET',
-                                                    success: function (resp) {
-                                                        var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                                        var newNode = {
-                                                            text: inputValu,
-                                                            li_attr: {
-                                                                'data-type':'folder',
-                                                                'data-menu_id':resp.last_id,
-                                                                'data-root_id':root_id ? root_id : (par_id ? par_id : 0)
-                                                            }
-                                                        };
-
-                                                        $('#tablebar_'+$tab+'_div').jstree().create_node(parent, newNode, 'last', false, false);
-                                                    }
-                                                });
-                                            }
-                                        );
+                                        alert('Under construction...');
                                     }
-                                },
-                                "edit": {
-                                    "separator_before": false,
-                                    "separator_after": false,
-                                    "label": "Edit",
-                                    "action": function (obj) {
-                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
-                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                        var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
-                                        swal({
-                                                title: "Change name",
-                                                text: "Write folder name:",
-                                                type: "input",
-                                                showCancelButton: true,
-                                                closeOnConfirm: true,
-                                                animation: "slide-from-top",
-                                                inputPlaceholder: "Folder name",
-                                                inputValue: input_text
-                                            },
-                                            function (inputValu) {
-                                                if (inputValu === false) return false;
+                                };
+                            }
+                            menu.add = {
+                                "separator_before": false,
+                                "separator_after": false,
+                                "label": "Add Folder",
+                                "action": function (obj) {
+                                    var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                    var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                    var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                    swal({
+                                            title: "New folder",
+                                            text: "Write folder name:",
+                                            type: "input",
+                                            showCancelButton: true,
+                                            closeOnConfirm: true,
+                                            animation: "slide-from-top",
+                                            inputPlaceholder: "Folder name"
+                                        },
+                                        function (inputValu) {
+                                            if (inputValu === false) return false;
 
-                                                if (inputValu === "") {
-                                                    swal.showInputError("You need to write something!");
-                                                    return false
-                                                }
-
-                                                $.ajax({
-                                                    url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+inputValu,
-                                                    method: 'GET',
-                                                    success: function (resp) {
-                                                        $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, inputValu);
-                                                    }
-                                                });
+                                            if (inputValu === "") {
+                                                swal.showInputError("You need to write something!");
+                                                return false
                                             }
-                                        );
-                                    }
-                                },
-                                "remove": {
-                                    "separator_before": false,
-                                    "separator_after": false,
-                                    "label": "Remove",
-                                    "action": function (obj) {
-                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
-                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                        if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ) {
-                                            swal('Error', 'You cannot remove folder with children', 'error');
-                                        } else {
-                                            swal({
-                                                    title: "Delete folder",
-                                                    text: "Are you sure?",
-                                                    type: "warning",
-                                                    confirmButtonClass: "btn-danger",
-                                                    confirmButtonText: "Yes, delete it!",
-                                                    showCancelButton: true,
-                                                    closeOnConfirm: true,
-                                                    animation: "slide-from-top"
-                                                },
-                                                function () {
-                                                    $.ajax({
-                                                        url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
-                                                        method: 'GET',
-                                                        success: function (resp) {
-                                                            $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+
+                                            $.ajax({
+                                                url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&from_tab='+$tab+'&text='+inputValu,
+                                                method: 'GET',
+                                                success: function (resp) {
+                                                    var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                                    var newNode = {
+                                                        text: inputValu,
+                                                        li_attr: {
+                                                            'data-type':'folder',
+                                                            'data-menu_id':resp.last_id,
                                                         }
-                                                    });
+                                                    };
+
+                                                    $('#tablebar_'+$tab+'_div').jstree().create_node(parent, newNode, 'last', false, false);
                                                 }
-                                            );
+                                            });
                                         }
+                                    );
+                                }
+                            };
+                            menu.edit = {
+                                "separator_before": false,
+                                "separator_after": false,
+                                "label": "Edit",
+                                "action": function (obj) {
+                                    var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                    var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                    var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                    var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
+                                    swal({
+                                            title: "Change name",
+                                            text: "Write folder name:",
+                                            type: "input",
+                                            showCancelButton: true,
+                                            closeOnConfirm: true,
+                                            animation: "slide-from-top",
+                                            inputPlaceholder: "Folder name",
+                                            inputValue: input_text
+                                        },
+                                        function (inputValu) {
+                                            if (inputValu === false) return false;
+
+                                            if (inputValu === "") {
+                                                swal.showInputError("You need to write something!");
+                                                return false
+                                            }
+
+                                            $.ajax({
+                                                url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+inputValu,
+                                                method: 'GET',
+                                                success: function (resp) {
+                                                    $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, inputValu);
+                                                }
+                                            });
+                                        }
+                                    );
+                                }
+                            };
+                            menu.remove = {
+                                "separator_before": false,
+                                "separator_after": false,
+                                "label": "Remove",
+                                "action": function (obj) {
+                                    var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                    var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                    var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                    if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ) {
+                                        swal('Error', 'You cannot remove folder with children', 'error');
+                                    } else {
+                                        swal({
+                                                title: "Delete folder",
+                                                text: "Are you sure?",
+                                                type: "warning",
+                                                confirmButtonClass: "btn-danger",
+                                                confirmButtonText: "Yes, delete it!",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top"
+                                            },
+                                            function () {
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
+                                                    method: 'GET',
+                                                    success: function (resp) {
+                                                        $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+                                                    }
+                                                });
+                                            }
+                                        );
                                     }
                                 }
-                            }
+                            };
                         }
-                        if (type == 'table') {
+                        if (type == 'table' && $tab == 'private') {
                             menu = {
                                 "edit": {
                                     "separator_before": false,
@@ -3382,6 +3389,7 @@ function jsTreeBuild($tab) {
                     });
                 }
 
+                sidebarPrevSelected = '';
             }
         } else {
             location.href = data.instance.get_node(data.node, true).children('a').attr('href');
@@ -3389,6 +3397,56 @@ function jsTreeBuild($tab) {
     })
     .on('ready.jstree', function() {
         $("#tablebar_"+$tab+"_div").jstree('open_all');
+    });
+
+    //menu on blanc place
+    $('#tablebar_'+$tab+'_div').on('contextmenu', function (evt) {
+        if (evt.target.nodeName != 'I' && evt.target.nodeName != 'A') {
+            var menu = '<ul id="cxtMenu_tablebar" class="vakata-context jstree-contextmenu jstree-default-contextmenu" style="left: '+(evt.pageX - 10)+'px; top: '+(evt.pageY - 10)+'px; display: block;">' +
+                '<li class="js-cxtMenu_tablebar"><a href="#" rel="0"><i></i><span class="vakata-contextmenu-sep">&nbsp;</span>Add Folder</a></li>' +
+                '</ul>';
+            $('#ctxMenu_tablebar').html(menu);
+            $('.js-cxtMenu_tablebar').on('click', function () {
+                swal({
+                        title: "New folder",
+                        text: "Write folder name:",
+                        type: "input",
+                        showCancelButton: true,
+                        closeOnConfirm: true,
+                        animation: "slide-from-top",
+                        inputPlaceholder: "Folder name"
+                    },
+                    function (inputValu) {
+                        if (inputValu === false) return false;
+
+                        if (inputValu === "") {
+                            swal.showInputError("You need to write something!");
+                            return false
+                        }
+
+                        $.ajax({
+                            url: baseHttpUrl+'/menutree_addfolder?parent_id=0&from_tab='+$tab+'&text='+inputValu,
+                            method: 'GET',
+                            success: function (resp) {
+                                var newNode = {
+                                    text: inputValu,
+                                    li_attr: {
+                                        'data-type':'folder',
+                                        'data-menu_id':resp.last_id,
+                                    }
+                                };
+
+                                $('#tablebar_'+$tab+'_div').jstree().create_node('#', newNode, 'last', false, false);
+                            }
+                        });
+                    }
+                );
+            });
+        }
+        return false;
+    });
+    $(document).on('click', function () {
+        $('#ctxMenu_tablebar').html('');
     });
 }
 

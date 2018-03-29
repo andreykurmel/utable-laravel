@@ -28,7 +28,7 @@ class AppController extends Controller
             $_SERVER['HTTP_REFERER'] = "";
         }
 
-        if ($this->subdomain) {
+        /*if ($this->subdomain) {
             $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $this->subdomain)->first();
             if ($tableMeta->subdomain && $this->tableExist($this->subdomain)) {
                 return view('table', $this->getVariables($this->subdomain));
@@ -39,7 +39,7 @@ class AppController extends Controller
                     return redirect()->to( route('login') );
                 }
             }
-        }
+        }*/
 
         if (Auth::guest() || ($_SERVER['HTTP_REFERER'] != config('app.url')."/")) {
             $socialProviders = config('auth.social.providers');
@@ -174,8 +174,11 @@ class AppController extends Controller
         if ($tableName && Auth::user()) {
             if (DB::connection('mysql_sys')
                 ->table('tb')
-                ->join('favorite_tables as ft', 'ft.table_id', '=', 'tb.id')
-                ->where('ft.user_id', '=', Auth::user()->id)
+                ->join('menutree_2_tb as m2t', function ($q) {
+                    $q->whereRaw('m2t.tb_id = tb.id');
+                    $q->where('m2t.structure', '=', 'favorite');
+                    $q->where('m2t.user_id', '=', Auth::user()->id);
+                })
                 ->where('tb.db_tb', '=', $tableName)
                 ->count()
             ) {
@@ -188,70 +191,78 @@ class AppController extends Controller
     }
 
     private function getTreeTables() {
-        return [
-            'public' => '<ul>'.$this->getTreeForTab('public').'</ul>',
-            'private' => '<ul>'.$this->getTreeForTab('private').'</ul>',
-            'favorite' => '<ul><li data-type=\'folder\'>Favorite'.
-                    '<ul>'.$this->getTreeForTab('public',1).'</ul>'.
-                    '<ul>'.$this->getTreeForTab('private',1).'</ul>'.
-                '</li></ul>',
-            'custom_select' => $this->links
-        ];
+        $arr = ['public' => $this->getTreeForTab('public')];
+        if (Auth::user()) {
+            $arr['private'] = $this->getTreeForTab('private');
+            $arr['favorite'] = $this->getTreeForTab('favorite');
+            $arr['custom_select'] = $this->links;
+        }
+
+        return $arr;
     }
     
-    private function getTreeForTab($tab, $for_favorite = 0) {
-        $folders = DB::connection('mysql_sys')->table('menutree')->where('structure', '=', $tab)->get();
-
-        $res_arr = (object)['id' => 0, 'root_id' => 0, 'title' => $tab ,'tables' => [], 'children' => $this->buildTree( $folders )];
-
-        $tables = DB::connection('mysql_sys')->table('tb')
-            ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
-            ->where('is_system', '=', 0)
-            ->select('tb.*','m2t.id as m2t_id','m2t.menutree_id','m2t.type as link_type');
-
-        if ($tab != 'private' || $for_favorite != 0) {
-            $tables->where('m2t.type', '=', 'link');
+    private function getTreeForTab($tab) {
+        $folders = DB::connection('mysql_sys')->table('menutree')->where('structure', '=', $tab);
+        //folders structure is shared only for 'public' tab. Other tabs with structure different for each user.
+        if ($tab != 'public') {
+            $folders->where('user_id', '=', Auth::user()->id);
         }
+        $folders = $folders->get();
 
-        if ($for_favorite) {
-            if (Auth::user()) {
-                $tables->join('favorite_tables as ft', function ($q) {
-                    $q->whereRaw('ft.table_id = tb.id');
-                    $q->where('ft.user_id', '=', Auth::user()->id);
+        //init menutree with folders
+        $res_arr = (object)['id' => 0, 'title' => $tab ,'tables' => [], 'children' => $this->buildTree( $folders )];
+
+        //tables are only on the 'private' tab, other tabs have only links.
+        if ($tab == 'private') {
+            $tables = DB::connection('mysql_sys')->table('tb')
+                ->leftJoin('menutree_2_tb as m2t', function ($q) {
+                    $q->whereRaw('m2t.tb_id = tb.id');
+                    $q->where('m2t.user_id', '=', Auth::user()->id);
+                    $q->where('m2t.structure', '=', 'private');
+                    $q->where('m2t.type', '=', 'table');
+                })
+                ->where('is_system', '=', 0)
+                ->selectRaw("tb.*, '0' as m2t_id, IF(m2t.menutree_id IS NULL, 0, m2t.menutree_id) as menutree_id, 'table' as link_type");
+
+            if (Auth::user()->role_id != 1) {
+                $tables->leftJoin('permissions', function ($q) {
+                    $q->where('permissions.table_id', '=', 'tb.id');
+                    $q->where('permissions.user_id', '=', Auth::user()->id);
                 });
-                $tables = $tables->get();
-            } else {
-                $tables = [];
+                $tables->where(function ($qt) {
+                    $qt->where('tb.owner', '=', Auth::user()->id);
+                    $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
+                });
             }
+            $tables = $tables->get();
         } else {
-            if ($tab == 'private') {
-                if (Auth::user()) {
-                    $tables->leftJoin('permissions', function ($q) {
-                        $q->where('permissions.table_id', '=', 'tb.id');
-                        $q->where('permissions.user_id', '=', Auth::user()->id);
-                    });
-                    if (Auth::user()->role_id != 1) {
-                        $tables->where(function ($qt) {
-                            $qt->where('tb.owner', '=', Auth::user()->id);
-                            $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
-                        });
-                    }
-                    $tables = $tables->groupBy('m2t.id')->get();
-                } else {
-                    $tables = [];
-                }
-            } else {
-                $tables = $tables->get();
-            }
+            $tables = [];
         }
 
+        //links can be found on each tab
+        $links = DB::connection('mysql_sys')->table('tb')
+            ->join('menutree_2_tb as m2t', function ($q) use ($tab) {
+                $q->whereRaw('m2t.tb_id = tb.id');
+                $q->where('m2t.structure', '=', $tab);
+                $q->where('m2t.type', '=', 'link');
+                //folders structure and links are shared only for 'public' tab. Other tabs with structure different for each user.
+                if ($tab != 'public') {
+                    $q->where('m2t.user_id', '=', Auth::user()->id);
+                }
+            })
+            ->where('is_system', '=', 0)
+            ->select('tb.*','m2t.id as m2t_id','m2t.menutree_id','m2t.type as link_type')
+            ->get();
+
+        //connect tables and links with folders structure (menutree)
         foreach ($tables as $tb) {
             $this->add_tb($tb, $res_arr);
         }
+        foreach ($links as $l) {
+            $this->add_tb($l, $res_arr);
+        }
 
-        //dd($res_arr);
-
-        return ($tables ? $this->buildHTMLTree($res_arr, '/data/', $tab, $for_favorite) : '');
+        return $this->buildHTMLTree($res_arr, '/data/', $tab);
     }
 
     private function add_tb($tb, &$res_arr) {
@@ -266,24 +277,28 @@ class AppController extends Controller
         }
     }
 
-    private function buildHTMLTree($res_arr, $url, $tab, $for_favorite) {
-        $html = "<li data-type='folder' data-menu_id='".$res_arr->id."' data-root_id='".$res_arr->root_id."'>".$res_arr->title;
+    private function buildHTMLTree($res_arr, $url, $tab) {
+        if ($res_arr->id) {
+            $html = "<li data-type='folder' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
+        } else {
+            $html = "";
+        }
+
         if ($res_arr->tables || $res_arr->children) {
             $html .= '<ul>';
             if ($res_arr->tables) {
                 foreach ($res_arr->tables as $table) {
-                    if ($table->subdomain) {
-                        $link = preg_replace('/\/\/www/i', '//www.'.$table->subdomain, config('app.url'));
+                    if ($tab == 'public') {
+                        preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
+                        //get subdomain from root folder or fall to 'general'
+                        $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
+                        //if table has filled 'subdomain' then replace with it.
+                        $pub_subdomain = $table->subdomain ? $table->subdomain : $pub_subdomain;
+                        $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
+                            .'/data/'
+                            .$table->db_tb;
                     } else {
-                        if ($tab == 'public') {
-                            preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
-                            $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : '';
-                            $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
-                                .preg_replace('/\/data\/'.$pub_subdomain.'\//i', '/data/', $url)
-                                .$table->db_tb;
-                        } else {
-                            $link = config('app.url').$url.$table->db_tb;
-                        }
+                        $link = config('app.url').'/data/'.$table->db_tb;
                     }
 
                     $html .= '<li 
@@ -297,7 +312,7 @@ class AppController extends Controller
                         data-tb_subdomain="'.$table->subdomain.'" 
                     ><a href="'.$link.'">'.$table->name.'</a></li>';
 
-                    if ($for_favorite) {
+                    if ($tab == 'favorite') {
                         $this->links[$table->db_tb] = [
                             'li' => $link,
                             'name' => $table->name
@@ -307,12 +322,15 @@ class AppController extends Controller
             }
             if ($res_arr->children) {
                 foreach ($res_arr->children as $child) {
-                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab, $for_favorite);
+                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab);
                 }
             }
             $html .= '</ul>';
         }
-        $html .= '</li>';
+
+        if ($res_arr->id) {
+            $html .= '</li>';
+        }
 
         return $html;
     }
@@ -341,54 +359,43 @@ class AppController extends Controller
         return $tb->nbr_entry_listing;
     }
 
-    private function tableExist($tablePath) {
-        //for subdomains logic changes from 'SUB.tabledataplace.com/data/folder/table' to 'tabledataplace.com/data/SUB/folder/table'
+    private function tableExist($tableName) {
+        $exist = 0;
+
         if ($this->subdomain) {
-            $tablePath = $this->subdomain.'/'.$tablePath;
-        }
-        $pathElems = explode('/', $tablePath);
-        $tableName = end($pathElems);
-        $pathCount = count($pathElems) - 1;
+            //check for 'public' tab
+            $exist = DB::connection('mysql_sys')->table('tb')
+                ->leftJoin('menutree_2_tb as m2t', function ($q) {
+                    $q->whereRaw('m2t.tb_id = tb.id');
+                    $q->where('m2t.structure', '=', 'public');
+                    $q->where('m2t.type', '=', 'link');
+                })
+                ->where('tb.db_tb', '=', $tableName)
+                ->where(function ($q) {
+                    $q->where('tb.subdomain', '=', $this->subdomain);
+                    $q->orWhereNotNull('m2t.id');
+                })
+                ->count();
 
-        //find table
-        $cnt = DB::connection('mysql_sys')->table('tb')
-            ->leftJoin('permissions', 'permissions.table_id', '=', 'tb.id')
-            ->where('tb.db_tb', '=', $tableName);
-
-        /*if (!Auth::user()) {
-            //guest - get public data
-            $cnt->where('tb.access', '=', 'public');
         } else {
-            if (Auth::user()->role_id != 1) {
-                //user - get user`s data, favourites and public data in the current folder
-                $cnt->where(function ($qt) {
-                    $qt->where('tb.access', '=', 'public');
-                    $qt->orWhere('tb.owner', '=', Auth::user()->id);
-                    $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
-                });
-            }
-            //admin - get all data
-        }*/
-        $tb = $cnt->select('tb.*')->first();
-
-        //exist if table has subdomain eq to the request`s subdomain
-        if ($this->subdomain && $this->subdomain == $tb->subdomain) {
-            return 1;
-        }
-
-        $tb_id = $tb ? $tb->id : 0;
-
-        //find 'menutree' path
-        $menutree_id = 0;
-        if ($pathCount) {
-            for ($i = 0; $i < $pathCount; $i++) {
-                $menutree = DB::connection('mysql_sys')->table('menutree')->where('title', '=', $pathElems[$i])->where('parent_id', '=', $menutree_id)->first();
-                $menutree_id = $menutree ? $menutree->id : -1;
+            //check for 'private' and 'favorite' tabs
+            if (Auth::user()) {
+                $table = DB::connection('mysql_sys')->table('tb')
+                    ->leftJoin('permissions', 'permissions.table_id', '=', 'tb.id')
+                    ->where('tb.db_tb', '=', $tableName);
+                if (Auth::user()->role_id != 1) {
+                    //user - get user`s data, favourites and public data in the current folder
+                    $table->where(function ($qt) {
+                        $qt->orWhere('tb.owner', '=', Auth::user()->id);
+                        $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
+                    });
+                }
+                //admin - get all data
+                $exist = $table->count();
             }
         }
 
-        //exists if exist table and exist 'menutree' path
-        return DB::connection('mysql_sys')->table('menutree_2_tb')->where('tb_id', '=', $tb_id)->where('menutree_id', '=', $menutree_id)->count();
+        return $exist;
     }
 
     public function showSettingsForCreateTable(Request $request) {

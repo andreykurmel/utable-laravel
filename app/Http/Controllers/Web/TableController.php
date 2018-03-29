@@ -159,10 +159,13 @@ class TableController extends Controller
             //if need to activate favourite -> then add row into 'favorite' table
             if ($request->status == "Active") {
                 DB::connection('mysql_sys')
-                    ->table('favorite_tables')
+                    ->table('menutree_2_tb')
                     ->insert([
                         'user_id' => Auth::user()->id,
-                        'table_id' => $table_id->id,
+                        'tb_id' => $table_id->id,
+                        'menutree_id' => 0,
+                        'type' => 'link',
+                        'structure' => 'favorite',
                         'createdBy' => Auth::user()->id,
                         'createdOn' => now(),
                         'modifiedBy' => Auth::user()->id,
@@ -174,6 +177,8 @@ class TableController extends Controller
                     ->table('favorite_tables')
                     ->where('user_id', '=', Auth::user()->id)
                     ->where('table_id', '=', $table_id->id)
+                    ->where('menutree_id', '=', 0)
+                    ->where('structure', '=', 'favorite')
                     ->delete();
             }
         }
@@ -899,10 +904,10 @@ class TableController extends Controller
 
     public function menutree_addfolder(Request $request) {
         $id = DB::connection('mysql_sys')->table('menutree')->insert([
-            'root_id' => $request->root_id ? $request->root_id : ($request->parent_id ? $request->parent_id : 0),
             'parent_id' => $request->parent_id,
             'title' => $request->text,
             'structure' => $request->from_tab,
+            'user_id' => Auth::user()->id,
             'createdBy' => Auth::user()->id,
             'createdOn' => now(),
             'modifiedBy' => Auth::user()->id,
@@ -972,6 +977,7 @@ class TableController extends Controller
             'tb_id' => $request->tb_id,
             'menutree_id' => $request->menutree_id,
             'type' => 'link',
+            'user_id' => Auth::user()->id,
             'createdBy' => Auth::user()->id,
             'createdOn' => now(),
             'modifiedBy' => Auth::user()->id,
