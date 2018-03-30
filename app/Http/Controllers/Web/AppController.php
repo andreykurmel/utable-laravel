@@ -292,8 +292,6 @@ class AppController extends Controller
                         preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
                         //get subdomain from root folder or fall to 'general'
                         $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
-                        //if table has filled 'subdomain' then replace with it.
-                        $pub_subdomain = $table->subdomain ? $table->subdomain : $pub_subdomain;
                         $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
                             .'/data/'
                             .$table->db_tb;
@@ -309,7 +307,7 @@ class AppController extends Controller
                         data-tb_name="'.$table->name.'" 
                         data-tb_db="'.$table->db_tb.'" 
                         data-tb_nbr="'.$table->nbr_entry_listing.'" 
-                        data-tb_subdomain="'.$table->subdomain.'" 
+                        data-href="'.$link.'" 
                     ><a href="'.$link.'">'.$table->name.'</a></li>';
 
                     if ($tab == 'favorite') {
@@ -371,10 +369,7 @@ class AppController extends Controller
                     $q->where('m2t.type', '=', 'link');
                 })
                 ->where('tb.db_tb', '=', $tableName)
-                ->where(function ($q) {
-                    $q->where('tb.subdomain', '=', $this->subdomain);
-                    $q->orWhereNotNull('m2t.id');
-                })
+                ->whereNotNull('m2t.id')
                 ->count();
 
         } else {

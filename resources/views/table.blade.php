@@ -113,7 +113,7 @@
                     @if(Auth::user() && $tableName)
                         <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
                     @endif
-                    @if($owner)
+                    @if($owner && $tableName)
                     <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                     @endif
                 </ul>
@@ -698,7 +698,7 @@
                     </div>
                     @endif
 
-                    @if($owner)
+                    @if($owner && $tableName)
                     <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <div class="container">
@@ -730,7 +730,7 @@
                                     </div>
                                     <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                         <div class="row">
-                                            <div class="col-xs-4">
+                                            <!--<div class="col-xs-4">
                                                 <div class="row">
                                                     <div class="col-xs-5"><label>Table name:</label></div>
                                                     <div class="col-xs-7"><input type="text" class="form-control" id="import_table_name" name="table_name" value="{{ $tableMeta ? $tableMeta->name : '' }}"></div>
@@ -739,15 +739,15 @@
                                                     <div class="col-xs-5"><label>Database name:</label></div>
                                                     <div class="col-xs-7"><input type="text" class="form-control" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}" {{ $tableName ? 'readonly' : '' }}></div>
                                                 </div>
-                                                <!--<div class="row">
+                                                <div class="row">
                                                     <div class="col-xs-5"><label>Data status:</label></div>
                                                     <div class="col-xs-7"><select class="form-control" name="table_access" value="">
                                                         <option>public</option>
                                                         <option>private</option>
                                                     </select></div>
-                                                </div>-->
-                                            </div>
-                                            <div class="col-xs-4 js-import_csv_style">
+                                                </div>
+                                            </div>-->
+                                            <div class="col-xs-5 js-import_csv_style">
                                                 @if(!$tableName)
                                                     <div class="row">
                                                         <div class="col-xs-9"><label>First row as headers:</label></div>
@@ -783,7 +783,7 @@
                                                     <div class="col-xs-7"><input type="number" class="form-control" name="csv_end_data"></div>
                                                 </div>
                                             </div>
-                                            <div class="col-xs-4 js-import_csv_style">
+                                            <div class="col-xs-5 js-import_csv_style">
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
                                                     <div class="col-xs-10"><label>Replace Accents/Diacriticals</label></div>
@@ -993,7 +993,7 @@
                         <h1>Edit table</h1>
                         <div style="width: 350px;">
                             <input type="hidden" id="sidebar_table_id">
-                            <input type="hidden" id="sidebar_table_tab">
+                            <input type="hidden" id="sidebar_table_action">
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_name">Table name</label>
@@ -1002,29 +1002,20 @@
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_db">Database name</label>
-                                <input type="text" id="sidebar_table_db" class="form-control" readonly>
-                            </div>
-
-                            <div class="form-group input-icon">
-                                <label for="sidebar_table_access">Data status</label>
-                                <select id="sidebar_table_access" class="form-control">
-                                    <option value="public">Public</option>
-                                    <option value="private">Private</option>
-                                </select>
+                                <input type="text" id="sidebar_table_db" class="form-control" disabled>
                             </div>
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_nbr">Entries per page</label>
-                                <input type="number" id="sidebar_table_nbr" class="form-control">
-                            </div>
-
-                            <div class="form-group input-icon">
-                                <label for="sidebar_table_subdomain">Subdomain</label>
-                                <input type="text" id="sidebar_table_subdomain" class="form-control">
+                                <select id="sidebar_table_nbr" class="form-control">
+                                    <option>100</option>
+                                    <option>200</option>
+                                    <option>500</option>
+                                </select>
                             </div>
 
                             <div class="form-group">
-                                <button type="button" class="btn btn-custom btn-lg btn-block" onclick="edit_sidebar_table()">
+                                <button type="button" class="btn btn-custom btn-lg btn-block" onclick="popup_sidebar_table()">
                                     Save
                                 </button>
                                 <a href="javascript:void(0)" onclick="$('.editSidebarTableForm').hide();" class="btn btn-default btn-lg btn-block">

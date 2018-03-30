@@ -67,13 +67,32 @@ $(document).ready(function () {
         }
     });
 
+    //show filters
+    if (localStorage.getItem('filter_hide') == 0) {
+        $('#showHideMenuBtn').removeClass('menu-hidden');
+        $('#showHideMenuBody').css('width', '260px');
+        $(".table_body_viewport > .mCSB_scrollTools").css("right", '286px');
+        $(".js-filterMenuHide").css("right", '280px');
+        $(".js-filterMenuHide_2").css("right", '680px');
+    }
+    //hide menutree
+    if (localStorage.getItem('menutree_hide') == 1) {
+        $('#showTableLibBtn').addClass('menu-hidden');
+        $('#showTableLibBody').css('width', '0');
+        $(".js-table_lib_hide").css("left", '20px');
+        $("#showTableLibBody .standard-tabs").css("display", "none");
+    }
+
+    if (MenutreeTab) {
+        if (MenutreeTab == 'public') tablebar_show_public();
+        if (MenutreeTab == 'private') tablebar_show_private();
+        if (MenutreeTab == 'favorite') tablebar_show_favorite();
+    } else
     if (authUser) {
         jsTreeBuild('favorite');
-        showHideTableLib();
     } else {
         jsTreeBuild('public');
     }
-
 });
 
 /* --------------------- Variables ---------------------- */
@@ -92,7 +111,8 @@ var baseHttpUrl = "/api",
     changedFilter = changedSearchKeyword = false,
     searchKeyword = "",
     filterMenuHide = true,
-    TableLibHide = false,
+    MenutreeHide = false,
+    MenutreeTab = localStorage.getItem('menutree_tab'),
     markerBounds = {top:0, left:0, right:0, bottom:0},
     tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
 
@@ -271,6 +291,8 @@ function showDataTable(headers, data) {
     var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "", visibleColumns = "", tbHiddenHeaders = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, star_class;
 
+    headerHasUnit = false;
+
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
         tableData += '<td '+(i === 0 ? 'id="first_data_td"' : '')+'>' +
@@ -418,6 +440,7 @@ function showDataTable(headers, data) {
     tbDataHeaders += "<tr>";
     for(var $hdr in headers) {
         if (headers[$hdr].unit) {
+            headerHasUnit = true;
             tbDataHeaders += '<th ' +
                 'id="' + headers[key].field + $hdr + headers[key].input_type + '_header"' +
                 'data-key="' + headers[$hdr].field + '" ' +
@@ -441,6 +464,10 @@ function showDataTable(headers, data) {
     $('#tbAddRow_body').html(tbAddRow + tbHiddenData);
     $('#tbHeaders_body').html(tbHiddenData);
     $('#tbData_body').html(tableData);
+
+    $('#tbAddRow').css('top', headerHasUnit ? '-64px' : '-32px');
+    $('#tbData').css('margin-top', headerHasUnit ? '-64px' : '-32px');
+    $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -552,9 +579,10 @@ function filterCheckAll(idx, status) {
 }
 
 function showHideTableLib() {
-    TableLibHide = !TableLibHide;
+    MenutreeHide = !MenutreeHide;
+    localStorage.setItem('menutree_hide', MenutreeHide ? '1' : '0');
 
-    if (TableLibHide) {
+    if (MenutreeHide) {
         $('#showTableLibBtn').addClass('menu-hidden');
         $('#showTableLibBody').css('width', '0');
     } else {
@@ -562,11 +590,12 @@ function showHideTableLib() {
         $('#showTableLibBody').css('width', '260px');
     }
 
-    $(".js-table_lib_hide").css("left", TableLibHide ? "20px" : "280px");
-    $("#showTableLibBody .standard-tabs").css("display", TableLibHide ? "none" : "");
+    $(".js-table_lib_hide").css("left", MenutreeHide ? "20px" : "280px");
+    $("#showTableLibBody .standard-tabs").css("display", MenutreeHide ? "none" : "");
 }
 
 function tablebar_show_public() {
+    localStorage.setItem('menutree_tab', 'public');
     $("#tablebar_li_public").addClass("active");
     $("#tablebar_li_private").removeClass("active");
     $("#tablebar_li_favorite").removeClass("active");
@@ -578,6 +607,7 @@ function tablebar_show_public() {
 }
 
 function tablebar_show_private() {
+    localStorage.setItem('menutree_tab', 'private');
     $("#tablebar_li_private").addClass("active");
     $("#tablebar_li_public").removeClass("active");
     $("#tablebar_li_favorite").removeClass("active");
@@ -589,6 +619,7 @@ function tablebar_show_private() {
 }
 
 function tablebar_show_favorite() {
+    localStorage.setItem('menutree_tab', 'favorite');
     $("#tablebar_li_favorite").addClass("active");
     $("#tablebar_li_private").removeClass("active");
     $("#tablebar_li_public").removeClass("active");
@@ -601,6 +632,7 @@ function tablebar_show_favorite() {
 
 function showHideMenu() {
     filterMenuHide = !filterMenuHide;
+    localStorage.setItem('filter_hide', filterMenuHide ? '1' : '0');
 
     if (filterMenuHide) {
         $('#showHideMenuBtn').addClass('menu-hidden');
@@ -1079,6 +1111,9 @@ function showInlineEdit(id, instant) {
         idx = $('#'+id).data('idx'),
         key = $('#'+id).data('key');
 
+
+
+    //------------------ START FREEZERS
     //freeze 'ddl_id' field if 'input_type' no selection (for Settings/Display Tab)
     if (
         id.indexOf('settingsDisplay') > -1
@@ -1100,6 +1135,31 @@ function showInlineEdit(id, instant) {
     ) {
         return;
     }
+
+    //freeze 'unit_ddl' field if 'unit' is empty (for Settings/Display Tab)
+    if (
+        id.indexOf('settingsDisplay') > -1
+        &&
+        key == 'unit_ddl'
+        &&
+        !settingsTableData[idx].unit
+    ) {
+        return;
+    }
+
+    //freeze 'unit_ddl' field if 'unit' is empty (for Main data)
+    if (
+        id.indexOf('_dataT') > -1
+        &&
+        key == 'unit_ddl'
+        &&
+        !tableData[idx].unit
+    ) {
+        return;
+    }
+    //------------------ END FREEZERS
+
+
 
     if ($('#'+id).data('innerHTML')) {
         return;
@@ -1407,13 +1467,13 @@ function checkboxAddToggle() {
 
         $('#tbAddRow').show();
         $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', '117px');
+        $('#divTbData').css('top', headerHasUnit ? '117px' : '85px');
 
         editSelectedData(-1);
     } else {
         $('#tbAddRow').hide();
         $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', '64px');
+        $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
     }
 }
 
@@ -1794,7 +1854,7 @@ function selectSettingsTable() {
 }
 
 function changeSettingsPage(page) {
-    $('.loadingFromServer').show();
+    //$('.loadingFromServer').show();
     settingsPage = page-1;
 
     for(var key in tableHeaders) {
@@ -1833,11 +1893,11 @@ function changeSettingsPage(page) {
             //ddl_names_for_settings = response.ddl_names_for_settings;
             showSettingsDataTable(settingsTableHeaders, settingsTableData);
             showSettingsTableFooter();
-            $('.loadingFromServer').hide();
+            //$('.loadingFromServer').hide();
         },
         error: function () {
             alert("Server error");
-            $('.loadingFromServer').hide();
+            //$('.loadingFromServer').hide();
         }
     })
 }
@@ -2249,6 +2309,7 @@ function settingsTabShowDDL() {
 }
 
 function settingsTabShowDisplay() {
+    changeSettingsPage(1);
     $('#div_settings_rights').hide();
     $('#div_settings_ddl').hide();
     $('#div_settings_display').show();
@@ -3114,7 +3175,13 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Add Table",
                                     "action": function (obj) {
-                                        alert('Under construction...');
+                                        $('#sidebar_table_action').val('add');
+                                        $('#sidebar_table_name').val('');
+                                        $('#sidebar_table_id').val(0);
+                                        $('#sidebar_table_db').prop('disabled', false).val('');
+                                        $('#sidebar_table_nbr').val(100);
+
+                                        $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                                     }
                                 };
                             }
@@ -3247,14 +3314,13 @@ function jsTreeBuild($tab) {
                                         var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
                                         var table_name = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
 
-                                        $('#sidebar_table_tab').val($tab);
+                                        $('#sidebar_table_action').val('edit');
                                         $('#sidebar_table_name').val(table_name);
                                         $('#sidebar_table_id').val( elem.data ? elem.data.tb_id : elem.li_attr['data-tb_id'] );
-                                        $('#sidebar_table_db').val( elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'] );
+                                        $('#sidebar_table_db').prop('disabled', true).val( elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'] );
                                         $('#sidebar_table_nbr').val( elem.data ? elem.data.tb_nbr : elem.li_attr['data-tb_nbr'] );
-                                        $('#sidebar_table_subdomain').val( elem.data ? elem.data.tb_subdomain : elem.li_attr['data-tb_subdomain'] );
 
-                                        $('.editSidebarTableForm').show(); //function edit_sidebar_table()
+                                        $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                                     }
                                 },
                                 "link": {
@@ -3363,10 +3429,11 @@ function jsTreeBuild($tab) {
                         method: 'GET',
                         success: function (resp) {
                             $('#tablebar_'+$tab+'_div').jstree('move_node', sidebarPrevSelected, target, 'last', false, false, false, false);
+                            $('#tablebar_'+$tab+'_div').jstree().open_node(target, false, false);
+                            sidebarPrevSelected = '';
                         }
                     });
-                }
-
+                } else
                 //create link for table
                 if (sidebarPrevSelected.action == 'link') {
                     var tb_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.tb_id : sidebarPrevSelected.li_attr['data-tb_id'];
@@ -3380,19 +3447,23 @@ function jsTreeBuild($tab) {
                                 li_attr: {
                                     'data-type': 'link',
                                     'data-m2t_id': resp.last_id,
-                                    'data-tb_id': tb_id
+                                    'data-tb_id': tb_id,
+                                    'data-href': sidebarPrevSelected.data ? sidebarPrevSelected.data.href : sidebarPrevSelected.li_attr['data-href']
                                 }
                             };
 
                             $('#tablebar_'+$tab+'_div').jstree().create_node(target, newNode, 'last', false, false);
+                            $('#tablebar_'+$tab+'_div').jstree().open_node(target, false, false);
+                            sidebarPrevSelected = '';
                         }
                     });
+                } else {
+                    sidebarPrevSelected = '';
                 }
-
-                sidebarPrevSelected = '';
             }
         } else {
-            location.href = data.instance.get_node(data.node, true).children('a').attr('href');
+            var node = data.instance.get_node(data.node);
+            location.href = node.data ? node.data.href : node.li_attr['data-href'];
         }
     })
     .on('ready.jstree', function() {
@@ -3402,11 +3473,16 @@ function jsTreeBuild($tab) {
     //menu on blanc place
     $('#tablebar_'+$tab+'_div').on('contextmenu', function (evt) {
         if (evt.target.nodeName != 'I' && evt.target.nodeName != 'A') {
-            var menu = '<ul id="cxtMenu_tablebar" class="vakata-context jstree-contextmenu jstree-default-contextmenu" style="left: '+(evt.pageX - 10)+'px; top: '+(evt.pageY - 10)+'px; display: block;">' +
-                '<li class="js-cxtMenu_tablebar"><a href="#" rel="0"><i></i><span class="vakata-contextmenu-sep">&nbsp;</span>Add Folder</a></li>' +
+            var menu = '<ul id="cxtMenu_tablebar" class="vakata-context jstree-contextmenu jstree-default-contextmenu" style="left: '+(evt.pageX - 10)+'px; top: '+(evt.pageY - 10)+'px; display: block;">';
+            if ($tab == 'private') {
+                menu += '<li class="js-cxtMenu_add_table"><a href="#" rel="0"><i></i><span class="vakata-contextmenu-sep">&nbsp;</span>Add Table</a></li>';
+            }
+            menu += '<li class="js-cxtMenu_add_folder"><a href="#" rel="0"><i></i><span class="vakata-contextmenu-sep">&nbsp;</span>Add Folder</a></li>'+
                 '</ul>';
+
             $('#ctxMenu_tablebar').html(menu);
-            $('.js-cxtMenu_tablebar').on('click', function () {
+
+            $('.js-cxtMenu_add_folder').on('click', function () {
                 swal({
                         title: "New folder",
                         text: "Write folder name:",
@@ -3442,6 +3518,17 @@ function jsTreeBuild($tab) {
                     }
                 );
             });
+            if ($tab == 'private') {
+                $('.js-cxtMenu_add_table').on('click', function () {
+                    $('#sidebar_table_action').val('add');
+                    $('#sidebar_table_name').val('');
+                    $('#sidebar_table_id').val(0);
+                    $('#sidebar_table_db').prop('disabled', false).val('');
+                    $('#sidebar_table_nbr').val(100);
+
+                    $('.editSidebarTableForm').show(); //function popup_sidebar_table()
+                });
+            }
         }
         return false;
     });
@@ -3450,28 +3537,52 @@ function jsTreeBuild($tab) {
     });
 }
 
-function edit_sidebar_table() {
+function popup_sidebar_table() {
     var $tab = $('#sidebar_table_tab').val(),
         tb_id = $('#sidebar_table_id').val(),
         tb_name = $('#sidebar_table_name').val(),
+        tb_db = $('#sidebar_table_db').val(),
         tb_nbr = $('#sidebar_table_nbr').val(),
-        tb_subdomain = $('#sidebar_table_subdomain').val(),
-        strParams = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr+"&subdomain="+tb_subdomain;
+        action = $('#sidebar_table_action').val(),
+        strParamsEdit = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr;
 
-    $.ajax({
-        method: 'GET',
-        url: baseHttpUrl + '/updateTableRow?' + strParams,
-        success: function (response) {
-            var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+    if (action == 'add') {
+        $.ajax({
+            method: 'POST',
+            url: baseHttpUrl + '/createTable',
+            data: {
+                'table_db_tb': tb_db,
+                'table_name': tb_name,
+                'nbr': tb_nbr
+            },
+            success: function (response) {
+                if (response.error) {
+                    swal(response.msg);
+                } else {
+                    window.location = response.msg;
+                }
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
+    if (action == 'edit') {
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/updateTableRow?' + strParamsEdit,
+            success: function (response) {
+                var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
 
-            $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, tb_name);
-            $('#'+elem_id).data('tb_nbr', tb_nbr);
-            $('#'+elem_id).data('tb_subdomain', tb_subdomain);
+                $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, tb_name);
+                $('#'+elem_id).data('tb_nbr', tb_nbr);
+                $('#'+elem_id).data('tb_subdomain', tb_subdomain);
 
-            alert(response.msg);
-        },
-        error: function () {
-            alert("Server error");
-        }
-    });
+                alert(response.msg);
+            },
+            error: function () {
+                alert("Server error");
+            }
+        });
+    }
 }

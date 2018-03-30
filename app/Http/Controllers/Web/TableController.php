@@ -614,15 +614,22 @@ class TableController extends Controller
 
     public function createTable(Request $request)
     {
-        $columns = $request->columns;
+        //$columns = $request->columns;
+        $columns = [
+            ['field' => 'id', 'header' => 'ID'],
+            ['field' => 'createdBy', 'header' => 'Created By'],
+            ['field' => 'createdOn', 'header' => 'Created On'],
+            ['field' => 'modifiedBy', 'header' => 'Modified By'],
+            ['field' => 'modifiedOn', 'header' => 'Modified On']
+        ];
         $filename = $request->table_db_tb;
 
         //create table
         try {
-            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) use ($columns) {
+            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) /*use ($columns)*/ {
                 $table->increments('id');
 
-                $presentCols = [];
+                /*$presentCols = [];
                 foreach ($columns as &$col) {
                     if ($col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //prevent error if we have two the same names for columns
@@ -652,7 +659,7 @@ class TableController extends Controller
                             $t->default($col['default']);
                         }
                     }
-                }
+                }*/
 
                 $table->integer('createdBy')->nullable();
                 $table->dateTime('createdOn')->nullable();
@@ -660,14 +667,17 @@ class TableController extends Controller
                 $table->dateTime('modifiedOn')->nullable();
             });
         } catch (\Exception $e) {
-            return "Seems that your table schema is incorrect!<br>".$e->getMessage();
+            return [
+                'error' => true,
+                'msg' => "Seems that table with provided db_tb is exists!<br>".$e->getMessage()
+            ];
         }
 
         //add record to 'tb'
         DB::connection('mysql_sys')->table('tb')->insert([
             'name' => $request->table_name,
             'owner' => Auth::user()->id,
-            'nbr_entry_listing' => 20,
+            'nbr_entry_listing' => $request->nbr,
             'source' => 'mysql',
             'db_tb' => $filename,
             'host' => env('DB_HOST', 'localhost'),
@@ -680,16 +690,6 @@ class TableController extends Controller
             'modifiedOn' => now()
         ]);
         $tb_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
-
-        //add table into the root of 'menutree'
-        DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
-            'tb_id' => $tb_id,
-            'menutree_id' => 0,
-            'createdBy' => Auth::user()->id,
-            'createdOn' => now(),
-            'modifiedBy' => Auth::user()->id,
-            'modifiedOn' => now()
-        ]);
 
         //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
@@ -714,11 +714,15 @@ class TableController extends Controller
         }
 
         //import data
-        if ($request->data_csv || $request->import_host) {
+        /*if ($request->data_csv || $request->import_host) {
             $this->importDataToTable($request, $filename, $columns);
-        }
+        }*/
 
-        return redirect()->to( "/data/all/".$filename );
+        //return redirect()->to( "/data/".$filename );
+        return [
+            'error' => false,
+            'msg' => config('app.url')."/data/".$filename
+        ];
     }
 
     public function modifyTable(Request $request)
