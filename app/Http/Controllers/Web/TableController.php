@@ -980,6 +980,7 @@ class TableController extends Controller
         $id = DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
             'tb_id' => $request->tb_id,
             'menutree_id' => $request->menutree_id,
+            'structure' => $request->tab,
             'type' => 'link',
             'user_id' => Auth::user()->id,
             'createdBy' => Auth::user()->id,

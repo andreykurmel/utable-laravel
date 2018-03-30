@@ -3438,7 +3438,7 @@ function jsTreeBuild($tab) {
                 if (sidebarPrevSelected.action == 'link') {
                     var tb_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.tb_id : sidebarPrevSelected.li_attr['data-tb_id'];
                     $.ajax({
-                        url: baseHttpUrl+'/menutree_createlink?tb_id='+tb_id+'&menutree_id='+target_id,
+                        url: baseHttpUrl+'/menutree_createlink?tb_id='+tb_id+'&menutree_id='+target_id+'&tab='+$tab,
                         method: 'GET',
                         success: function (resp) {
                             var newNode = {
