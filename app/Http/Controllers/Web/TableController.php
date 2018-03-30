@@ -960,11 +960,33 @@ class TableController extends Controller
     }
 
     public function menutree_movenode(Request $request) {
-        $id = DB::connection('mysql_sys')->table('menutree_2_tb')->where('id', '=', $request->m2t_id)->update([
-            'menutree_id' => $request->menutree_id,
-            'modifiedBy' => Auth::user()->id,
-            'modifiedOn' => now()
-        ]);
+        if ($request->type == 'folder') {
+            $id = DB::connection('mysql_sys')->table('menutree')->where('id', '=', $request->m2t_id)->update([
+                'parent_id' => $request->menutree_id,
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
+        } else {
+            if ($request->m2t_id) {
+                $id = DB::connection('mysql_sys')->table('menutree_2_tb')->where('id', '=', $request->m2t_id)->update([
+                    'menutree_id' => $request->menutree_id,
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            } else {
+                $id = DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
+                    'tb_id' => $request->tb_id,
+                    'menutree_id' => $request->menutree_id,
+                    'structure' => $request->tab,
+                    'type' => $request->type,
+                    'user_id' => Auth::user()->id,
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
 
         if ($id) {
             $responseArray['error'] = FALSE;

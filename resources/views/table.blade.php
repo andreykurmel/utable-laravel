@@ -27,11 +27,11 @@
                         @endif
                     </ul>
 
-                    @if(Auth::user())
-                        <div id="tablebar_public_div" class="tab-content" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
-                            {!! $treeTables['public'] !!}
-                        </div>
 
+                    <div id="tablebar_public_div" class="tab-content" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                        {!! $treeTables['public'] !!}
+                    </div>
+                    @if(Auth::user())
                         <div id="tablebar_private_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                             {!! $treeTables['private'] !!}
                         </div>

@@ -222,7 +222,7 @@ class AppController extends Controller
                     $q->where('m2t.type', '=', 'table');
                 })
                 ->where('is_system', '=', 0)
-                ->selectRaw("tb.*, '0' as m2t_id, IF(m2t.menutree_id IS NULL, 0, m2t.menutree_id) as menutree_id, 'table' as link_type");
+                ->selectRaw("tb.*, IF(m2t.id IS NULL, 0, m2t.id) as m2t_id, IF(m2t.menutree_id IS NULL, 0, m2t.menutree_id) as menutree_id, 'table' as link_type");
 
             if (Auth::user()->role_id != 1) {
                 $tables->leftJoin('permissions', function ($q) {

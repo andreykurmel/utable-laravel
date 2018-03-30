@@ -3162,7 +3162,7 @@ function jsTreeBuild($tab) {
             {}
         :
             {
-                "plugins": ["contextmenu"],
+                "plugins": ["contextmenu", "dnd"],
                 "contextmenu": {
                     "items": function ($node) {
                         var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
@@ -3334,18 +3334,6 @@ function jsTreeBuild($tab) {
                                         sidebarPrevSelected.fromtab = $tab;
                                         swal('Create link', 'Please select target folder.');
                                     }
-                                },
-                                "move": {
-                                    "separator_before": false,
-                                    "separator_after": false,
-                                    "label": "Move to other Tabs",
-                                    "action": function (obj) {
-                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
-                                        sidebarPrevSelected.action = 'move';
-                                        sidebarPrevSelected.fromtab = $tab;
-                                        swal('Move table', 'Please select target folder.');
-                                    }
                                 }
                             }
                         }
@@ -3380,18 +3368,6 @@ function jsTreeBuild($tab) {
                                             }
                                         );
                                     }
-                                },
-                                "move": {
-                                    "separator_before": false,
-                                    "separator_after": false,
-                                    "label": "Move to other Tabs",
-                                    "action": function (obj) {
-                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                        sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
-                                        sidebarPrevSelected.action = 'move';
-                                        sidebarPrevSelected.fromtab = $tab;
-                                        swal('Move link', 'Please select target folder.');
-                                    }
                                 }
                             }
                         }
@@ -3399,7 +3375,16 @@ function jsTreeBuild($tab) {
                     }
                 },
                 "core": {
-                    check_callback : true
+                    check_callback : function(operation, node, node_parent, node_position, more) {
+                        if (operation === "move_node") {
+                            var type = node_parent.data ? node_parent.data.type : false;
+                                type = node_parent.li_attr ? node_parent.li_attr['data-type'] : false;
+                            if (type !== "folder") {
+                                return false;
+                            }
+                        }
+                        return true; //allow all other operations
+                    }
                 }
             }
         ;
@@ -3422,18 +3407,6 @@ function jsTreeBuild($tab) {
             } else {
 
                 var m2t_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.m2t_id : sidebarPrevSelected.li_attr['data-m2t_id'];
-                //move node
-                if (sidebarPrevSelected.action == 'move' && $tab == sidebarPrevSelected.fromtab) {
-                    $.ajax({
-                        url: baseHttpUrl+'/menutree_movenode?m2t_id='+m2t_id+'&menutree_id='+target_id,
-                        method: 'GET',
-                        success: function (resp) {
-                            $('#tablebar_'+$tab+'_div').jstree('move_node', sidebarPrevSelected, target, 'last', false, false, false, false);
-                            $('#tablebar_'+$tab+'_div').jstree().open_node(target, false, false);
-                            sidebarPrevSelected = '';
-                        }
-                    });
-                } else
                 //create link for table
                 if (sidebarPrevSelected.action == 'link') {
                     var tb_id = sidebarPrevSelected.data ? sidebarPrevSelected.data.tb_id : sidebarPrevSelected.li_attr['data-tb_id'];
@@ -3468,6 +3441,27 @@ function jsTreeBuild($tab) {
     })
     .on('ready.jstree', function() {
         $("#tablebar_"+$tab+"_div").jstree('open_all');
+    })
+    .on("move_node.jstree", function (e, data) {
+        var target = data.instance.get_node(data.parent);
+        var target_id = target.data ? target.data.menu_id : target.li_attr['data-menu_id'];
+        var type = data.node.data ? data.node.data.type : data.node.li_attr['data-type'];
+        if (type === 'folder') {
+            var m2t_id = data.node.data ? data.node.data.menu_id : data.node.li_attr['data-menu_id'];
+            var tb_id = 0;
+        } else {
+            var m2t_id = data.node.data ? data.node.data.m2t_id : data.node.li_attr['data-m2t_id'];
+            var tb_id = data.node.data ? data.node.data.tb_id : data.node.li_attr['data-tb_id'];
+        }
+
+        $.ajax({
+            url: baseHttpUrl+'/menutree_movenode?m2t_id='+m2t_id+'&menutree_id='+target_id+'&type='+type+'&tab='+$tab+'&tb_id='+tb_id,
+            method: 'GET',
+            success: function (resp) {
+                $('#tablebar_'+$tab+'_div').jstree().open_node(target, false, false);
+                sidebarPrevSelected = '';
+            }
+        });
     });
 
     //menu on blanc place
