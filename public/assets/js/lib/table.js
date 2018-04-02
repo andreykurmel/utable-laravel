@@ -1767,7 +1767,7 @@ function favoritesCopyToClipboard() {
         copyToClipboard(textToClip);
     } else {
         swal({
-            title: "Only available to logged user",
+            title: "Only available to logged in user. Register and login to make full use of all functions and features.",
             type: "warning"
         });
     }
