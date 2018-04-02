@@ -89,7 +89,7 @@ class AppController extends Controller
         foreach ($importHeaders as &$imp) {
             if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                 $imp->auto = 1;
-                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'date' : 'int');
+                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'Date' : 'Integer');
                 $imp->default = 'auto';
                 $imp->required = 1;
                 $imp->maxlen = '';
@@ -102,7 +102,7 @@ class AppController extends Controller
                     }
                 }
                 $imp->auto = 0;
-                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'int' : ($curval && $curval->DATETIME_PRECISION ? 'date' : 'str'));
+                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
                 $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
                 $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
                 $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
@@ -136,7 +136,8 @@ class AppController extends Controller
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             //'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favorite' => $tableName ? $this->isFavorite($tableName) : "",
-            'owner' => $owner
+            'owner' => $owner,
+            'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->get()
         ];
     }
 
@@ -307,6 +308,7 @@ class AppController extends Controller
                         data-tb_name="'.$table->name.'" 
                         data-tb_db="'.$table->db_tb.'" 
                         data-tb_nbr="'.$table->nbr_entry_listing.'" 
+                        data-tb_notes="'.$table->notes.'" 
                         data-href="'.$link.'" 
                     ><a href="'.$link.'">'.$table->name.'</a></li>';
 

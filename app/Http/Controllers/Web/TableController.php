@@ -678,12 +678,9 @@ class TableController extends Controller
             'name' => $request->table_name,
             'owner' => Auth::user()->id,
             'nbr_entry_listing' => $request->nbr,
+            'notes' => $request->notes,
             'source' => 'mysql',
             'db_tb' => $filename,
-            'host' => env('DB_HOST', 'localhost'),
-            'db' => env('DB_DATABASE', 'utable_admin'),
-            'user' => env('DB_USERNAME', 'root'),
-            'pwd' => env('DB_PASSWORD', ''),
             'createdBy' => Auth::user()->id,
             'createdOn' => now(),
             'modifiedBy' => Auth::user()->id,
@@ -744,18 +741,21 @@ class TableController extends Controller
                 }
                 //for adding columns
                 foreach ($columns as $col) {
+                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
+                    if (!isset($col_size[0])) $col_size[0] = 9;
+                    if (!isset($col_size[1])) $col_size[1] = 2;
                     if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //add column
-                        if ($col['type'] == 'str') {
+                        if ($col['type'] == 'String') {
                             $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
-                        } elseif ($col['type'] == 'date') {
+                        } elseif ($col['type'] == 'Date') {
                             $t = $table->date($col['field']);
-                        } elseif ($col['type'] == 'datetime') {
+                        } elseif ($col['type'] == 'Date Time') {
                             $t = $table->dateTime($col['field']);
-                        } elseif ($col['type'] == 'dec') {
-                            $t = $table->decimal($col['field']);
+                        } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
+                            $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
                         } else {
-                            $t = $table->integer($col['field']);
+                            $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
                         }
 
                         if (empty($col['required'])) {

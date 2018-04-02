@@ -719,6 +719,9 @@
                                 </div>
                             </div>
                             <form method="post" action="{{ $tableName ? route('modifyTable') : route('createTable') }}">
+                                <div class="container">
+                                    <input type="submit" class="btn btn-success" value="Save" style="float:right;">
+                                </div>
                                 <input type="hidden" value="<?= csrf_token() ?>" name="_token">
                                 <input type="hidden" id="import_data_csv" name="data_csv" value="">
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 30px;bottom: 0;">
@@ -728,7 +731,7 @@
                                             <li id="import_li_col_tab"><a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Columns Settings</a></li>
                                         </ul>
                                     </div>
-                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                         <div class="row">
                                             <!--<div class="col-xs-4">
                                                 <div class="row">
@@ -804,7 +807,7 @@
                                         </div>
                                     </div>
 
-                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 60px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
+                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0px; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                         <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
                                         <div class="row">
                                             <div class="col-xs-12">
@@ -825,7 +828,7 @@
 
                                                         <tbody id="import_table_body">
                                                         @foreach($importHeaders as $hdr)
-                                                            <tr id="import_columns_{{ $loop->index }}">
+                                                            <tr id="import_columns_{{ $loop->index }}" {{ $hdr->field == 'createdBy' ? 'class=js-import-col-createdBy' : '' }}>
                                                                 <td>
                                                                     <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
                                                                 </td>
@@ -837,11 +840,9 @@
                                                                 </td>
                                                                 <td>
                                                                     <select class="form-control" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
-                                                                        <option {{ $hdr->type == 'str' ? 'selected="selected"' : '' }} value="str">String</option>
-                                                                        <option {{ $hdr->type == 'int' ? 'selected="selected"' : '' }} value="int">Integer</option>
-                                                                        <option {{ $hdr->type == 'dec' ? 'selected="selected"' : '' }} value="dec">Decimal</option>
-                                                                        <option {{ $hdr->type == 'date' ? 'selected="selected"' : '' }} value="date">Date</option>
-                                                                        <option {{ $hdr->type == 'datetime' ? 'selected="selected"' : '' }} value="datetime">Date Time</option>
+                                                                        @foreach($importTypesDDL as $i_ddl)
+                                                                            <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }} value="str">{{ $i_ddl->option }}</option>
+                                                                        @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
@@ -870,16 +871,6 @@
                                             <div class="col-xs-12">
                                                 <div class="form-group">
                                                     <input type="button" class="btn btn-primary" onclick="import_add_table_row()" value="Add">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="container">
-                                        <div class="row" style="position: absolute; width: 100%; bottom: 0;">
-                                            <div class="col-xs-12">
-                                                <div class="form-group">
-                                                    <input type="submit" class="btn btn-success" value="Save">
-                                                    <a href="{{ route('homepage') }}" class="btn btn-default">Cancel</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -994,6 +985,7 @@
                         <div style="width: 350px;">
                             <input type="hidden" id="sidebar_table_id">
                             <input type="hidden" id="sidebar_table_action">
+                            <input type="hidden" id="sidebar_table_tab">
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_name">Table name</label>
@@ -1012,6 +1004,11 @@
                                     <option>200</option>
                                     <option>500</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_notes">Notes</label>
+                                <input type="text" id="sidebar_table_notes" class="form-control">
                             </div>
 
                             <div class="form-group">
@@ -1045,5 +1042,7 @@
         authUser = {{ (int)Auth::check() }};
         userOwner = {{ (int)$owner }};
         isAdmin = {{ (Auth::user() && Auth::user()->role_id == 1 ? 1 : 0) }};
+        importTypesDDL = JSON.parse('{!! json_encode($importTypesDDL) !!}');
+        console.log(importTypesDDL);
     </script>
 @endpush

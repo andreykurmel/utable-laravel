@@ -2950,17 +2950,15 @@ function sent_csv_to_backend(is_upload) {
 
                 var html = '';
                 $.each(fieldlist, function(i, hdr) {
-                    html += '<tr id="import_columns_'+i+'">'+
+                    html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="number" class="form-control" name="columns['+i+'][col]" value="'+(hdr.auto ? '' : i)+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>' +
-                            '<option '+(hdr.type == 'str' ? 'selected="selected"' : '')+' value="str">String</option>' +
-                            '<option '+(hdr.type == 'int' ? 'selected="selected"' : '')+' value="int">Integer</option>' +
-                            '<option '+(hdr.type == 'dec' ? 'selected="selected"' : '')+' value="dec">Decimal</option>' +
-                            '<option '+(hdr.type == 'date' ? 'selected="selected"' : '')+' value="date">Date</option>' +
-                            '<option '+(hdr.type == 'datetime' ? 'selected="selected"' : '')+' value="datetime">Date Time</option>' +
-                        '</select></td>' +
+                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                    for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
+                        html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
+                    }
+                    html += '</select></td>' +
                         '<td><input type="number" class="form-control" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
@@ -3004,17 +3002,15 @@ function import_test_db_connect() {
 
                 var html = '';
                 $.each(fieldlist, function(i, hdr) {
-                    html += '<tr id="import_columns_'+i+'">'+
+                    html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="number" class="form-control" name="columns['+i+'][col]" value="'+(hdr.auto ? '' : i)+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>' +
-                            '<option '+(hdr.type == 'str' ? 'selected="selected"' : '')+' value="str">String</option>' +
-                            '<option '+(hdr.type == 'int' ? 'selected="selected"' : '')+' value="int">Integer</option>' +
-                            '<option '+(hdr.type == 'dec' ? 'selected="selected"' : '')+' value="dec">Decimal</option>' +
-                            '<option '+(hdr.type == 'date' ? 'selected="selected"' : '')+' value="date">Date</option>' +
-                            '<option '+(hdr.type == 'datetime' ? 'selected="selected"' : '')+' value="datetime">Date Time</option>' +
-                        '</select></td>' +
+                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                    for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
+                        html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
+                    }
+                    html += '</select></td>' +
                         '<td><input type="number" class="form-control" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
@@ -3042,10 +3038,12 @@ function import_add_table_row() {
     var html = '<tr id="import_columns_'+i+'">'+
         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
         '<td><input type="text" class="form-control" name="columns['+i+'][field]" value=""></td>' +
-        '<td><input type="number" class="form-control" name="columns['+i+'][col]" value=""></td>' +
-        '<td><select class="form-control" name="columns['+i+'][type]" value="int">' +
-            '<option value="str">String</option><option value="int">Integer</option><option value="dec">Decimal</option><option value="date">Date</option><option value="datetime">Date Time</option>' +
-        '</select></td>' +
+        '<td style="display: none;"><input type="number" class="form-control" name="columns['+i+'][col]" value=""></td>' +
+        '<td><select class="form-control" name="columns['+i+'][type]">';
+    for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
+        html += '<option>'+importTypesDDL[jdx].option+'</option>';
+    }
+    html += '</select></td>' +
         '<td><input type="number" class="form-control" name="columns['+i+'][size]"></td>' +
         '<td><input type="text" class="form-control" name="columns['+i+'][default]"></td>' +
         '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]"></td>' +
@@ -3054,7 +3052,7 @@ function import_add_table_row() {
             '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
         '</td>' +
         '</tr>';
-    $('#import_table_body').append(html);
+    $('.js-import-col-createdBy').before(html);
     $('#import_row_count').val(i+1);
 }
 
@@ -3175,6 +3173,7 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Add Table",
                                     "action": function (obj) {
+                                        $('#sidebar_table_tab').val($tab);
                                         $('#sidebar_table_action').val('add');
                                         $('#sidebar_table_name').val('');
                                         $('#sidebar_table_id').val(0);
@@ -3314,11 +3313,13 @@ function jsTreeBuild($tab) {
                                         var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
                                         var table_name = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
 
+                                        $('#sidebar_table_tab').val($tab);
                                         $('#sidebar_table_action').val('edit');
                                         $('#sidebar_table_name').val(table_name);
                                         $('#sidebar_table_id').val( elem.data ? elem.data.tb_id : elem.li_attr['data-tb_id'] );
                                         $('#sidebar_table_db').prop('disabled', true).val( elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'] );
                                         $('#sidebar_table_nbr').val( elem.data ? elem.data.tb_nbr : elem.li_attr['data-tb_nbr'] );
+                                        $('#sidebar_table_notes').val( elem.data ? elem.data.tb_notes : elem.li_attr['data-tb_notes'] );
 
                                         $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                                     }
@@ -3514,11 +3515,13 @@ function jsTreeBuild($tab) {
             });
             if ($tab == 'private') {
                 $('.js-cxtMenu_add_table').on('click', function () {
+                    $('#sidebar_table_tab').val($tab);
                     $('#sidebar_table_action').val('add');
                     $('#sidebar_table_name').val('');
                     $('#sidebar_table_id').val(0);
                     $('#sidebar_table_db').prop('disabled', false).val('');
                     $('#sidebar_table_nbr').val(100);
+                    $('#sidebar_table_notes').val('');
 
                     $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                 });
@@ -3537,8 +3540,9 @@ function popup_sidebar_table() {
         tb_name = $('#sidebar_table_name').val(),
         tb_db = $('#sidebar_table_db').val(),
         tb_nbr = $('#sidebar_table_nbr').val(),
+        tb_notes = $('#sidebar_table_notes').val(),
         action = $('#sidebar_table_action').val(),
-        strParamsEdit = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr;
+        strParamsEdit = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr+"&notes="+tb_notes;
 
     if (action == 'add') {
         $.ajax({
@@ -3547,7 +3551,8 @@ function popup_sidebar_table() {
             data: {
                 'table_db_tb': tb_db,
                 'table_name': tb_name,
-                'nbr': tb_nbr
+                'nbr': tb_nbr,
+                'notes': tb_notes
             },
             success: function (response) {
                 if (response.error) {
@@ -3570,7 +3575,7 @@ function popup_sidebar_table() {
 
                 $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, tb_name);
                 $('#'+elem_id).data('tb_nbr', tb_nbr);
-                $('#'+elem_id).data('tb_subdomain', tb_subdomain);
+                $('#'+elem_id).data('tb_notes', tb_notes);
 
                 alert(response.msg);
             },
