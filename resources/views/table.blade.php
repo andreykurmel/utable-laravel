@@ -23,7 +23,7 @@
                         <li {{ Auth::guest() ? 'class=active' : '' }} id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
                         @if(Auth::user())
                             <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
-                            <li class="active" id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Favorite</a></li>
+                            <li class="active" id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px"></a></li>
                         @endif
                     </ul>
 
@@ -326,9 +326,9 @@
                                         entries
                                     </label>
                                 </div>
-                                <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">copy</button>
+                                <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
                                 <input id="favourite_copy_with_headers" type="checkbox">
-                                <label for="favourite_copy_with_headers">headers</label>
+                                <label for="favourite_copy_with_headers">Headers</label>
                             </div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
@@ -728,7 +728,7 @@
                                     <div class="standard-tabs container">
                                         <ul class="tabs">
                                             <li class="active" id="import_li_csv_tab" onclick="import_show_csv_tab()"><a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">CSV Settings</a></li>
-                                            <li id="import_li_col_tab"><a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Columns Settings</a></li>
+                                            <li id="import_li_col_tab"><a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Field Settings</a></li>
                                         </ul>
                                     </div>
                                     <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
