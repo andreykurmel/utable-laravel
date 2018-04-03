@@ -5,6 +5,7 @@ namespace Vanguard\Http\Controllers\Web;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Vanguard\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Vanguard\Services\TableService;
@@ -119,6 +120,13 @@ class AppController extends Controller
             $owner = Auth::user() ? true : false;
         }
 
+        $connections =
+            Auth::user()
+            ?
+            DB::connection('mysql_sys')->table('conn')->where('user_id', '=', Auth::user()->id)->orderBy('name')->get()
+            :
+            [];
+
         return [
             'server' => config('app.url'),
             'socialProviders' => config('auth.social.providers'),
@@ -137,7 +145,8 @@ class AppController extends Controller
             //'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",
             'favorite' => $tableName ? $this->isFavorite($tableName) : "",
             'owner' => $owner,
-            'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->get()
+            'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->orderBy('id')->get(),
+            'importConnections' => $connections
         ];
     }
 
@@ -396,13 +405,28 @@ class AppController extends Controller
     }
 
     public function showSettingsForCreateTable(Request $request) {
+        if (!Auth::user()) {
+            return "Only for logged users";
+        }
+
+        if ($request->file_link) {
+            $filename = explode('/', $request->file_link);
+            $filename = pathinfo(last($filename), PATHINFO_FILENAME);
+            $filename = preg_replace('/[^\w\d]/i', '_', $filename);
+
+            $tmp_csv = time()."_".rand().".csv";
+            if( !Storage::put("csv/".$tmp_csv, file_get_contents($request->file_link)) ) {
+                return "File accessing error!";
+            }
+        }
         if ($request->csv) {
             $tmp_csv = time()."_".rand().".csv";
             $request->csv->storeAs('csv', $tmp_csv);
 
             $filename = pathinfo($request->csv->getClientOriginalName(), PATHINFO_FILENAME);
             $filename = preg_replace('/[^\w\d]/i', '_', $filename);
-        } else {
+        }
+        if (empty($filename)) {
             $filename = $request->filename;
             $tmp_csv = $request->data_csv;
         }
@@ -454,6 +478,16 @@ class AppController extends Controller
             if ($columns != count($data)) {
                 return "Incorrect csv format (your rows have different number of columns)!";
             }
+
+            //auto fill 'size' from columns
+            foreach ($data as $key => $val) {
+                if (!isset($headers[$key]['size'])) {
+                    $headers[$key]['size'] = '';
+                }
+                if (strlen((string)$val) > $headers[$key]['size']) {
+                    $headers[$key]['size'] = strlen((string)$val);
+                }
+            }
         }
 
         $to_view['filename'] = $filename;
@@ -463,10 +497,52 @@ class AppController extends Controller
     }
 
     public function showSettingsForCreateTableMySQL(Request $request) {
+        if (!Auth::user()) {
+            return "Only for logged users";
+        }
+
+        //if need to save connection info
+        if ($request->save_conn) {
+            $exist = DB::connection('mysql_sys')->table('conn')
+                ->where('user_id', '=', Auth::user()->id)
+                ->where('name', '=', $request->name_conn)
+                ->first();
+            if ($exist) {
+                DB::connection('mysql_sys')->table('conn')
+                    ->where('user_id', '=', Auth::user()->id)
+                    ->where('name', '=', $request->name_conn)
+                    ->update([
+                        'server' => $request->host,
+                        'user' => $request->user,
+                        'pwd' => $request->pass,
+                        'db' => $request->db,
+                        'table' => $request->table,
+                        'notes' => $request->notes,
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+            } else {
+                DB::connection('mysql_sys')->table('conn')->insert([
+                    'user_id' => Auth::user()->id,
+                    'name' => $request->name_conn,
+                    'server' => $request->host,
+                    'user' => $request->user,
+                    'pwd' => $request->pass,
+                    'db' => $request->db,
+                    'table' => $request->table,
+                    'notes' => $request->notes,
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
+
         Config::set('database.connections.mysql_import.host', $request->host);
         Config::set('database.connections.mysql_import.username', $request->user);
         Config::set('database.connections.mysql_import.password', $request->pass);
-        Config::set('database.connections.mysql_import.database', 'information_schemas');
+        Config::set('database.connections.mysql_import.database', 'information_schema');
 
         try {
             $columns = DB::connection('mysql_import')->table('COLUMNS')->where('TABLE_SCHEMA', '=', $request->db)->where('TABLE_NAME', '=', $request->table)->get();
@@ -474,7 +550,6 @@ class AppController extends Controller
         } catch (\Exception $e) {}
 
         if (empty($columns)) {
-            DB::disconnect('mysql_import');
             Config::set('database.connections.mysql_import2.host', $request->host);
             Config::set('database.connections.mysql_import2.username', $request->user);
             Config::set('database.connections.mysql_import2.password', $request->pass);
@@ -485,7 +560,7 @@ class AppController extends Controller
                 $full_info = false;
             } catch (\Exception $e) {}
         }
-
+print_r(config('database.connections'));exit;
         if (!empty($columns)) {
             $headers = [];
             $idx = 1;

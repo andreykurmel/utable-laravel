@@ -395,7 +395,9 @@ Route::get('/api/changeOrder', 'TableController@changeOrder')->name('changeOrder
 Route::get('/api/changeSettingsRowOrder', 'TableController@changeSettingsRowOrder')->name('changeSettingsRowOrder');
 Route::get('/api/settingsForCreateMySQL', 'AppController@showSettingsForCreateTableMySQL')->name('showSettingsForCreateTableMySQL');
 Route::post('/api/settingsForCreate', 'AppController@showSettingsForCreateTable')->name('showSettingsForCreateTable');
+Route::post('/api/createTableFromMenu', 'TableController@createTableFromMenu')->name('createTableFromMenu');
 Route::post('/api/createTable', 'TableController@createTable')->name('createTable');
+Route::post('/api/replaceTable', 'TableController@replaceTable')->name('replaceTable');
 Route::post('/api/modifyTable', 'TableController@modifyTable')->name('modifyTable');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/menutree_addfolder', 'TableController@menutree_addfolder')->name('menutree_addfolder');

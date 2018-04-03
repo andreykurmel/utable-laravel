@@ -1492,7 +1492,7 @@ function deleteCurrentTable() {
                 method: 'GET',
                 url: baseHttpUrl + '/deleteAllTable',
                 data: {
-                    tableName: selectedTableName
+                    table_name: selectedTableName
                 },
                 success: function (response) {
                     window.location = '/data/all';
@@ -2898,6 +2898,7 @@ function import_changed_type_group() {
 function sent_csv_to_backend(is_upload) {
     var data = new FormData();
     var data_csv = $('#import_data_csv').val();
+    var file_link = $('#import_file_link').val();
 
     if (!is_upload && !data_csv) {
         //if no file for upload and file didn`t uploaded before - return
@@ -2913,6 +2914,8 @@ function sent_csv_to_backend(is_upload) {
         jQuery.each(jQuery('#import_csv')[0].files, function(i, file) {
             data.append('csv', file);
         });
+
+        data.append('file_link', file_link);
     } else {
         data.append('data_csv', data_csv);
         data.append('filename', $('#import_table_name').val());
@@ -2934,19 +2937,19 @@ function sent_csv_to_backend(is_upload) {
         method: 'POST',
         success: function(resp) {
             $('#import_data_csv').val(resp.data_csv);
-            if (!selectedTableName) {
+            if ($('#import_action_type').val() != '/modifyTable') {
                 $('#import_table_name').val(resp.filename);
                 $('#import_table_db_tb').val(resp.filename);
 
                 var fieldlist = [];
-                fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 $.each(resp.headers, function(i, hdr) {
                     fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':hdr.type, 'auto':0, 'size':hdr.size, 'default':hdr.default, 'required':hdr.required});
                 });
-                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
 
                 var html = '';
                 $.each(fieldlist, function(i, hdr) {
@@ -2970,6 +2973,9 @@ function sent_csv_to_backend(is_upload) {
                 });
                 $('#import_table_body').html(html);
             }
+            if (file_link) {
+                import_show_col_tab();
+            }
         }
     });
 }
@@ -2979,26 +2985,28 @@ function import_test_db_connect() {
         url: baseHttpUrl+'/settingsForCreateMySQL',
         data: {
             'host': $('#import_mysql_host').val(),
-            'user': $('#import_mysql_login').val(),
-            'pass': $('#import_mysql_pass').val(),
+            'user': $('#import_mysql_lgn').val(),
+            'pass': $('#import_mysql_pwd').val(),
             'db': $('#import_mysql_db').val(),
             'table': $('#import_mysql_table').val(),
+            'name_conn': $('#import_name_conn').val(),
+            'save_conn': $('#import_save_conn').is(':checked') ? 1 : 0
         },
         method: 'GET',
         success: function(resp) {
-            if (!resp.error && !selectedTableName) {
+            if (!resp.error && $('#import_action_type').val() != '/modifyTable') {
                 $('#import_table_name').val(resp.filename);
                 $('#import_table_db_tb').val(resp.filename);
 
                 var fieldlist = [];
-                fieldlist.push({'name':'ID', 'field':'id', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 $.each(resp.headers, function(i, hdr) {
                     fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':hdr.type, 'auto':0, 'size':hdr.size, 'default':hdr.default, 'required':hdr.required});
                 });
-                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'int', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
 
                 var html = '';
                 $.each(fieldlist, function(i, hdr) {
@@ -3024,7 +3032,9 @@ function import_test_db_connect() {
 
                 swal("Success!", "", "success");
             } else {
-                swal("Connection error!", "", "error");
+                if (resp.error) {
+                    swal("Connection error!", "", "error");
+                }
             }
         },
         error: function (e) {
@@ -3077,14 +3087,33 @@ function import_show_col_tab() {
 
 function changeImportStyle(sel) {
     var style = $(sel).val();
+    if (style == 'scratch') {
+        $('.js-import_mysql_style').hide();
+        $('.js-import_csv_style').hide();
+        import_show_col_tab();
+    } else
     if (style == 'csv') {
         $('.js-import_mysql_style').hide();
         $('.js-import_csv_style').show();
-        $('#import_li_csv_tab > a').html('CSV Settings');
+    } else
+    if (style == 'mysql') {
+        $('.js-import_csv_style').hide();
+        $('.js-import_mysql_style').show();
     } else {
         $('.js-import_csv_style').hide();
         $('.js-import_mysql_style').show();
-        $('#import_li_csv_tab > a').html('MySQL Settings');
+    }
+}
+
+function select_import_connection() {
+    var idx = $('#import_saved_conn').val();
+    if (idx >= 0) {
+        $('#import_name_conn').val( importConnections[idx].name );
+        $('#import_mysql_host').val( importConnections[idx].server );
+        $('#import_mysql_lgn').val( importConnections[idx].user );
+        $('#import_mysql_pwd').val( importConnections[idx].pwd );
+        $('#import_mysql_db').val( importConnections[idx].db );
+        $('#import_mysql_table').val( importConnections[idx].table );
     }
 }
 
@@ -3547,7 +3576,7 @@ function popup_sidebar_table() {
     if (action == 'add') {
         $.ajax({
             method: 'POST',
-            url: baseHttpUrl + '/createTable',
+            url: baseHttpUrl + '/createTableFromMenu',
             data: {
                 'table_db_tb': tb_db,
                 'table_name': tb_name,
@@ -3584,4 +3613,9 @@ function popup_sidebar_table() {
             }
         });
     }
+}
+
+function import_form_submit () {
+    var action = baseHttpUrl + $('#import_action_type').val();
+    $('#import_form').prop('action', action);
 }

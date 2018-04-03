@@ -612,9 +612,8 @@ class TableController extends Controller
         }
     }
 
-    public function createTable(Request $request)
+    public function createTableFromMenu(Request $request)
     {
-        //$columns = $request->columns;
         $columns = [
             ['field' => 'id', 'header' => 'ID'],
             ['field' => 'createdBy', 'header' => 'Created By'],
@@ -626,10 +625,74 @@ class TableController extends Controller
 
         //create table
         try {
-            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) /*use ($columns)*/ {
+            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) {
+                $table->increments('id');
+                $table->integer('createdBy')->nullable();
+                $table->dateTime('createdOn')->nullable();
+                $table->integer('modifiedBy')->nullable();
+                $table->dateTime('modifiedOn')->nullable();
+            });
+        } catch (\Exception $e) {
+            return [
+                'error' => true,
+                'msg' => "Seems that table with provided db_tb is exists!<br>".$e->getMessage()
+            ];
+        }
+
+        //add record to 'tb'
+        DB::connection('mysql_sys')->table('tb')->insert([
+            'name' => $request->table_name,
+            'owner' => Auth::user()->id,
+            'nbr_entry_listing' => $request->nbr,
+            'notes' => $request->notes,
+            'source' => 'mysql',
+            'db_tb' => $filename,
+            'createdBy' => Auth::user()->id,
+            'createdOn' => now(),
+            'modifiedBy' => Auth::user()->id,
+            'modifiedOn' => now()
+        ]);
+        $tb_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+
+        //add settings to 'tb_settings_display'
+        foreach ($columns as $col) {
+            if ($col['field']) {
+                DB::connection('mysql_sys')->table('tb_settings_display')->insert([
+                    'user_id' => Auth::user()->id,
+                    'tb_id' => $tb_id,
+                    'field' => $col['field'],
+                    'name' => $col['header'],
+                    'web' => 'Yes',
+                    'filter' => 'No',
+                    'sum' => 'No',
+                    'input_type' => 'Input',
+                    'min_wth' => 0,
+                    'max_wth' => 0,
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
+
+        return [
+            'error' => false,
+            'msg' => config('app.url')."/data/".$filename
+        ];
+    }
+
+    public function createTable(Request $request)
+    {
+        $columns = $request->columns;
+        $filename = $request->table_db_tb;
+
+        //create table
+        try {
+            Schema::connection('mysql_data')->create($filename, function (Blueprint $table) use ($columns) {
                 $table->increments('id');
 
-                /*$presentCols = [];
+                $presentCols = [];
                 foreach ($columns as &$col) {
                     if ($col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //prevent error if we have two the same names for columns
@@ -639,16 +702,16 @@ class TableController extends Controller
                         $presentCols[] = $col['field'];
 
                         //add column
-                        if ($col['type'] == 'str') {
+                        if ($col['type'] == 'String') {
                             $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
-                        } elseif ($col['type'] == 'date') {
+                        } elseif ($col['type'] == 'Date') {
                             $t = $table->date($col['field']);
-                        } elseif ($col['type'] == 'datetime') {
+                        } elseif ($col['type'] == 'Date Time') {
                             $t = $table->dateTime($col['field']);
-                        } elseif ($col['type'] == 'dec') {
-                            $t = $table->decimal($col['field']);
+                        } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
+                            $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
                         } else {
-                            $t = $table->integer($col['field']);
+                            $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
                         }
 
                         if (empty($col['required'])) {
@@ -659,7 +722,7 @@ class TableController extends Controller
                             $t->default($col['default']);
                         }
                     }
-                }*/
+                }
 
                 $table->integer('createdBy')->nullable();
                 $table->dateTime('createdOn')->nullable();
@@ -711,15 +774,18 @@ class TableController extends Controller
         }
 
         //import data
-        /*if ($request->data_csv || $request->import_host) {
+        if ($request->data_csv || $request->import_host) {
             $this->importDataToTable($request, $filename, $columns);
-        }*/
+        }
 
-        //return redirect()->to( "/data/".$filename );
-        return [
-            'error' => false,
-            'msg' => config('app.url')."/data/".$filename
-        ];
+        return redirect()->to( "/data/".$filename );
+    }
+
+    public function replaceTable(Request $request) {
+        if ($request->table_name) {
+            $this->deleteAllTable($request);
+        }
+        return $this->createTable($request);
     }
 
     public function modifyTable(Request $request)
@@ -821,10 +887,10 @@ class TableController extends Controller
 
     public function deleteAllTable(Request $request)
     {
-        $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
+        $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->table_name)->first();
 
         //delete table
-        Schema::connection('mysql_data')->table($request->tableName, function (Blueprint $table) {
+        Schema::connection('mysql_data')->table($request->table_name, function (Blueprint $table) {
             $table->drop();
         });
 
