@@ -560,7 +560,7 @@ class AppController extends Controller
                 $full_info = false;
             } catch (\Exception $e) {}
         }
-print_r(config('database.connections'));exit;
+
         if (!empty($columns)) {
             $headers = [];
             $idx = 1;
