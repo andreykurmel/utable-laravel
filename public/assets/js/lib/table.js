@@ -3090,17 +3090,21 @@ function changeImportStyle(sel) {
     if (style == 'scratch') {
         $('.js-import_mysql_style').hide();
         $('.js-import_csv_style').hide();
+        $('#import_action_type').hide();
         import_show_col_tab();
     } else
     if (style == 'csv') {
         $('.js-import_mysql_style').hide();
+        $('#import_action_type').show();
         $('.js-import_csv_style').show();
     } else
     if (style == 'mysql') {
         $('.js-import_csv_style').hide();
+        $('#import_action_type').show();
         $('.js-import_mysql_style').show();
     } else {
         $('.js-import_csv_style').hide();
+        $('#import_action_type').hide();
         $('.js-import_mysql_style').show();
     }
 }
@@ -3116,6 +3120,15 @@ function select_import_connection() {
         $('#import_mysql_table').val( importConnections[idx].table );
     }
 }
+
+function import_form_submit () {
+    var action = baseHttpUrl + $('#import_action_type').val();
+    if (!$('#import_action_type').is(':visible')) {
+        action = baseHttpUrl + '/modifyTable';
+    }
+    $('#import_form').prop('action', action);
+}
+
 
 
 
@@ -3613,9 +3626,4 @@ function popup_sidebar_table() {
             }
         });
     }
-}
-
-function import_form_submit () {
-    var action = baseHttpUrl + $('#import_action_type').val();
-    $('#import_form').prop('action', action);
 }
