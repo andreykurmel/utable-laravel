@@ -1136,24 +1136,13 @@ function showInlineEdit(id, instant) {
         return;
     }
 
-    //freeze 'unit_ddl' field if 'unit' is empty (for Settings/Display Tab)
+    //freeze 'unit' field if 'unit_ddl' is empty (for Settings/Display Tab)
     if (
         id.indexOf('settingsDisplay') > -1
         &&
-        key == 'unit_ddl'
+        key == 'unit'
         &&
-        !settingsTableData[idx].unit
-    ) {
-        return;
-    }
-
-    //freeze 'unit_ddl' field if 'unit' is empty (for Main data)
-    if (
-        id.indexOf('_dataT') > -1
-        &&
-        key == 'unit_ddl'
-        &&
-        !tableData[idx].unit
+        !settingsTableData[idx].unit_ddl
     ) {
         return;
     }
@@ -1188,6 +1177,15 @@ function showInlineEdit(id, instant) {
         if (key == 'ddl_id' || key == 'unit_ddl') {
             for(var i in ltableDDls['ddl_id']) {
                 html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
+            }
+        } else
+        if (key == 'unit') {
+            for (var i in settingsDDLs) {
+                if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
+                    for (var j in settingsDDLs[i].items) {
+                        html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+                    }
+                }
             }
         } else {
             for(var i in ltableDDls[key]) {
@@ -1749,7 +1747,11 @@ function favoritesCopyToClipboard() {
         if ($('#favourite_copy_with_headers').is(':checked')) {
             textToClip += "<tr>";
             for (var j = 0; j < selectedColumns.length; j++) {
-                textToClip += "<td>" + favoriteTableHeaders[j].name + "</td>";
+                for (var k = 0; k < favoriteTableHeaders.length; k++) {
+                    if (favoriteTableHeaders[k].field == selectedColumns[j]) {
+                        textToClip += "<td>" + favoriteTableHeaders[k].name + "</td>";
+                    }
+                }
             }
             textToClip += "</tr>";
         }
