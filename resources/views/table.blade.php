@@ -329,6 +329,9 @@
                                 <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
                                 <input id="favourite_copy_with_headers" type="checkbox">
                                 <label for="favourite_copy_with_headers">Headers</label>
+                                @if($tableMeta && $tableMeta->source == 'remote')
+                                    <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
+                                @endif
                             </div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
@@ -701,49 +704,49 @@
                     @if($owner && $tableName)
                     <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
-                            <div class="container">
-                                <div class="row form-group">
-                                    <select class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
-                                        <option value="scratch">From Scratch</option>
-                                        <option selected value="csv">CSV Import</option>
-                                        <option value="mysql">MySQL Import</option>
-                                        <option value="remote">Remote</option>
-                                        <option value="ref">Referencing</option>
-                                    </select>
-                                    <select class="form-control" id="import_action_type" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
-                                        <option value="/createTable">New</option>
-                                        <option value="/replaceTable">Replace Existing</option>
-                                        <option value="/modifyTable">Append</option>
-                                    </select>
-                                    <div class="js-import_csv_style" style="width: 67%;display: flex;float: right;align-items: center; justify-content:  space-between;">
-                                        <div style="width: calc(50% - 50px); display: inline-block;">
-                                            <input type="file" name="csv" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
-                                        </div>
-                                        OR
-                                        <div style="width: calc(50% - 50px); display: inline-block;">
-                                            <input type="text" name="file_link" id="import_file_link" class="form-control" placeholder="www address of file">
-                                        </div>
-                                        <button class="btn btn-primary" onclick="sent_csv_to_backend(1)">Import</button>
-                                    </div>
-                                    <div class="js-import_mysql_style" style="width: 67%; display: none; float: right; text-align: right;">
-                                        <select class="form-control" id="import_saved_conn" onchange="select_import_connection()" style="width: 11%; display: inline-block; height: 34px;">
-                                            <option value="-1"></option>
-                                            @foreach($importConnections as $key => $iconn)
-                                                <option value="{{ $key }}">{{ $iconn->name }}</option>
-                                            @endforeach
+                            <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
+                                <div class="container">
+                                    <div class="row form-group">
+                                        <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
+                                            <option value="scratch">From Scratch</option>
+                                            <option selected value="csv">CSV Import</option>
+                                            <option value="mysql">MySQL Import</option>
+                                            <option value="remote">Remote</option>
+                                            <option value="ref">Referencing</option>
                                         </select>
-                                        <input id="import_name_conn" name="import_name_conn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="NAME">
-                                        <input id="import_mysql_host" name="import_host" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="HOST">
-                                        <input id="import_mysql_lgn" name="import_lgn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="LOGIN">
-                                        <input id="import_mysql_pwd" name="import_pwd" type="password" class="form-control" style="width: 11%; display: inline-block;" placeholder="PASS">
-                                        <input id="import_mysql_db" name="import_db" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="DB">
-                                        <input id="import_mysql_table" name="import_table" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="TABLE">
-                                        <input id="import_save_conn" name="import_save_conn" type="checkbox" class="form-control" style="width: 5%; display: inline-block;">
-                                        <input type="button" class="btn btn-success" style="width: 11%; display: inline-block;" value="Connect" onclick="import_test_db_connect()">
+                                        <select class="form-control" id="import_action_type" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
+                                            <option value="/createTable">New</option>
+                                            <option value="/replaceTable">Replace Existing</option>
+                                            <option value="/modifyTable">Append</option>
+                                        </select>
+                                        <div class="js-import_csv_style" style="width: 67%;display: flex;float: right;align-items: center; justify-content:  space-between;">
+                                            <div style="width: calc(50% - 50px); display: inline-block;">
+                                                <input type="file" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
+                                            </div>
+                                            OR
+                                            <div style="width: calc(50% - 50px); display: inline-block;">
+                                                <input type="text" id="import_file_link" class="form-control" placeholder="www address of file">
+                                            </div>
+                                            <button class="btn btn-primary" onclick="sent_csv_to_backend(1)">Import</button>
+                                        </div>
+                                        <div class="js-import_mysql_style" style="width: 67%; display: none; float: right; text-align: right;">
+                                            <select class="form-control" id="import_saved_conn" onchange="select_import_connection()" style="width: 11%; display: inline-block; height: 34px;">
+                                                <option value="-1"></option>
+                                                @foreach($importConnections as $key => $iconn)
+                                                    <option value="{{ $key }}">{{ $iconn->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <input id="import_name_conn" name="import_name_conn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="NAME">
+                                            <input id="import_mysql_host" name="import_host" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="HOST">
+                                            <input id="import_mysql_lgn" name="import_lgn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="LOGIN">
+                                            <input id="import_mysql_pwd" name="import_pwd" type="password" class="form-control" style="width: 11%; display: inline-block;" placeholder="PASS">
+                                            <input id="import_mysql_db" name="import_db" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="DB">
+                                            <input id="import_mysql_table" name="import_table" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="TABLE">
+                                            <input id="import_save_conn" name="import_save_conn" type="checkbox" class="form-control" style="width: 5%; display: inline-block;">
+                                            <input type="button" class="btn btn-success" style="width: 11%; display: inline-block;" value="Connect" onclick="import_test_db_connect()">
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
                                 <div class="container" style="position: relative;">
                                     <input type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
                                 </div>
@@ -1060,5 +1063,6 @@
         isAdmin = {{ (Auth::user() && Auth::user()->role_id == 1 ? 1 : 0) }};
         importTypesDDL = JSON.parse('{!! json_encode($importTypesDDL) !!}');
         importConnections = JSON.parse('{!! json_encode($importConnections) !!}');
+        table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
     </script>
 @endpush

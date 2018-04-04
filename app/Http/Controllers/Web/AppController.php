@@ -75,7 +75,7 @@ class AppController extends Controller
             ?
             DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first()
             :
-            '';
+            [];
 
         $importHeadersMeta = $tableName
             ?

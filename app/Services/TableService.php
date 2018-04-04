@@ -3,6 +3,7 @@
 namespace Vanguard\Services;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class TableService {
@@ -27,6 +28,9 @@ class TableService {
         }
 
         $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
+        if ($table_meta->source == 'remote') {
+            $this->setRemoteConnection($table_meta->conn_id);
+        }
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
@@ -129,7 +133,7 @@ class TableService {
         }
 
         //join favourite table for main data
-        if($fromMainData) {
+        if($fromMainData && $table_meta->source != 'remote') {
             $sql->leftJoin('favorite as f', function ($q) use ($tableName, $table_meta) {
                 $q->whereRaw($tableName.'.id = f.row_id');
                 $q->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
@@ -143,12 +147,12 @@ class TableService {
             foreach ($fields_for_select as $key => $fld) {
                 $select_cls[] = $tableName.".".$key;
             }
-            if($fromMainData) {
+            if($fromMainData && $table_meta->source != 'remote') {
                 $select_cls[] = 'f.id as is_favorited';
             }
             $sql->select($select_cls);
         } else {
-            if($fromMainData) {
+            if($fromMainData && $table_meta->source != 'remote') {
                 $sql->select($tableName.'.*', 'f.id as is_favorited');
             }
         }
@@ -367,6 +371,14 @@ class TableService {
 
         }
         return $result;
+    }
+
+    public function setRemoteConnection($connId, $connName = 'mysql_data') {
+        $conn = DB::connection('mysql_sys')->table('conn')->where('id', '=', $connId)->first();
+        Config::set('database.connections.'.$connName.'.host', $conn->server);
+        Config::set('database.connections.'.$connName.'.username', $conn->user);
+        Config::set('database.connections.'.$connName.'.password', $conn->pwd);
+        Config::set('database.connections.'.$connName.'.database', $conn->db);
     }
 
     public function getHeaders($tableName, $fields_for_select = []) {

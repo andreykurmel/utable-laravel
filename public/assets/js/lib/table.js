@@ -733,7 +733,7 @@ function toggleFavoriteTable(elem) {
 }
 
 function toggleFavoriteRow(idx, elem) {
-    if (authUser) {
+    if (authUser && table_meta.source != 'remote') {
         var i = $(elem).find('i');
         if ($(i).hasClass('fa-star')) {
             $.ajax({
@@ -1535,7 +1535,7 @@ function changeFavoritePage(page) {
             }
 
             console.log('Favorite', response);
-            if (authUser) {
+            if (authUser && table_meta.source != 'remote') {
                 favoriteRowsCount = response.rows;
                 favoriteTableData = response.data;
             } else {
@@ -3122,9 +3122,15 @@ function select_import_connection() {
 }
 
 function import_form_submit () {
-    var action = baseHttpUrl + $('#import_action_type').val();
-    if (!$('#import_action_type').is(':visible')) {
+    var action, type = $('#import_type_import').val();
+    if (type == 'scratch') {
         action = baseHttpUrl + '/modifyTable';
+    } else
+    if (type == 'csv' || type == 'mysql') {
+        action = baseHttpUrl + $('#import_action_type').val();
+    } else
+    if (type == 'remote') {
+        action = baseHttpUrl + '/remoteTable';
     }
     $('#import_form').prop('action', action);
 }
@@ -3591,9 +3597,9 @@ function popup_sidebar_table() {
             method: 'POST',
             url: baseHttpUrl + '/createTableFromMenu',
             data: {
-                'table_db_tb': tb_db,
+                'db_tb': tb_db,
                 'table_name': tb_name,
-                'nbr': tb_nbr,
+                'nbr_entry_listing': tb_nbr,
                 'notes': tb_notes
             },
             success: function (response) {

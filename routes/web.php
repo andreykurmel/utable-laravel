@@ -399,6 +399,7 @@ Route::post('/api/createTableFromMenu', 'TableController@createTableFromMenu')->
 Route::post('/api/createTable', 'TableController@createTable')->name('createTable');
 Route::post('/api/replaceTable', 'TableController@replaceTable')->name('replaceTable');
 Route::post('/api/modifyTable', 'TableController@modifyTable')->name('modifyTable');
+Route::post('/api/remoteTable', 'TableController@remoteTable')->name('remoteTable');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/menutree_addfolder', 'TableController@menutree_addfolder')->name('menutree_addfolder');
     Route::get('/api/menutree_renamefolder', 'TableController@menutree_renamefolder')->name('menutree_renamefolder');
