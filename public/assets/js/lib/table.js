@@ -2338,7 +2338,8 @@ var settingsDDLs,
     settingsDDL_Obj,
     settingsDDL_ItemsObj,
     settingsDDL_selectedIndex = -1,
-    settingsDDL_TableMeta;
+    settingsDDL_TableMeta,
+    settingsDDL_cdtns_headers;
 
 function getDDLdatas(tableName) {
     $.ajax({
@@ -2354,6 +2355,7 @@ function getDDLdatas(tableName) {
             settingsDDL_hdr = response.DDL_hdr;
             settingsDDL_items_hdr = response.DDL_items_hdr;
             settingsDDL_TableMeta = response.table_meta;
+            settingsDDL_cdtns_headers = response.cdtns_headers;
             availableDDL = response.available_DDL;
             settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
             settingsDDL_ItemsObj = setAllNullObj(settingsDDL_items_hdr);
@@ -2379,12 +2381,16 @@ function showSettingsDDLDataTable(headers, data, idx) {
         $('#row_' + idx + '_settings_ddl').css('background-color', '#FFA');
         $('#add_settings_ddl_item_btn').show();
         settingsDDL_selectedIndex = idx;
+        if (settingsDDLs[idx].type == 'referencing') {
+            data = [];
+            headers = [];
+        }
     }
 
-    for(var i = 0; i < data.length; i++) {
+    for (var i = 0; i < data.length; i++) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsDDLDataTable(settingsDDL_items_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
-        for(key in headers) {
+        for (key in headers) {
             d_key = headers[key].field;
             if (d_key != 'items') {
                 tableData +=
@@ -2394,7 +2400,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'data-idx="' + i + '"' +
                     'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
                     'data-table_idx="' + idx + '"' +
-                    ((d_key == 'name' || d_key == 'option' || d_key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'' + d_key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
+                    ((d_key == 'name' || d_key == 'option' || d_key == 'notes' || d_key == 'type') ? 'onclick="showInlineEdit_SDDL(\'' + d_key + i + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && d_key === 'tb_id') {
                     tableData += settingsDDL_TableMeta.name;
@@ -2411,7 +2417,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
-        for(key in headers) {
+        for (key in headers) {
             d_key = headers[key].field;
             if (d_key != 'items') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
@@ -2430,16 +2436,16 @@ function showSettingsDDLDataTable(headers, data, idx) {
     }
 
     tbAddRow += "<tr style='height: 37px;'><td>auto</td>";
-    for(key in headers) {
+    for (key in headers) {
         d_key = headers[key].field;
         if (d_key != 'items') {
             tbAddRow += '<td ' +
                 'id="add_' + d_key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '"' +
                 'data-key="' + d_key + '"' +
                 'data-table="' + (idx == -1 ? 'ddl' : 'ddl_items') + '"' +
-                ((d_key == 'name' || d_key == 'option' || d_key == 'notes') ? 'onclick="showInlineEdit_SDDL(\'add_' + d_key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
+                ((d_key == 'name' || d_key == 'option' || d_key == 'notes' || d_key == 'type') ? 'onclick="showInlineEdit_SDDL(\'add_' + d_key + (idx == -1 ? '_settings_ddl' : '_settings_items_ddl') + '\', 0)"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    ((d_key != 'name' && d_key != 'option' && d_key != 'notes') ? 'auto' : '') +
+                    ((d_key != 'name' && d_key != 'option' && d_key != 'notes' && d_key != 'type') ? 'auto' : '') +
                 '</td>';
         }
     }
@@ -2447,14 +2453,180 @@ function showSettingsDDLDataTable(headers, data, idx) {
     tbAddRow += "</tr>";
 
     if (idx > -1) {
-        $('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
-        $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
-        $('#tbSettingsDDL_Items_data').html(tableData);
+        $('#settings_selected_DDL_name').html('('+settingsDDLs[idx].name+')');
+
+        if (settingsDDLs[idx].type == 'referencing') {
+            var dataHTML = '', headerHTML = '';
+            data = settingsDDLs[idx].referencing;
+            headers = settingsDDL_cdtns_headers;
+
+            for (key in headers) {
+                d_key = headers[key].field;
+
+                dataHTML += '<tr>';
+                if (headers[key].web == 'Yes') {
+                    dataHTML += '<td style="background: #d6dadf;">'+(headers[key].name ? headers[key].name : '')+'</td>';
+                    dataHTML += '<td ' +
+                        'id="add_' + d_key + '_settings_ref_ddl"' +
+                        'data-key="' + d_key + '"' +
+                        'data-cdtns_id="' + data['id'] + '"' +
+                        'data-table_idx="' + idx + '"' +
+                        'onclick="showInlineEdit_REFDDL(\'add_' + d_key + '_settings_ref_ddl\')"' +
+                        'style="position:relative;">' +
+                            (data[d_key] ? data[d_key] : '') +
+                        '</td>';
+                }
+                dataHTML += '</tr>';
+
+                headerHTML += '<tr>';
+                if (headers[key].web == 'Yes') {
+                    headerHTML += '<td style="background: #d6dadf;">'+(headers[key].name ? headers[key].name : '')+'</td>';
+                    headerHTML += '<td>' + (data[d_key] ? data[d_key] : '') + '</td>';
+                }
+                headerHTML += '</tr>';
+            }
+
+            $('._settings_selected_DDL_reference').show();
+            $('._settings_selected_DDL_regular').hide();
+            $('#tbSettingsDDL_References_headers').html(headerHTML);
+            $('#tbSettingsDDL_References_data').html(dataHTML);
+        } else {
+            $('._settings_selected_DDL_regular').show();
+            $('._settings_selected_DDL_reference').hide();
+            $('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
+            $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
+            $('#tbSettingsDDL_Items_data').html(tableData);
+        }
     } else {
         $('#tbSettingsDDL_addrow').html(tbAddRow+tbHiddenData);
         $('#tbSettingsDDL_headers').html(tbHiddenData);
         $('#tbSettingsDDL_data').html(tableData);
     }
+}
+
+function showInlineEdit_REFDDL(id) {
+    if ($('#'+id).data('innerHTML')) {
+        return;
+    }
+
+    $('#'+id).data('innerHTML', $('#'+id).html());
+    var cdtns_id = $('#'+id).data('cdtns_id'),
+        table_idx = $('#'+id).data('table_idx'),
+        key = $('#'+id).data('key'),
+        html, options;
+
+    if (key == 'type') {
+        options = '<option>DDL</option><option>Permission</option>';
+    } else
+    if (key == 'sampleing') {
+        options = '<option>Distinctive</option><option>Full</option>';
+    } else
+    if (key == 'logic_opr') {
+        options = '<option>AND</option><option>OR</option>';
+    }
+
+    if (key == 'type' || key == 'sampleing' || key == 'logic_opr') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + key + '"' +
+            'data-cdtns_id="' + cdtns_id + '"' +
+            'data-table_idx="' + table_idx + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="updateSettingsREFDDL(\''+id+'_inp\')" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            options +
+            '</select>';
+    } else
+    if (key == 'ref_tb') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + key + '"' +
+            'data-cdtns_id="' + cdtns_id + '"' +
+            'data-table_idx="' + table_idx + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="updateSettingsREFDDL(\''+id+'_inp\')" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        for (var i in tablesDropDown) {
+            html += '<option value="'+tablesDropDown[i].db_tb+'">'+tablesDropDown[i].name+'</option>';
+        }
+        html += '</select>';
+    } else
+    if (key == 'ref_tb_field') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + key + '"' +
+            'data-cdtns_id="' + cdtns_id + '"' +
+            'data-table_idx="' + table_idx + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="updateSettingsREFDDL(\''+id+'_inp\')" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        for (var i in tablesDropDown) {
+            if (tablesDropDown[i].id == settingsDDLs[table_idx].referencing.ref_tb_id) {
+                for (var j in tablesDropDown[i].items) {
+                    html += '<option value="'+tablesDropDown[i].items[j].field+'">'+tablesDropDown[i].items[j].name+'</option>';
+                }
+            }
+        }
+        html += '</select>';
+    } else
+    if (key == 'comp_field') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + key + '"' +
+            'data-cdtns_id="' + cdtns_id + '"' +
+            'data-table_idx="' + table_idx + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="updateSettingsREFDDL(\''+id+'_inp\')" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        for (var i in tablesDropDown) {
+            if (tablesDropDown[i].id == settingsDDL_TableMeta.id) {
+                for (var j in tablesDropDown[i].items) {
+                    html += '<option value="'+tablesDropDown[i].items[j].field+'">'+tablesDropDown[i].items[j].name+'</option>';
+                }
+            }
+        }
+        html += '</select>';
+    } else {
+        html = '<input ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + key + '"' +
+            'data-cdtns_id="' + cdtns_id + '"' +
+            'data-table_idx="' + table_idx + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="updateSettingsREFDDL(\''+id+'_inp\')" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+    }
+
+    $('#'+id).html(html);
+    $('#'+id+'_inp').val( $('#'+id).data('innerHTML') );
+    $('#'+id+'_inp').focus();
+}
+
+function updateSettingsREFDDL(id) {
+    //update in the table view
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
+    var cdtns_id = $('#'+id).data('cdtns_id'),
+        table_idx = $('#'+id).data('table_idx'),
+        key_name = $('#'+id).data('key'),
+        param;
+
+    settingsDDLs[table_idx].referencing[key_name] = $('#'+id).val();
+    param = settingsDDLs[table_idx].referencing[key_name];
+
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/updateTableRow?tableName=cdtns&id=' + cdtns_id + '&' + key_name + '=' + param,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
 }
 
 function showInlineEdit_SDDL(id, isUpdate) {
@@ -2465,17 +2637,33 @@ function showInlineEdit_SDDL(id, isUpdate) {
     $('#'+id).data('innerHTML', $('#'+id).html());
     var inp_t = $('#'+id).data('input'),
         idx = $('#'+id).data('idx'),
-        key = $('#'+id).data('key');
+        key = $('#'+id).data('key'),
+        html;
 
-    var html = '<input ' +
-        'id="'+id+'_inp" ' +
-        'data-key="' + $('#'+id).data('key') + '"' +
-        'data-idx="' + $('#'+id).data('idx') + '"' +
-        'data-table="' + $('#'+id).data('table') + '"' +
-        'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
-        'onblur="hideInlineEdit(\''+id+'\')" ' +
-        'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
-        'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+    if (key == 'type') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            '<option>regular</option>' +
+            '<option>referencing</option>' +
+            '</select>';
+    } else {
+        html = '<input ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+    }
 
     $('#'+id).html(html);
     $('#'+id+'_inp').val( $('#'+id).data('innerHTML') );
@@ -2504,7 +2692,7 @@ function updateSettingsDDL(id) {
 
     var strParams = "";
     for (var key in params) {
-        if (key != 'items' && params[key] !== null) {
+        if (key != 'items' && key != 'referencing' && params[key] !== null) {
             strParams += key + '=' + params[key] + '&';
         }
     }
@@ -2573,7 +2761,7 @@ function saveSettingsDDLRow(tableName) {
     var params = (tableName == 'ddl' ? settingsDDL_Obj : settingsDDL_ItemsObj);
     var strParams = "";
     for (var key in params) {
-        if (key != 'items' && params[key] !== null) {
+        if (key != 'items' && key != 'referencing' && params[key] !== null) {
             strParams += key + '=' + params[key] + '&';
         }
     }
@@ -2587,9 +2775,23 @@ function saveSettingsDDLRow(tableName) {
 
             if (tableName == 'ddl') {
                 settingsDDL_Obj.id = response.last_id;
-                settingsDDLs.push(settingsDDL_Obj);
-                settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
-                showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+                //add empty row to 'cdtns' table
+                $.ajax({
+                    method: 'GET',
+                    url: baseHttpUrl + '/addTableRow?tableName=cdtns&ddl_id='+response.last_id+'&tb_id='+settingsDDL_TableMeta.id+'&user_id='+authUser,
+                    success: function(response) {
+                        settingsDDL_Obj.referencing = {
+                            id: response.last_id,
+                            ddl_id: settingsDDL_Obj.id,
+                            tb_id: settingsDDL_TableMeta.id,
+                            user_id: authUser
+                        };
+                        settingsDDLs.push(settingsDDL_Obj);
+                        settingsDDL_Obj = setAllNullObj(settingsDDL_hdr);
+                        //redraw table
+                        showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+                    }
+                });
             } else {
                 settingsDDL_ItemsObj.id = response.last_id;
                 settingsDDLs[settingsDDL_selectedIndex].items.push(settingsDDL_ItemsObj);

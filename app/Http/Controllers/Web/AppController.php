@@ -127,6 +127,31 @@ class AppController extends Controller
             :
             [];
 
+        if (Auth::user()) {
+            //get tables for user
+            $tablesDropDown = DB::connection('mysql_sys')->table('tb')
+                ->leftJoin('menutree_2_tb as m2t', function ($q) {
+                    $q->whereRaw('m2t.tb_id = tb.id');
+                    $q->where('m2t.structure', '=', 'public');
+                    $q->where('m2t.type', '=', 'link');
+                })
+                ->where('is_system', '=', 0);
+            if (Auth::user()->role_id != 1) {
+                $tablesDropDown->where('tb.owner', '=', Auth::user()->id)->orWhereNotNull('m2t.id');
+            }
+            $tablesDropDown = $tablesDropDown->groupBy('tb.id')->select('tb.*')->get();
+            //get fields for each tables
+            foreach ($tablesDropDown as &$tb) {
+                $tb->items = DB::connection('mysql_sys')
+                    ->table('tb_settings_display')
+                    ->where('tb_id', '=', $tb->id)
+                    ->where('user_id', '=', $tb->owner)
+                    ->get();
+            }
+        } else {
+            $tablesDropDown = [];
+        }
+
         return [
             'server' => config('app.url'),
             'socialProviders' => config('auth.social.providers'),
@@ -146,7 +171,8 @@ class AppController extends Controller
             'favorite' => $tableName ? $this->isFavorite($tableName) : "",
             'owner' => $owner,
             'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->orderBy('id')->get(),
-            'importConnections' => $connections
+            'importConnections' => $connections,
+            'tablesDropDown' => $tablesDropDown
         ];
     }
 

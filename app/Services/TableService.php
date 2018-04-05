@@ -133,7 +133,7 @@ class TableService {
         }
 
         //join favourite table for main data
-        if($fromMainData && $table_meta->source != 'remote') {
+        if($fromMainData && $table_meta->source != 'remote' && $table_meta->is_system == 0) {
             $sql->leftJoin('favorite as f', function ($q) use ($tableName, $table_meta) {
                 $q->whereRaw($tableName.'.id = f.row_id');
                 $q->where('f.user_id', '=', (Auth::user() ? Auth::user()->id : 0));
@@ -147,12 +147,12 @@ class TableService {
             foreach ($fields_for_select as $key => $fld) {
                 $select_cls[] = $tableName.".".$key;
             }
-            if($fromMainData && $table_meta->source != 'remote') {
+            if($fromMainData && $table_meta->source != 'remote' && $table_meta->is_system == 0) {
                 $select_cls[] = 'f.id as is_favorited';
             }
             $sql->select($select_cls);
         } else {
-            if($fromMainData && $table_meta->source != 'remote') {
+            if($fromMainData && $table_meta->source != 'remote' && $table_meta->is_system == 0) {
                 $sql->select($tableName.'.*', 'f.id as is_favorited');
             }
         }
@@ -232,16 +232,41 @@ class TableService {
 
             $ddls = DB::connection('mysql_sys')->table('tb_settings_display as ts')
                 ->join('ddl_items as di', function ($q) {
-                    $q->whereRaw('di.list_id = ts.ddl_id OR di.list_id =ts.unit_ddl');
+                    $q->whereRaw('di.list_id = ts.ddl_id OR di.list_id = ts.unit_ddl');
                 })
+                ->join('ddl as d', 'di.list_id', '=', 'd.id')
                 ->select('ts.field', 'di.option')
                 ->where('ts.user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner)
                 ->where('ts.tb_id', '=', $table_meta->id)
+                ->where('d.type', '=', 'regular')
                 ->whereNotNull('di.option')
                 ->get();
 
             foreach ($ddls as $row) {
                 $respDDLs[$row->field][] = $row->option;
+            }
+
+            $ddls_ref = DB::connection('mysql_sys')->table('tb_settings_display as ts')
+                ->join('ddl as d', function ($q) {
+                    $q->whereRaw('d.id = ts.ddl_id OR d.id = ts.unit_ddl');
+                })
+                ->join('cdtns as cd', 'cd.ddl_id', '=', 'd.id')
+                ->select('cd.*', 'ts.field')
+                ->where('ts.user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner)
+                ->where('ts.tb_id', '=', $table_meta->id)
+                ->where('d.type', '=', 'referencing')
+                ->get();
+
+            foreach ($ddls_ref as $row) {
+                $options = DB::connection('mysql_data')->table($row->ref_tb);
+                if ($row->sampleing == 'Distinctive') {
+                    $options->select($row->ref_tb_field)->distinct();
+                }
+                $options = $options->get();
+                foreach ($options as $opt) {
+                    $opt = (array)$opt;
+                    $respDDLs[$row->field][] = $opt[$row->ref_tb_field];
+                }
             }
 
             $blet = [];

@@ -286,12 +286,19 @@ class TableController extends Controller
                 ->select('ddl.*')
                 ->get();
 
+            $DDLdatas['cdtns_headers'] = $this->tableService->getHeaders('cdtns');
+
             foreach ($DDLdatas['data'] as &$DDL) {
                 $DDL->items = DB::connection('mysql_sys')
                     ->table('ddl_items')
                     ->where('list_id', '=', $DDL->id)
                     ->whereNotNull('option')
                     ->get();
+
+                $DDL->referencing = DB::connection('mysql_sys')
+                    ->table('cdtns')
+                    ->where('ddl_id', '=', $DDL->id)
+                    ->first();
             }
         }
         return $DDLdatas;
@@ -637,7 +644,7 @@ class TableController extends Controller
 
         return [
             'error' => false,
-            'msg' => config('app.url')."/data/".$filename
+            'msg' => config('app.url')."/data/".$request->db_tb
         ];
     }
 

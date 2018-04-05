@@ -538,8 +538,8 @@
                                 </table>
                             </div>
 
-                            <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List</div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List <span id="settings_selected_DDL_name"></span></div>
+                            <div class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -571,7 +571,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div class="_settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
                                     <thead>
@@ -593,6 +593,33 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="dataTables_body _settings_selected_DDL_reference" style="display: none;overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
+                                    <thead>
+                                    <tr>
+                                        <th class="sorting nowrap" data-key="field">Field</th>
+                                        <th class="sorting nowrap" data-key="val">Value</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody id="tbSettingsDDL_References_headers">
+                                    </tbody>
+                                </table>
+                                <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
+                                        <thead>
+                                        <tr>
+                                            <th class="sorting nowrap" data-key="field">Field</th>
+                                            <th class="sorting nowrap" data-key="val">Value</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsDDL_References_data">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
 
                             <div class="dataTables_footer" style="position: absolute; bottom: 25px; right: 0; left: 10px">
                                 <div role="status" aria-live="polite" style="position:absolute;">
@@ -1058,11 +1085,13 @@
 
 @push('scripts')
     <script>
-        authUser = {{ (int)Auth::check() }};
+        authUser = {{ Auth::user() ? Auth::user()->id : 0 }};
         userOwner = {{ (int)$owner }};
         isAdmin = {{ (Auth::user() && Auth::user()->role_id == 1 ? 1 : 0) }};
         importTypesDDL = JSON.parse('{!! json_encode($importTypesDDL) !!}');
         importConnections = JSON.parse('{!! json_encode($importConnections) !!}');
         table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
+        tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
+        console.log('tablesDropDown', tablesDropDown);
     </script>
 @endpush
