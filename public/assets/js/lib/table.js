@@ -2515,7 +2515,7 @@ function showInlineEdit_REFDDL(id) {
         key = $('#'+id).data('key'),
         html, options;
 
-    if (key == 'type') {
+    if (key == 'use') {
         options = '<option>DDL</option><option>Permission</option>';
     } else
     if (key == 'sampleing') {
@@ -2525,7 +2525,7 @@ function showInlineEdit_REFDDL(id) {
         options = '<option>AND</option><option>OR</option>';
     }
 
-    if (key == 'type' || key == 'sampleing' || key == 'logic_opr') {
+    if (key == 'use' || key == 'sampleing' || key == 'logic_opr') {
         html = '<select ' +
             'id="'+id+'_inp" ' +
             'data-key="' + key + '"' +
