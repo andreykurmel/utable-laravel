@@ -593,12 +593,15 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="dataTables_body _settings_selected_DDL_reference" style="display: none;overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
-                                        <th class="sorting nowrap" data-key="field">Field</th>
-                                        <th class="sorting nowrap" data-key="val">Value</th>
+                                        <th class="sorting nowrap">#</th>
+                                        @foreach($settingsDDL_References_Headers as $hdr)
+                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
+                                        @endforeach
+                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                     </tr>
                                     </thead>
 
@@ -609,8 +612,11 @@
                                     <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                         <thead>
                                         <tr>
-                                            <th class="sorting nowrap" data-key="field">Field</th>
-                                            <th class="sorting nowrap" data-key="val">Value</th>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($settingsDDL_References_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
+                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>
                                         </thead>
 
@@ -618,6 +624,28 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="_settings_selected_References_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                                <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('cdtns')" id="add_settings_references_btn">Add</a>
+                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
+                                    <thead>
+                                    <tr>
+                                        <th class="sorting nowrap">#</th>
+                                        @foreach($settingsDDL_References_Headers as $hdr)
+                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
+                                        @endforeach
+                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody id="tbSettingsDDL_References_addrow">
+                                    <tr style="height: 32px;">
+                                        @foreach($settingsDDL_References_Headers as $hdr)
+                                            <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
+                                        @endforeach
+                                    </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
 
@@ -855,10 +883,11 @@
 
                                     <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                         <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
+                                        <input type="hidden" id="import_ref_row_count" value="{{ count($importReferences) }}">
                                         <div class="row">
                                             <div class="col-xs-12">
                                                 <div class="form-group">
-                                                    <table class="table table-striped">
+                                                    <table class="table table-striped" id="import_not_reference_columns">
                                                         <thead>
                                                             <tr>
                                                                 <th>Table Header</th>
@@ -904,6 +933,50 @@
                                                                     <input type="hidden" id="import_columns_deleted_{{ $loop->index }}" name="columns[{{ $loop->index }}][stat]">
                                                                     @if(!$hdr->auto)
                                                                     <button type="button" class="btn btn-default" onclick="import_del_row({{ $loop->index }})">&times;</button>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    <table class="table table-striped" id="import_reference_columns" style="display: none;">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Table Field</th>
+                                                            <th>Reference Table</th>
+                                                            <th>Reference Field</th>
+                                                            <th>Delete</th>
+                                                        </tr>
+                                                        </thead>
+
+                                                        <tbody id="import_table_ref_body">
+                                                        @foreach($importReferences as $hdr)
+                                                            <tr id="import_columns_ref_tr_{{ $loop->index }}">
+                                                                <td>
+                                                                    <input type="text" class="form-control" name="columns_ref[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                </td>
+                                                                <td>
+                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_tb]" {{ $hdr->auto || $tableName ? 'readonly' : ''}} onchange="import_ref_table_changed({{ $loop->index }})">
+                                                                        @foreach($tablesDropDown as $tb)
+                                                                            <option {{ $hdr->ref_tb == $tb->db_tb ? 'selected="selected"' : '' }} value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    <select id="import_columns_ref_field_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_field]" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                        @foreach($tablesDropDown as $tb)
+                                                                            @if($hdr->ref_tb == $tb->db_tb)
+                                                                                @foreach($tb->items as $tb_field)
+                                                                                    <option {{ $hdr->ref_field == $tb_field->field ? 'selected="selected"' : '' }} value="{{ $tb_field->field }}">{{ $tb_field->name }}</option>
+                                                                                @endforeach
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="hidden" id="import_columns_ref_deleted_{{ $loop->index }}" name="columns_ref[{{ $loop->index }}][stat]">
+                                                                    @if(!$hdr->auto)
+                                                                        <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
                                                                     @endif
                                                                 </td>
                                                             </tr>
@@ -1092,6 +1165,5 @@
         importConnections = JSON.parse('{!! json_encode($importConnections) !!}');
         table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
-        console.log('tablesDropDown', tablesDropDown);
     </script>
 @endpush

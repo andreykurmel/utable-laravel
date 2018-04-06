@@ -110,6 +110,8 @@ class AppController extends Controller
             }
         }
 
+        $importReferences = $tableMeta ? DB::connection('mysql_sys')->table('tb_rfcn')->where('tb_id', '=', $tableMeta->id)->get() : [];
+
         if ($tableName) {
             $owner = (
                 Auth::user()
@@ -160,9 +162,11 @@ class AppController extends Controller
             'tableName' => $tableName,
             'headers' => $tableName ? $this->tableService->getHeaders($tableName) : [],
             'importHeaders' => $importHeaders,
+            'importReferences' => $importReferences,
             'settingsHeaders' => $tableName ? $this->tableService->getHeaders('tb_settings_display') : [],
             'settingsDDL_Headers' => $tableName ? $this->tableService->getHeaders('ddl') : [],
             'settingsDDL_Items_Headers' => $tableName ? $this->tableService->getHeaders('ddl_items') : [],
+            'settingsDDL_References_Headers' => $tableName ? $this->tableService->getHeaders('cdtns') : [],
             'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('permissions') : [],
             'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('permissions_fields') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',

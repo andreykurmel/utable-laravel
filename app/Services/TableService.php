@@ -229,7 +229,7 @@ class TableService {
                 }
             }
 
-
+            //get regular ddls
             $ddls = DB::connection('mysql_sys')->table('tb_settings_display as ts')
                 ->join('ddl_items as di', function ($q) {
                     $q->whereRaw('di.list_id = ts.ddl_id OR di.list_id = ts.unit_ddl');
@@ -246,6 +246,7 @@ class TableService {
                 $respDDLs[$row->field][] = $row->option;
             }
 
+            //get referencing ddls
             $ddls_ref = DB::connection('mysql_sys')->table('tb_settings_display as ts')
                 ->join('ddl as d', function ($q) {
                     $q->whereRaw('d.id = ts.ddl_id OR d.id = ts.unit_ddl');
@@ -260,9 +261,12 @@ class TableService {
             foreach ($ddls_ref as $row) {
                 $options = DB::connection('mysql_data')->table($row->ref_tb);
                 if ($row->sampleing == 'Distinctive') {
-                    $options->select($row->ref_tb_field)->distinct();
+                    $options->distinct();
                 }
-                $options = $options->get();
+                if ($row->comp_field) {
+                    $options->join($table_meta->db_tb, $table_meta->db_tb.'.'.$row->comp_field, '=', $row->ref_tb.'.'.$row->ref_tb_field);
+                }
+                $options = $options->select($row->ref_tb.'.'.$row->ref_tb_field)->get();
                 foreach ($options as $opt) {
                     $opt = (array)$opt;
                     $respDDLs[$row->field][] = $opt[$row->ref_tb_field];

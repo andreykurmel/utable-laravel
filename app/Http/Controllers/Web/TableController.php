@@ -298,7 +298,7 @@ class TableController extends Controller
                 $DDL->referencing = DB::connection('mysql_sys')
                     ->table('cdtns')
                     ->where('ddl_id', '=', $DDL->id)
-                    ->first();
+                    ->get();
             }
         }
         return $DDLdatas;
@@ -693,6 +693,41 @@ class TableController extends Controller
         $columns = $request->columns;
         $table_db = $request->import_table;
         $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
+
+        if (!$exist) {
+            $this->createTableColumns($request, $table_db, $columns);
+        } else {
+            $this->modifyTableColumns($request, $exist, $columns);
+        }
+
+        return redirect()->to( "/data/".$table_db );
+    }
+
+    public function refTable(Request $request) {
+        $columns = $request->columns_ref;
+        $table_db = $request->table_name;
+        $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
+
+        //add settings to 'tb_settings_display'
+        foreach ($columns as $col) {
+            if ($col['field']) {
+                DB::connection('mysql_sys')->table('tb_rfcn')->insert([
+                    'tb_id' => $exist->id,
+                    'field' => $col['field'],
+                    'ref_tb' => $col['ref_tb'],
+                    'ref_field' => $col['ref_field'],
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+            }
+        }
+        return 'under construction...';
+        if ($exist && $exist->source != 'ref') {
+            $this->deleteAllTable($request);
+            $exist = false;
+        }
 
         if (!$exist) {
             $this->createTableColumns($request, $table_db, $columns);
