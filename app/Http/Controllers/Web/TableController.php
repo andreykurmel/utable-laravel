@@ -973,6 +973,37 @@ class TableController extends Controller
                         $table->dropColumn($col['field']);
                     }
                 }
+                //for changing columns
+                foreach ($columns as $col) {
+                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
+                    if (!isset($col_size[0])) $col_size[0] = 9;
+                    if (!isset($col_size[1])) $col_size[1] = 2;
+                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && ($col['field'] != $col['old_field']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        //edit column
+                        $t = $table->renameColumn($col['old_field'], $col['field']);
+
+                        if ($col['type'] == 'String') {
+                            $t->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
+                        } elseif ($col['type'] == 'Date') {
+                            $t->date($col['field']);
+                        } elseif ($col['type'] == 'Date Time') {
+                            $t->dateTime($col['field']);
+                        } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
+                            $t->decimal($col['field'], $col_size[0], $col_size[1]);
+                        } else {
+                            $t->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                        }
+
+                        if (empty($col['required'])) {
+                            $t->nullable();
+                        }
+
+                        if (!empty($col['default'])) {
+                            $t->default($col['default']);
+                        }
+                        $t->change();
+                    }
+                }
                 //for adding columns
                 foreach ($columns as $col) {
                     $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
@@ -1022,6 +1053,19 @@ class TableController extends Controller
                     ->where('tb_id', '=', $table_meta->id)
                     ->where('field', '=', $col['field'])
                     ->delete();
+            }
+            //for editing columns
+            if (($col['stat'] == '') && $col['field'] && $col['old_field'] && ($col['field'] != $col['old_field']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                //edit column
+                DB::connection('mysql_sys')->table('tb_settings_display')
+                    ->where('tb_id', '=', $table_meta->id)
+                    ->where('field', '=', $col['old_field'])
+                    ->update([
+                    'field' => $col['field'],
+                    'name' => $col['header'],
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
             }
             //for adding columns
             if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {

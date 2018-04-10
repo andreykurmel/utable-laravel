@@ -503,6 +503,10 @@ class AppController extends Controller
                 foreach ($data as $key => $val) {
                     $headers[$key]['required'] = $request->check_6 && $val ? 1 : 0;
                 }
+            } else {
+                foreach ($data as $key => $val) {
+                    $headers[$key]['required'] = 1;
+                }
             }
 
             if ($columns != count($data)) {
@@ -616,7 +620,7 @@ class AppController extends Controller
                         'type' => 'str',
                         'size' => '',
                         'default' => '',
-                        'required' => 0
+                        'required' => 1
                     ];
                 }
             }

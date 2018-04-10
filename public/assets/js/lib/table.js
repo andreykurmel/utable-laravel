@@ -3050,6 +3050,7 @@ function settingsPermissionsTabShowRows() {
 
 
 /* ------------------- Import tab ----------------------- */
+var ddl_col_numbers = [];
 
 function import_show_type_group() {
     if ($('#import_type_group_check').is(':checked')) {
@@ -3087,7 +3088,6 @@ function sent_csv_to_backend(is_upload) {
         $('.js-import_chb').each(function (i, elem) {
             $(elem).prop('disabled', false);
         });
-        $('.js-import_column-orders').show();
 
         jQuery.each(jQuery('#import_csv')[0].files, function(i, file) {
             data.append('csv', file);
@@ -3133,8 +3133,12 @@ function sent_csv_to_backend(is_upload) {
                 $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="number" class="form-control" name="columns['+i+'][col]" value="'+(hdr.auto ? '' : i)+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td>' +
+                            '<input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td>' +
+                            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
+                        '</td>' +
                         '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
@@ -3153,6 +3157,13 @@ function sent_csv_to_backend(is_upload) {
             }
             if (file_link) {
                 import_show_col_tab();
+            }
+
+            if (!resp.error) {
+                ddl_col_numbers = [];
+                $.each(resp.headers, function(i, hdr) {
+                    ddl_col_numbers.push(hdr.field);
+                });
             }
         }
     });
@@ -3186,12 +3197,17 @@ function import_test_db_connect() {
                 fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
 
-                var html = '';
+                var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="number" class="form-control" name="columns['+i+'][col]" value="'+(hdr.auto ? '' : i)+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td>' +
+                            '<input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
+                        '</td>' +
+                        '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
+                            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
+                        '</td>' +
                         '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
@@ -3214,6 +3230,13 @@ function import_test_db_connect() {
                     swal("Connection error!", "", "error");
                 }
             }
+
+            if (!resp.error) {
+                ddl_col_numbers = [];
+                $.each(resp.headers, function(i, hdr) {
+                    ddl_col_numbers.push(hdr.field);
+                });
+            }
         },
         error: function (e) {
             swal("Connection error!", "", "error");
@@ -3222,11 +3245,14 @@ function import_test_db_connect() {
 }
 
 function import_add_table_row() {
-    var i = 0, html = '';
-    if ($('#import_type_import').val() == 'ref') {
+    var i = 0, html = '', imp_type = $('#import_type_import').val();
+    if (imp_type == 'ref') {
         i = Number( $('#import_ref_row_count').val() );
         html = '<tr id="import_columns_ref_tr_'+i+'">'+
-            '<td><input type="text" class="form-control" name="columns_ref['+i+'][field]" value=""></td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="columns_ref['+i+'][field]" value="">' +
+                '<input type="hidden" class="form-control" name="columns_ref['+i+'][old_field]" value="">' +
+            '</td>' +
             '<td><select id="import_columns_ref_table_'+i+'" class="form-control" name="columns_ref['+i+'][ref_tb]" onchange="import_ref_table_changed('+i+')">';
         for (var k in tablesDropDown) {
             html += '<option value="'+tablesDropDown[k].db_tb+'">'+tablesDropDown[k].name+'</option>';
@@ -3244,8 +3270,13 @@ function import_add_table_row() {
         i = Number( $('#import_row_count').val() );
         html = '<tr id="import_columns_'+i+'">'+
             '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
-            '<td><input type="text" class="form-control" name="columns['+i+'][field]" value=""></td>' +
-            '<td style="display: none;"><input type="number" class="form-control" name="columns['+i+'][col]" value=""></td>' +
+            '<td>' +
+                '<input type="text" class="form-control" name="columns['+i+'][field]" value="">' +
+                '<input type="hidded" class="form-control" name="columns['+i+'][old_field]" value="">' +
+            '</td>' +
+            '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
+                '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()"></select>' +
+            '</td>' +
             '<td><select class="form-control" name="columns['+i+'][type]">';
         for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
             html += '<option>'+importTypesDDL[jdx].option+'</option>';
@@ -3253,7 +3284,7 @@ function import_add_table_row() {
         html += '</select></td>' +
             '<td><input type="number" class="form-control" name="columns['+i+'][size]"></td>' +
             '<td><input type="text" class="form-control" name="columns['+i+'][default]"></td>' +
-            '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]"></td>' +
+            '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" checked="checked"></td>' +
             '<td>' +
             '<input type="hidden" id="import_columns_ref_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
             '<button type="button" class="btn btn-default" onclick="import_del_row_ref('+i+')">&times;</button>' +
@@ -3265,13 +3296,35 @@ function import_add_table_row() {
 }
 
 function import_del_row(idx) {
-    $('#import_columns_'+idx).hide();
-    $('#import_columns_deleted_'+idx).val('del');
+    swal({
+        title: "Delete field",
+        text: 'Confirm to delete a field in the table? Deleting a field can’t be recovered!',
+        type: "warning",
+        showCancelButton: true,
+        closeOnConfirm: true
+    },
+    function ($confirmed) {
+        if ($confirmed) {
+            $('#import_columns_'+idx).hide();
+            $('#import_columns_deleted_'+idx).val('del');
+        }
+    });
 }
 
 function import_del_row_ref(idx) {
-    $('#import_columns_ref_tr_'+idx).hide();
-    $('#import_columns_ref_deleted_'+idx).val('del');
+    swal({
+        title: "Delete field",
+        text: 'Confirm to delete a field in the table? Deleting a field can’t be recovered!',
+        type: "warning",
+        showCancelButton: true,
+        closeOnConfirm: true
+    },
+    function ($confirmed) {
+        if ($confirmed) {
+            $('#import_columns_ref_tr_'+idx).hide();
+            $('#import_columns_ref_deleted_'+idx).val('del');
+        }
+    });
 }
 
 function import_show_csv_tab() {
@@ -3296,6 +3349,7 @@ function changeImportStyle(sel) {
         $('#import_action_type').hide();
         $('#import_not_reference_columns').show();
         $('#import_reference_columns').hide();
+        $('.js-import_column-orders').hide();
         import_show_col_tab();
     } else
     if (style == 'csv') {
@@ -3304,6 +3358,7 @@ function changeImportStyle(sel) {
         $('.js-import_csv_style').show();
         $('#import_not_reference_columns').show();
         $('#import_reference_columns').hide();
+        $('.js-import_column-orders').show();
     } else
     if (style == 'mysql') {
         $('.js-import_csv_style').hide();
@@ -3311,6 +3366,7 @@ function changeImportStyle(sel) {
         $('.js-import_mysql_style').show();
         $('#import_not_reference_columns').show();
         $('#import_reference_columns').hide();
+        $('.js-import_column-orders').show();
     } else
     if (style == 'remote') {
         $('.js-import_csv_style').hide();
@@ -3318,13 +3374,24 @@ function changeImportStyle(sel) {
         $('.js-import_mysql_style').show();
         $('#import_not_reference_columns').show();
         $('#import_reference_columns').hide();
+        $('.js-import_column-orders').hide();
     } else {
         $('.js-import_csv_style').hide();
         $('#import_action_type').hide();
         $('.js-import_mysql_style').hide();
         $('#import_reference_columns').show();
         $('#import_not_reference_columns').hide();
+        $('.js-import_column-orders').hide();
+        import_show_col_tab();
     }
+}
+
+function changeImportAction(sel) {
+    var action = $(sel).val(),
+        status = (action == '/modifyTable' ? true : false);
+    $('.js-import_chb').each(function (i, elem) {
+        $(elem).prop('disabled', status);
+    });
 }
 
 function select_import_connection() {
@@ -3370,6 +3437,17 @@ function import_ref_table_changed(row_idx) {
     }
 
     $('#import_columns_ref_field_'+row_idx).html(html);
+}
+
+function show_import_cols_numbers() {
+    var evt = event || window.event;
+    var imp_type = $('#import_type_import').val(), html = '<option value=""></option>';
+    if (imp_type == 'csv' || imp_type == 'mysql') {
+        $.each(ddl_col_numbers, function(i, hdr) {
+            html += '<option value="'+i+'">'+hdr+'</option>';
+        });
+    }
+    $(evt.target).html(html);
 }
 
 

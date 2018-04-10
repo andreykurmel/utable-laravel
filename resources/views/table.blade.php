@@ -760,48 +760,6 @@
                     <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
-                                <div class="container">
-                                    <div class="row form-group">
-                                        <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
-                                            <option value="scratch">From Scratch</option>
-                                            <option selected value="csv">CSV Import</option>
-                                            <option value="mysql">MySQL Import</option>
-                                            <option value="remote">Remote</option>
-                                            <option value="ref">Referencing</option>
-                                        </select>
-                                        <select class="form-control" id="import_action_type" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
-                                            <option value="/createTable">New</option>
-                                            <option value="/replaceTable">Replace Existing</option>
-                                            <option value="/modifyTable">Append</option>
-                                        </select>
-                                        <div class="js-import_csv_style" style="width: 67%;display: flex;float: right;align-items: center; justify-content:  space-between;">
-                                            <div style="width: calc(50% - 50px); display: inline-block;">
-                                                <input type="file" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
-                                            </div>
-                                            OR
-                                            <div style="width: calc(50% - 50px); display: inline-block;">
-                                                <input type="text" id="import_file_link" class="form-control" placeholder="www address of file">
-                                            </div>
-                                            <button class="btn btn-primary" onclick="sent_csv_to_backend(1)">Import</button>
-                                        </div>
-                                        <div class="js-import_mysql_style" style="width: 67%; display: none; float: right; text-align: right;">
-                                            <select class="form-control" id="import_saved_conn" onchange="select_import_connection()" style="width: 11%; display: inline-block; height: 34px;">
-                                                <option value="-1"></option>
-                                                @foreach($importConnections as $key => $iconn)
-                                                    <option value="{{ $key }}">{{ $iconn->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <input id="import_name_conn" name="import_name_conn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="NAME">
-                                            <input id="import_mysql_host" name="import_host" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="HOST">
-                                            <input id="import_mysql_lgn" name="import_lgn" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="LOGIN">
-                                            <input id="import_mysql_pwd" name="import_pwd" type="password" class="form-control" style="width: 11%; display: inline-block;" placeholder="PASS">
-                                            <input id="import_mysql_db" name="import_db" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="DB">
-                                            <input id="import_mysql_table" name="import_table" type="text" class="form-control" style="width: 11%; display: inline-block;" placeholder="TABLE">
-                                            <input id="import_save_conn" name="import_save_conn" type="checkbox" class="form-control" style="width: 5%; display: inline-block;">
-                                            <input type="button" class="btn btn-success" style="width: 11%; display: inline-block;" value="Connect" onclick="import_test_db_connect()">
-                                        </div>
-                                    </div>
-                                </div>
                                 <div class="container" style="position: relative;">
                                     <input type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
                                 </div>
@@ -812,20 +770,81 @@
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 30px;bottom: 0;">
                                     <div class="standard-tabs container">
                                         <ul class="tabs">
-                                            <li class="active" id="import_li_col_tab">
+                                            <li class="active" id="import_li_csv_tab" onclick="import_show_csv_tab()">
+                                                <a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
+                                                    Method
+                                                </a>
+                                            </li>
+                                            <li id="import_li_col_tab">
                                                 <a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
                                                     Field Settings
                                                 </a>
                                             </li>
-                                            <li id="import_li_csv_tab" class="js-import_csv_style" onclick="import_show_csv_tab()">
-                                                <a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
-                                                    CSV Settings
-                                                </a>
-                                            </li>
                                         </ul>
                                     </div>
-                                    <div id="import_csv_tab" class="tab-content container js-import_csv_style" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
-                                        <div class="row">
+                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                        <div class="row form-group" style="padding: 0 15px;">
+                                            <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
+                                                <option value="scratch">From Scratch</option>
+                                                <option selected value="csv">CSV Import</option>
+                                                <option value="mysql">MySQL Import</option>
+                                                <option value="remote">Remote</option>
+                                                <option value="ref">Referencing</option>
+                                            </select>
+                                            <select class="form-control" id="import_action_type" onchange="changeImportAction(this)" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
+                                                <option value="/createTable">New</option>
+                                                <option value="/replaceTable">Replace Existing</option>
+                                                <option value="/modifyTable">Append</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group js-import_csv_style" style="width: 67%;display: flex;align-items: center; justify-content:  space-between;">
+                                            <div style="width: calc(50% - 25px); display: inline-block;">
+                                                <input type="file" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
+                                            </div>
+                                            OR
+                                            <div style="width: calc(50% - 25px); display: inline-block;">
+                                                <input type="text" id="import_file_link" class="form-control" placeholder="www address of file">
+                                            </div>
+                                        </div>
+                                        <div class="row form-group js-import_mysql_style" style="display: none;">
+                                            <div class="col-xs-8 form-group">
+                                                <div class="row">
+                                                    <div class="col-xs-4">
+                                                        <label>Select a saved the connection:</label>
+                                                    </div>
+                                                    <div class="col-xs-4">
+                                                        <select class="form-control" id="import_saved_conn" onchange="select_import_connection()" style="height: 34px;">
+                                                            <option value="-1"></option>
+                                                            @foreach($importConnections as $key => $iconn)
+                                                                <option value="{{ $key }}">{{ $iconn->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-8 form-group">
+                                                <input id="import_name_conn" name="import_name_conn" type="text" class="form-control" style="width: 15%; display: inline-block;" placeholder="NAME">
+                                                <input id="import_mysql_host" name="import_host" type="text" class="form-control" style="width: 15%; display: inline-block;" placeholder="HOST">
+                                                <input id="import_mysql_lgn" name="import_lgn" type="text" class="form-control" style="width: 15%; display: inline-block;" placeholder="LOGIN">
+                                                <input id="import_mysql_pwd" name="import_pwd" type="password" class="form-control" style="width: 15%; display: inline-block;" placeholder="PASS">
+                                                <input id="import_mysql_db" name="import_db" type="text" class="form-control" style="width: 15%; display: inline-block;" placeholder="DB">
+                                                <input id="import_mysql_table" name="import_table" type="text" class="form-control" style="width: 15%; display: inline-block;" placeholder="TABLE">
+                                            </div>
+                                            <div class="col-xs-8 form-group">
+                                                <div class="row" style="display: flex;align-items: center;">
+                                                    <div class="col-xs-1">
+                                                        <input id="import_save_conn" name="import_save_conn" type="checkbox" class="form-control" style="margin: 0;">
+                                                    </div>
+                                                    <div class="col-xs-8">
+                                                        <label>Save the connection?</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-8 form-group">
+                                                <input type="button" class="btn btn-success" style="width: 11%; display: inline-block;" value="Connect" onclick="import_test_db_connect()">
+                                            </div>
+                                        </div>
+                                        <div class="row js-import_csv_style">
                                             <div class="col-xs-5">
                                                 <div class="row">
                                                     <div class="col-xs-9"><label>First row as headers:</label></div>
@@ -879,9 +898,10 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
                                     </div>
 
-                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                         <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
                                         <input type="hidden" id="import_ref_row_count" value="{{ count($importReferences) }}">
                                         <div class="row">
@@ -892,7 +912,7 @@
                                                             <tr>
                                                                 <th>Table Header</th>
                                                                 <th>tb Field</th>
-                                                                <th class="js-import_column-orders" style="display: none;">Column # in CSV</th>
+                                                                <th class="js-import_column-orders">Column # in CSV</th>
                                                                 <th>Type</th>
                                                                 <th>Max. Size</th>
                                                                 <th>Default Value</th>
@@ -905,29 +925,30 @@
                                                         @foreach($importHeaders as $hdr)
                                                             <tr id="import_columns_{{ $loop->index }}" {{ $hdr->field == 'createdBy' ? 'class=js-import-col-createdBy' : '' }}>
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="hidden" class="form-control" name="columns[{{ $loop->index }}][old_field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
-                                                                <td class="js-import_column-orders" style="display: none;">
-                                                                    <input type="number" class="form-control" name="columns[{{ $loop->index }}][col]" value="{{ $hdr->auto ? '' : $loop->index }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                <td class="js-import_column-orders">
+                                                                    <select class="form-control" name="columns[{{ $loop->index }}][col]" onfocus="show_import_cols_numbers()" {{ $hdr->auto ? 'readonly' : ''}}></select>
                                                                 </td>
                                                                 <td>
-                                                                    <select class="form-control" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <select class="form-control" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                         @foreach($importTypesDDL as $i_ddl)
-                                                                            <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }} value="str">{{ $i_ddl->option }}</option>
+                                                                            <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }}>{{ $i_ddl->option }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="number" class="form-control" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <input type="number" class="form-control" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="checkbox" class="form-control" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto || $tableName ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
+                                                                    <input type="checkbox" class="form-control" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
                                                                 </td>
                                                                 <td>
                                                                     <input type="hidden" id="import_columns_deleted_{{ $loop->index }}" name="columns[{{ $loop->index }}][stat]">
@@ -953,17 +974,17 @@
                                                         @foreach($importReferences as $hdr)
                                                             <tr id="import_columns_ref_tr_{{ $loop->index }}">
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns_ref[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control" name="columns_ref[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_tb]" {{ $hdr->auto || $tableName ? 'readonly' : ''}} onchange="import_ref_table_changed({{ $loop->index }})">
+                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_tb]" {{ $hdr->auto ? 'readonly' : ''}} onchange="import_ref_table_changed({{ $loop->index }})">
                                                                         @foreach($tablesDropDown as $tb)
                                                                             <option {{ $hdr->ref_tb == $tb->db_tb ? 'selected="selected"' : '' }} value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <select id="import_columns_ref_field_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_field]" {{ $hdr->auto || $tableName ? 'readonly' : ''}}>
+                                                                    <select id="import_columns_ref_field_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_field]" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                         @foreach($tablesDropDown as $tb)
                                                                             @if($hdr->ref_tb == $tb->db_tb)
                                                                                 @foreach($tb->items as $tb_field)
