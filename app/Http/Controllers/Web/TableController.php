@@ -854,7 +854,7 @@ class TableController extends Controller
             $tables_dbs = $request->import_target_db ? [$request->import_target_db] : [];
             if (!$tables_dbs) {
                 foreach ($columns as $col) {
-                    if (!in_array($col['ref_tb'], $tables_dbs)) {
+                    if ($col['ref_tb'] && !in_array($col['ref_tb'], $tables_dbs)) {
                         $tables_dbs[] = $col['ref_tb'];
                     }
                 }
