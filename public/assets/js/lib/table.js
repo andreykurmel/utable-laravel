@@ -3118,8 +3118,10 @@ function sent_csv_to_backend(is_upload) {
         success: function(resp) {
             $('#import_data_csv').val(resp.data_csv);
             if ($('#import_action_type').val() != '/modifyTable') {
-                $('#import_table_name').val(resp.filename);
-                $('#import_table_db_tb').val(resp.filename);
+                if ($('#import_action_type').val() == '/createTable') {
+                    $('#import_table_name').val(resp.filename);
+                    $('#import_table_db_tb').val(resp.filename);
+                }
 
                 var fieldlist = [];
                 fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
@@ -3186,8 +3188,10 @@ function import_test_db_connect() {
         method: 'GET',
         success: function(resp) {
             if (!resp.error && $('#import_action_type').val() != '/modifyTable') {
-                $('#import_table_name').val(resp.filename);
-                $('#import_table_db_tb').val(resp.filename);
+                if ($('#import_action_type').val() == '/createTable') {
+                    $('#import_table_name').val(resp.filename);
+                    $('#import_table_db_tb').val(resp.filename);
+                }
 
                 var fieldlist = [];
                 fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
