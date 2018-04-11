@@ -447,6 +447,61 @@ class TableService {
         return $headers;
     }
 
+    public function getImportHeaders($tableName, $target_tb_id = 0) {
+        $importHeadersMeta = $tableName
+            ?
+            DB::connection('mysql_schema')
+                ->table('COLUMNS')
+                ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
+                ->where('TABLE_NAME', '=', $tableName)
+                ->get()
+            :
+            [];
+
+        if ($target_tb_id) {//get data for 'tb_rfcn'
+            $importHeaders = DB::connection('mysql_sys')
+                ->table('tb_rfcn')
+                ->where('tb_id', '=', $target_tb_id)
+                ->get();
+        } else {
+            $importHeaders = $tableName ? $this->getHeaders($tableName) : $this->emptyTBHeaders();
+        }
+
+        foreach ($importHeaders as &$imp) {
+            if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                $imp->auto = 1;
+                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'Date' : 'Integer');
+                $imp->default = 'auto';
+                $imp->required = 1;
+                $imp->maxlen = '';
+            } else {
+                $curval = [];
+                foreach ($importHeadersMeta as $imeta) {
+                    if ($imeta->COLUMN_NAME == $imp->field) {
+                        $curval = $imeta;
+                        break;
+                    }
+                }
+                $imp->auto = 0;
+                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
+                $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
+                $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
+                $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+            }
+        }
+        return $importHeaders;
+    }
+
+    private function emptyTBHeaders() {
+        return [
+            (object) ['field' => 'id', 'name' => 'ID', 'type' => 'int'],
+            (object) ['field' => 'createdBy', 'name' => 'Created By', 'type' => 'int'],
+            (object) ['field' => 'createdOn', 'name' => 'Created On', 'type' => 'data'],
+            (object) ['field' => 'modifiedBy', 'name' => 'Modified By', 'type' => 'int'],
+            (object) ['field' => 'modifiedOn', 'name' => 'Modified On', 'type' => 'data']
+        ];
+    }
+
     private function selectHeaders($table_meta, $user_id) {
         return DB::connection('mysql_sys')->table('tb_settings_display as tsd')
             ->where('tsd.user_id', '=', $user_id ? $user_id : $table_meta->owner)

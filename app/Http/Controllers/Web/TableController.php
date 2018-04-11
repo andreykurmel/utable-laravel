@@ -4,6 +4,7 @@ namespace Vanguard\Http\Controllers\Web;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Vanguard\Http\Controllers\Controller;
 use Vanguard\Services\TableService;
@@ -633,19 +634,14 @@ class TableController extends Controller
     public function createTableFromMenu(Request $request)
     {
         $columns = [
-            ['field' => 'id', 'header' => 'ID'],
-            ['field' => 'createdBy', 'header' => 'Created By'],
-            ['field' => 'createdOn', 'header' => 'Created On'],
-            ['field' => 'modifiedBy', 'header' => 'Modified By'],
-            ['field' => 'modifiedOn', 'header' => 'Modified On']
+            ['field' => 'id', 'header' => 'ID', 'size' => 0],
+            ['field' => 'createdBy', 'header' => 'Created By', 'size' => 0],
+            ['field' => 'createdOn', 'header' => 'Created On', 'size' => 0],
+            ['field' => 'modifiedBy', 'header' => 'Modified By', 'size' => 0],
+            ['field' => 'modifiedOn', 'header' => 'Modified On', 'size' => 0]
         ];
 
-        $this->createTableColumns($request, $request->db_tb, $columns);
-
-        return [
-            'error' => false,
-            'msg' => config('app.url')."/data/".$request->db_tb
-        ];
+        return $this->createTableColumns($request, $request->db_tb, $columns);
     }
 
     public function createTable(Request $request)
@@ -667,7 +663,7 @@ class TableController extends Controller
 
     public function replaceTable(Request $request) {
         if ($request->table_name) {
-            $this->deleteAllTable($request);
+            $this->deleteAllTable($request->table_name);
         }
         return $this->createTable($request);
     }
@@ -682,7 +678,7 @@ class TableController extends Controller
         $this->modifyTableColumns($request, $tableMeta, $columns);
 
         //import data
-        if ($request->data_csv && $tableMeta->source != 'remote') {
+        if (($request->data_csv || $request->import_host) && $tableMeta->source != 'remote') {
             $this->importDataToTable($request, $filename, $columns);
         }
 
@@ -705,46 +701,71 @@ class TableController extends Controller
 
     public function refTable(Request $request) {
         $columns = $request->columns_ref;
-        $table_db = $request->table_name;
+        $table_db = $request->table_db_tb;
         $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
 
-        //add settings to 'tb_settings_display'
-        foreach ($columns as $col) {
-            if ($col['field']) {
-                DB::connection('mysql_sys')->table('tb_rfcn')->insert([
-                    'tb_id' => $exist->id,
-                    'field' => $col['field'],
-                    'ref_tb' => $col['ref_tb'],
-                    'ref_field' => $col['ref_field'],
-                    'createdBy' => Auth::user()->id,
-                    'createdOn' => now(),
-                    'modifiedBy' => Auth::user()->id,
-                    'modifiedOn' => now()
-                ]);
-            }
-        }
-        return 'under construction...';
         if ($exist && $exist->source != 'ref') {
-            $this->deleteAllTable($request);
+            $this->deleteAllTable($table_db);
             $exist = false;
         }
 
         if (!$exist) {
             $this->createTableColumns($request, $table_db, $columns);
+
+            $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
+
+            //add info into the 'tb_rfcn'
+            foreach ($columns as $col) {
+                if ($col['field']) {
+                    DB::connection('mysql_sys')->table('tb_rfcn')->insert([
+                        'tb_id' => $exist->id,
+                        'field' => $col['field'],
+                        'ref_tb' => (!empty($col['ref_tb']) ? $col['ref_tb'] : ''),
+                        'ref_field' => (!empty($col['ref_field']) ? $col['ref_field'] : ''),
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+                }
+            }
         } else {
             $this->modifyTableColumns($request, $exist, $columns);
+
+            //modify info in the 'tb_rfcn'
+            DB::connection('mysql_sys')->table('tb_rfcn')->where('tb_id', '=', $exist->id)->delete();
+            foreach ($columns as $col) {
+                if ($col['field']) {
+                    DB::connection('mysql_sys')->table('tb_rfcn')->insert([
+                        'tb_id' => $exist->id,
+                        'field' => $col['field'],
+                        'ref_tb' => (!empty($col['ref_tb']) ? $col['ref_tb'] : ''),
+                        'ref_field' => (!empty($col['ref_field']) ? $col['ref_field'] : ''),
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+                }
+            }
         }
 
-        return redirect()->to( "/data/".$table_db );
+        $this->importDataToTable($request, $table_db, $columns);
+
+        return ($request->import_target_db ? 'Success!' : redirect()->to( "/data/".$table_db ) );
     }
 
-    public function deleteAllTable(Request $request)
+    public function deleteAllTable($table_name)
     {
-        $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->table_name)->first();
+        $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_name)->first();
+
+        if (!$tableMeta) {
+            return "not found";
+        }
 
         //delete table
         if ($tableMeta->source != 'remote') {
-            Schema::connection('mysql_data')->table($request->table_name, function (Blueprint $table) {
+            Schema::connection('mysql_data')->table($table_name, function (Blueprint $table) {
                 $table->drop();
             });
         }
@@ -758,8 +779,8 @@ class TableController extends Controller
         //delete record from the 'ddl'
         DB::connection('mysql_sys')->table('ddl')->where('tb_id', '=', $tableMeta->id)->delete();
 
-        //delete record from the 'favorite'
-        DB::connection('mysql_sys')->table('favorite')->where('table_id', '=', $tableMeta->id)->delete();
+        //delete record from the folders and favorites ('menutree_2_tb')
+        DB::connection('mysql_sys')->table('menutree_2_tb')->where('tb_id', '=', $tableMeta->id)->delete();
 
         //delete record from the 'permissions'
         DB::connection('mysql_sys')->table('permissions')->where('table_id', '=', $tableMeta->id)->delete();
@@ -769,6 +790,7 @@ class TableController extends Controller
 
     private function importDataToTable($request, $filename, $columns) {
         if ($request->data_csv) {
+            //CSV IMPORT
             $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
             $start = $end = $cur = 0;
             if ($request->csv_first_headers) { $start = 2; }
@@ -788,7 +810,7 @@ class TableController extends Controller
                 $insert = [];
                 //fill only those data columns which numbers are setted in 'table columns settings'
                 foreach ($columns as $idx => $col) {
-                    if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if (!empty($col['col']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         $insert[ $col['field'] ] = $data[ $col['col']-1 ];
                     }
                 }
@@ -798,21 +820,22 @@ class TableController extends Controller
                 $insert['modifiedOn'] = now();
                 DB::connection('mysql_data')->table($filename)->insert($insert);
             }
-        } elseif ($request->host) {
-            Config::set('database.connections.mysql_import2.host', $request->host);
-            Config::set('database.connections.mysql_import2.username', $request->user);
-            Config::set('database.connections.mysql_import2.password', $request->pass);
-            Config::set('database.connections.mysql_import2.database', $request->db);
+        } elseif ($request->import_host) {
+            //MYSQL IMPORT
+            Config::set('database.connections.mysql_import2.host', $request->import_host);
+            Config::set('database.connections.mysql_import2.username', $request->import_lgn);
+            Config::set('database.connections.mysql_import2.password', $request->import_pwd);
+            Config::set('database.connections.mysql_import2.database', $request->import_db);
 
             try {
-                $all_rows = DB::connection('mysql_import2')->table($request->table)->get();
+                $all_rows = DB::connection('mysql_import2')->table($request->import_table)->get();
 
                 foreach ($all_rows as $row) {
                     $row = (array)$row;
                     $insert = [];
 
                     foreach ($columns as $col) {
-                        if ($col['col'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        if (!empty($col['col']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                             $insert[ $col['field'] ] = !empty($row[ $col['field'] ]) ? $row[ $col['field'] ] : null;
                         }
                     }
@@ -823,8 +846,53 @@ class TableController extends Controller
                     $insert['modifiedOn'] = now();
                     DB::connection('mysql_data')->table($filename)->insert($insert);
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+                return false;
+            }
+        } elseif ($request->type_import == 'ref') {
+            //REFERENCE IMPORT
+            $tables_dbs = $request->import_target_db ? [$request->import_target_db] : [];
+            if (!$tables_dbs) {
+                foreach ($columns as $col) {
+                    if (!in_array($col['ref_tb'], $tables_dbs)) {
+                        $tables_dbs[] = $col['ref_tb'];
+                    }
+                }
+            }
+
+            foreach ($tables_dbs as $t_db) {
+                $refer_tb_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $t_db)->first();
+
+                $corresp_fields = [];
+                foreach ($columns as $col) {
+                    if ($col['ref_tb'] == $t_db && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        $corresp_fields[ $col['field'] ] = $col['ref_field'];
+                    }
+                }
+
+                //delete already present rows before import
+                DB::connection('mysql_data')->table($filename)->where('refer_tb_id', '=', $refer_tb_id->id)->delete();
+
+                //import rows from each referenced tables
+                $all_rows = DB::connection('mysql_data')->table($t_db)->get();
+                foreach ($all_rows as $row) {
+                    $row = (array)$row;
+                    $insert = [];
+
+                    foreach ($corresp_fields as $cur => $ref) {
+                        $insert[ $cur ] = $row[ $ref ];
+                    }
+
+                    $insert['refer_tb_id'] = $refer_tb_id->id;
+                    $insert['createdBy'] = Auth::user()->id;
+                    $insert['createdOn'] = now();
+                    $insert['modifiedBy'] = Auth::user()->id;
+                    $insert['modifiedOn'] = now();
+                    DB::connection('mysql_data')->table($filename)->insert($insert);
+                }
+            }
         }
+        return true;
     }
 
     private function createTableColumns($request, $table_db, $columns) {
@@ -847,18 +915,22 @@ class TableController extends Controller
         } else {
             //create table
             try {
-                Schema::connection('mysql_data')->create($table_db, function (Blueprint $table) use ($columns) {
+                Schema::connection('mysql_data')->create($table_db, function (Blueprint $table) use ($columns, $request) {
                     $table->increments('id');
+                    if ($request->type_import == 'ref') {
+                        $table->integer('refer_tb_id')->default(0);
+                    }
 
                     $presentCols = [];
                     foreach ($columns as &$col) {
+                        if (empty($col['size'])) $col['size'] = 0;
                         $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
                         if (!isset($col_size[0])) $col_size[0] = 9;
                         if (!isset($col_size[1])) $col_size[1] = 2;
                         if ($col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                             //prevent error if we have two the same names for columns
                             if (in_array($col['field'], $presentCols)) {
-                                $col['field'] = $col['field']."_1";
+                                continue;
                             }
                             $presentCols[] = $col['field'];
 
@@ -890,7 +962,7 @@ class TableController extends Controller
                     $table->integer('modifiedBy')->nullable();
                     $table->dateTime('modifiedOn')->nullable();
                 });
-            } catch (\Exception $e) {
+            } catch (\Exception $e) {dd($e);
                 return [
                     'error' => true,
                     'msg' => "Seems that table with provided db_tb is exists!<br>".$e->getMessage()
@@ -921,7 +993,7 @@ class TableController extends Controller
                     'user_id' => Auth::user()->id,
                     'tb_id' => $tb_id,
                     'field' => $col['field'],
-                    'name' => $col['header'],
+                    'name' => (!empty($col['header']) ? $col['header'] : $col['field']),
                     'web' => 'Yes',
                     'filter' => 'No',
                     'sum' => 'No',
@@ -934,6 +1006,21 @@ class TableController extends Controller
                     'modifiedOn' => now()
                 ]);
             }
+        }
+
+        //add table to  folder if defined ('menutree_2_tb')
+        if ($request->menutree_id) {
+            DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
+                'user_id' => Auth::user()->id,
+                'tb_id' => $tb_id,
+                'menutree_id' => $request->menutree_id,
+                'type' => 'table',
+                'structure' => 'private',
+                'createdBy' => Auth::user()->id,
+                'createdOn' => now(),
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
         }
 
         if ($request->type_import == 'remote') {
@@ -956,7 +1043,10 @@ class TableController extends Controller
             } catch (\Exception $e) {}
         }
 
-        return 'done';
+        return [
+            'error' => false,
+            'msg' => config('app.url')."/data/".$table_db
+        ];
     }
 
     private function modifyTableColumns($request, $table_meta, $columns) {
@@ -966,49 +1056,48 @@ class TableController extends Controller
         //modify table
         try {
             Schema::connection('mysql_data')->table($table_meta->db_tb, function (Blueprint $table) use ($columns) {
-                //for deleting columns
                 foreach ($columns as $col) {
+                    if (empty($col['size'])) $col['size'] = 0;
+                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
+                    if (!isset($col_size[0])) $col_size[0] = 9;
+                    if (!isset($col_size[1])) $col_size[1] = 2;
+
+                    //for deleting columns
                     if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //del column
                         $table->dropColumn($col['field']);
                     }
-                }
-                //for changing columns
-                foreach ($columns as $col) {
-                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
-                    if (!isset($col_size[0])) $col_size[0] = 9;
-                    if (!isset($col_size[1])) $col_size[1] = 2;
-                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && ($col['field'] != $col['old_field']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+
+                    //for changing columns
+                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //edit column
-                        $t = $table->renameColumn($col['old_field'], $col['field']);
-
-                        if ($col['type'] == 'String') {
-                            $t->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
-                        } elseif ($col['type'] == 'Date') {
-                            $t->date($col['field']);
-                        } elseif ($col['type'] == 'Date Time') {
-                            $t->dateTime($col['field']);
-                        } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
-                            $t->decimal($col['field'], $col_size[0], $col_size[1]);
+                        if ($col['field'] != $col['old_field']) {
+                            $table->renameColumn($col['old_field'], $col['field'])->change();
                         } else {
-                            $t->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
-                        }
+                            if ($col['type'] == 'String') {
+                                $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
+                            } elseif ($col['type'] == 'Date') {
+                                $t = $table->date($col['field']);
+                            } elseif ($col['type'] == 'Date Time') {
+                                $t = $table->dateTime($col['field']);
+                            } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
+                                $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
+                            } else {
+                                $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                            }
 
-                        if (empty($col['required'])) {
-                            $t->nullable();
-                        }
+                            if (empty($col['required'])) {
+                                $t->nullable();
+                            }
 
-                        if (!empty($col['default'])) {
-                            $t->default($col['default']);
+                            if (!empty($col['default'])) {
+                                $t->default($col['default']);
+                            }
+                            $t->change();
                         }
-                        $t->change();
                     }
-                }
-                //for adding columns
-                foreach ($columns as $col) {
-                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
-                    if (!isset($col_size[0])) $col_size[0] = 9;
-                    if (!isset($col_size[1])) $col_size[1] = 2;
+
+                    //for adding columns
                     if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                         //add column
                         if ($col['type'] == 'String') {
@@ -1055,7 +1144,7 @@ class TableController extends Controller
                     ->delete();
             }
             //for editing columns
-            if (($col['stat'] == '') && $col['field'] && $col['old_field'] && ($col['field'] != $col['old_field']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+            if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
                 //edit column
                 DB::connection('mysql_sys')->table('tb_settings_display')
                     ->where('tb_id', '=', $table_meta->id)

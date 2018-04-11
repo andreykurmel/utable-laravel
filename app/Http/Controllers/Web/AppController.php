@@ -77,40 +77,9 @@ class AppController extends Controller
             :
             [];
 
-        $importHeadersMeta = $tableName
-            ?
-            DB::connection('mysql_schema')
-                ->table('COLUMNS')
-                ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
-                ->where('TABLE_NAME', '=', $tableName)
-                ->get()
-            :
-            [];
-        $importHeaders = $tableName ? $this->tableService->getHeaders($tableName) : $this->emptyTBHeaders();
-        foreach ($importHeaders as &$imp) {
-            if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
-                $imp->auto = 1;
-                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'Date' : 'Integer');
-                $imp->default = 'auto';
-                $imp->required = 1;
-                $imp->maxlen = '';
-            } else {
-                $curval = [];
-                foreach ($importHeadersMeta as $imeta) {
-                    if ($imeta->COLUMN_NAME == $imp->field) {
-                        $curval = $imeta;
-                        break;
-                    }
-                }
-                $imp->auto = 0;
-                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
-                $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
-                $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
-                $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
-            }
-        }
+        $importHeaders = $this->tableService->getImportHeaders($tableName);
 
-        $importReferences = $tableMeta ? DB::connection('mysql_sys')->table('tb_rfcn')->where('tb_id', '=', $tableMeta->id)->get() : [];
+        $importReferences = $this->tableService->getImportHeaders($tableName, $tableMeta->id);
 
         if ($tableName) {
             $owner = (
@@ -177,16 +146,6 @@ class AppController extends Controller
             'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->orderBy('id')->get(),
             'importConnections' => $connections,
             'tablesDropDown' => $tablesDropDown
-        ];
-    }
-
-    private function emptyTBHeaders() {
-        return [
-            (object) ['field' => 'id', 'name' => 'ID', 'type' => 'int'],
-            (object) ['field' => 'createdBy', 'name' => 'Created By', 'type' => 'int'],
-            (object) ['field' => 'createdOn', 'name' => 'Created On', 'type' => 'data'],
-            (object) ['field' => 'modifiedBy', 'name' => 'Modified By', 'type' => 'int'],
-            (object) ['field' => 'modifiedOn', 'name' => 'Modified On', 'type' => 'data']
         ];
     }
 

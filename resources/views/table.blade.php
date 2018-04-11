@@ -767,29 +767,30 @@
                                 <input type="hidden" id="import_data_csv" name="data_csv" value="">
                                 <input type="hidden" id="import_table_name" name="table_name" value="{{ $tableMeta ? $tableMeta->name : '' }}">
                                 <input type="hidden" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}">
-                                <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 30px;bottom: 0;">
+                                <input type="hidden" id="import_target_db" name="import_target_db" value="0">
+                                <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 0;bottom: 0;padding-top: 10px;">
                                     <div class="standard-tabs container">
                                         <ul class="tabs">
-                                            <li class="active" id="import_li_csv_tab" onclick="import_show_csv_tab()">
+                                            <li id="import_li_csv_tab" onclick="import_show_csv_tab()">
                                                 <a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
                                                     Method
                                                 </a>
                                             </li>
-                                            <li id="import_li_col_tab">
+                                            <li class="active" id="import_li_col_tab">
                                                 <a href="javascript:void(0)" onclick="import_show_col_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
                                                     Field Settings
                                                 </a>
                                             </li>
                                         </ul>
                                     </div>
-                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                         <div class="row form-group" style="padding: 0 15px;">
                                             <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
-                                                <option value="scratch">From Scratch</option>
-                                                <option selected value="csv">CSV Import</option>
+                                                <option {{ ($tableMeta->source != 'ref' ? 'selected' : '') }} value="scratch">From Scratch</option>
+                                                <option value="csv">CSV Import</option>
                                                 <option value="mysql">MySQL Import</option>
                                                 <option value="remote">Remote</option>
-                                                <option value="ref">Referencing</option>
+                                                <option {{ ($tableMeta->source == 'ref' ? 'selected' : '') }} value="ref">Referencing</option>
                                             </select>
                                             <select class="form-control" id="import_action_type" onchange="changeImportAction(this)" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
                                                 <option value="/createTable">New</option>
@@ -901,7 +902,7 @@
                                         <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
                                     </div>
 
-                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 60px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
+                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                         <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
                                         <input type="hidden" id="import_ref_row_count" value="{{ count($importReferences) }}">
                                         <div class="row">
@@ -963,10 +964,16 @@
                                                     <table class="table table-striped" id="import_reference_columns" style="display: none;">
                                                         <thead>
                                                         <tr>
+                                                            <th colspan="3" style="text-align: center;">Current Table</th>
+                                                            <th colspan="4" style="text-align: center;">Referencing</th>
+                                                        </tr>
+                                                        <tr>
                                                             <th>Table Field</th>
+                                                            <th>Type</th>
+                                                            <th>Size</th>
                                                             <th>Reference Table</th>
+                                                            <th>Actions</th>
                                                             <th>Reference Field</th>
-                                                            <th>Delete</th>
                                                         </tr>
                                                         </thead>
 
@@ -977,11 +984,31 @@
                                                                     <input type="text" class="form-control" name="columns_ref[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
+                                                                    <select class="form-control" name="columns_ref[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                        @foreach($importTypesDDL as $i_ddl)
+                                                                            <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }}>{{ $i_ddl->option }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control" name="columns_ref[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                </td>
+                                                                <td>
                                                                     <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_tb]" {{ $hdr->auto ? 'readonly' : ''}} onchange="import_ref_table_changed({{ $loop->index }})">
+                                                                        <option></option>
                                                                         @foreach($tablesDropDown as $tb)
                                                                             <option {{ $hdr->ref_tb == $tb->db_tb ? 'selected="selected"' : '' }} value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
                                                                         @endforeach
                                                                     </select>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="hidden" id="import_columns_ref_deleted_{{ $loop->index }}" name="columns_ref[{{ $loop->index }}][stat]">
+                                                                    @if(!$hdr->auto)
+                                                                        <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
+                                                                        |
+                                                                        <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}')"><span class="fa fa-arrow-right"></span></button>
+                                                                        <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}curre')"><span class="fa fa-arrow-right"></span></button>
+                                                                    @endif
                                                                 </td>
                                                                 <td>
                                                                     <select id="import_columns_ref_field_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_field]" {{ $hdr->auto ? 'readonly' : ''}}>
@@ -993,12 +1020,6 @@
                                                                             @endif
                                                                         @endforeach
                                                                     </select>
-                                                                </td>
-                                                                <td>
-                                                                    <input type="hidden" id="import_columns_ref_deleted_{{ $loop->index }}" name="columns_ref[{{ $loop->index }}][stat]">
-                                                                    @if(!$hdr->auto)
-                                                                        <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
-                                                                    @endif
                                                                 </td>
                                                             </tr>
                                                         @endforeach
@@ -1126,6 +1147,7 @@
                             <input type="hidden" id="sidebar_table_id">
                             <input type="hidden" id="sidebar_table_action">
                             <input type="hidden" id="sidebar_table_tab">
+                            <input type="hidden" id="sidebar_menutree_id">
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_name">Table name</label>

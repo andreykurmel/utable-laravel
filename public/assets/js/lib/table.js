@@ -93,6 +93,8 @@ $(document).ready(function () {
     } else {
         jsTreeBuild('public');
     }
+
+    changeImportStyle();
 });
 
 /* --------------------- Variables ---------------------- */
@@ -3129,14 +3131,14 @@ function sent_csv_to_backend(is_upload) {
                 fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
 
-                var html = '';
+                var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
                         '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
                             '<input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
                             '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td>' +
+                        '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
                             '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
                         '</td>' +
                         '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
@@ -3236,6 +3238,7 @@ function import_test_db_connect() {
                 $.each(resp.headers, function(i, hdr) {
                     ddl_col_numbers.push(hdr.field);
                 });
+                import_show_col_tab();
             }
         },
         error: function (e) {
@@ -3253,16 +3256,24 @@ function import_add_table_row() {
                 '<input type="text" class="form-control" name="columns_ref['+i+'][field]" value="">' +
                 '<input type="hidden" class="form-control" name="columns_ref['+i+'][old_field]" value="">' +
             '</td>' +
-            '<td><select id="import_columns_ref_table_'+i+'" class="form-control" name="columns_ref['+i+'][ref_tb]" onchange="import_ref_table_changed('+i+')">';
+            '<td><select class="form-control" name="columns_ref['+i+'][type]">';
+        for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
+            html += '<option>'+importTypesDDL[jdx].option+'</option>';
+        }
+        html += '</select></td>' +
+            '<td><input type="number" class="form-control" name="columns_ref['+i+'][size]"></td>' +
+            '<td><select id="import_columns_ref_table_'+i+'" class="form-control" name="columns_ref['+i+'][ref_tb]" onchange="import_ref_table_changed('+i+')">' +
+            '<option></option>';
         for (var k in tablesDropDown) {
             html += '<option value="'+tablesDropDown[k].db_tb+'">'+tablesDropDown[k].name+'</option>';
         }
         html += '</select></td>' +
-            '<td><select id="import_columns_ref_field_'+i+'" class="form-control" name="columns_ref['+i+'][ref_field]"></select></td>' +
             '<td>' +
             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns_ref['+i+'][stat]" value="add">' +
-            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button> | ' +
+            '<button type="button" class="btn btn-default" onclick="import_ref_table('+i+')"><span class="fa fa-arrow-right"></span></button>' +
             '</td>' +
+            '<td><select id="import_columns_ref_field_'+i+'" class="form-control" name="columns_ref['+i+'][ref_field]"></select></td>' +
             '</tr>';
         $('#import_table_ref_body').append(html);
         $('#import_ref_row_count').val(i+1);
@@ -3272,7 +3283,7 @@ function import_add_table_row() {
             '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
             '<td>' +
                 '<input type="text" class="form-control" name="columns['+i+'][field]" value="">' +
-                '<input type="hidded" class="form-control" name="columns['+i+'][old_field]" value="">' +
+                '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="">' +
             '</td>' +
             '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
                 '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()"></select>' +
@@ -3342,7 +3353,7 @@ function import_show_col_tab() {
 }
 
 function changeImportStyle(sel) {
-    var style = $(sel).val();
+    var style = $(sel).val() || (table_meta.source == 'ref' ? 'ref' : 'scratch');
     if (style == 'scratch') {
         $('.js-import_mysql_style').hide();
         $('.js-import_csv_style').hide();
@@ -3375,7 +3386,8 @@ function changeImportStyle(sel) {
         $('#import_not_reference_columns').show();
         $('#import_reference_columns').hide();
         $('.js-import_column-orders').hide();
-    } else {
+    } else
+    if (style == 'ref') {
         $('.js-import_csv_style').hide();
         $('#import_action_type').hide();
         $('.js-import_mysql_style').hide();
@@ -3444,10 +3456,30 @@ function show_import_cols_numbers() {
     var imp_type = $('#import_type_import').val(), html = '<option value=""></option>';
     if (imp_type == 'csv' || imp_type == 'mysql') {
         $.each(ddl_col_numbers, function(i, hdr) {
-            html += '<option value="'+i+'">'+hdr+'</option>';
+            html += '<option value="'+(i+1)+'">'+hdr+'</option>';
         });
     }
     $(evt.target).html(html);
+}
+
+function partially_import_ref_table($ref_tb) {
+    if ($ref_tb) {
+        $('#import_target_db').val($ref_tb);
+        jQuery.ajax({
+            url: baseHttpUrl + '/refTable',
+            data: $('#import_form').serializeArray(),
+            method: 'POST',
+            success: function() {
+                swal("Success!", "", "success");
+            },
+            error: function (e) {
+                swal("Connection error!", "", "error");
+            }
+        });
+        $('#import_target_db').val(0);
+    } else {
+        swal("Warning!", "You should select reference table and field", "warning");
+    }
 }
 
 
@@ -3536,12 +3568,16 @@ function jsTreeBuild($tab) {
                                     "separator_after": false,
                                     "label": "Add Table",
                                     "action": function (obj) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var menutree_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
                                         $('#sidebar_table_tab').val($tab);
                                         $('#sidebar_table_action').val('add');
                                         $('#sidebar_table_name').val('');
                                         $('#sidebar_table_id').val(0);
                                         $('#sidebar_table_db').prop('disabled', false).val('');
                                         $('#sidebar_table_nbr').val(100);
+                                        $('#sidebar_menutree_id').val(menutree_id);
 
                                         $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                                     }
@@ -3885,6 +3921,7 @@ function jsTreeBuild($tab) {
                     $('#sidebar_table_db').prop('disabled', false).val('');
                     $('#sidebar_table_nbr').val(100);
                     $('#sidebar_table_notes').val('');
+                    $('#sidebar_menutree_id').val(0);
 
                     $('.editSidebarTableForm').show(); //function popup_sidebar_table()
                 });
@@ -3904,6 +3941,7 @@ function popup_sidebar_table() {
         tb_db = $('#sidebar_table_db').val(),
         tb_nbr = $('#sidebar_table_nbr').val(),
         tb_notes = $('#sidebar_table_notes').val(),
+        menutree_id = $('#sidebar_menutree_id').val(),
         action = $('#sidebar_table_action').val(),
         strParamsEdit = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr+"&notes="+tb_notes;
 
@@ -3915,7 +3953,8 @@ function popup_sidebar_table() {
                 'db_tb': tb_db,
                 'table_name': tb_name,
                 'nbr_entry_listing': tb_nbr,
-                'notes': tb_notes
+                'notes': tb_notes,
+                'menutree_id': menutree_id
             },
             success: function (response) {
                 if (response.error) {
