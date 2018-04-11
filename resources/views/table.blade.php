@@ -1007,7 +1007,6 @@
                                                                         <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
                                                                         |
                                                                         <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}')"><span class="fa fa-arrow-right"></span></button>
-                                                                        <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}curre')"><span class="fa fa-arrow-right"></span></button>
                                                                     @endif
                                                                 </td>
                                                                 <td>

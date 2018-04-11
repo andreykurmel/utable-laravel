@@ -3271,7 +3271,7 @@ function import_add_table_row() {
             '<td>' +
             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns_ref['+i+'][stat]" value="add">' +
             '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button> | ' +
-            '<button type="button" class="btn btn-default" onclick="import_ref_table('+i+')"><span class="fa fa-arrow-right"></span></button>' +
+            '<button type="button" class="btn btn-default" onclick="partially_import_ref_table('+i+')"><span class="fa fa-arrow-right"></span></button>' +
             '</td>' +
             '<td><select id="import_columns_ref_field_'+i+'" class="form-control" name="columns_ref['+i+'][ref_field]"></select></td>' +
             '</tr>';
