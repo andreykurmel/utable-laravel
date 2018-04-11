@@ -77,9 +77,9 @@ class AppController extends Controller
             :
             [];
 
-        $importHeaders = $this->tableService->getImportHeaders($tableName);
+        $importHeaders = ($tableName ? $this->tableService->getImportHeaders($tableName) : []);
 
-        $importReferences = $this->tableService->getImportHeaders($tableName, $tableMeta->id);
+        $importReferences = ($tableName ? $this->tableService->getImportHeaders($tableName, $tableMeta->id) : []);
 
         if ($tableName) {
             $owner = (
