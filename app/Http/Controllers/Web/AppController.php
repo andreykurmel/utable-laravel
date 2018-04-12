@@ -407,7 +407,7 @@ class AppController extends Controller
                     ->where('parent_id', '=', $par_id);
 
                 if ($this->subdomain) {
-                    $par_id->whereNull('user_id');
+                    $par_id->where('structure', '=', 'public');
                 } else {
                     $par_id->where('user_id', '=', Auth::user() ? Auth::user()->id : 0);
                 }
