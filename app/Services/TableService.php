@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class TableService {
+    private $subdomain = "";
+
+    public function __construct() {
+        if( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST']/*'www.sub.tabledataplace.com'*/, $subdomain) ) {
+            $this->subdomain = $subdomain[1];
+        }
+    }
+
     public function getData($post) {
         $fromMainData = isset($post->from_main_data) ? 1 : 0;
         $tableName = $post->tableName;
@@ -34,7 +42,7 @@ class TableService {
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
-        if (Auth::user()) {
+        if (!$this->subdomain && Auth::user()) {
             if (
                 //not admin
                 Auth::user()->role_id != 1

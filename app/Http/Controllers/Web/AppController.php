@@ -76,6 +76,9 @@ class AppController extends Controller
             DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first()
             :
             [];
+        if ($tableMeta) {
+            $tableMeta->conn_notes = json_decode($tableMeta->conn_notes);
+        }
 
         $importHeaders = ($tableName ? $this->tableService->getImportHeaders($tableName) : []);
 
@@ -113,6 +116,7 @@ class AppController extends Controller
             $tablesDropDown = $tablesDropDown->groupBy('tb.id')->select('tb.*')->get();
             //get fields for each tables
             foreach ($tablesDropDown as &$tb) {
+                $tb->conn_notes = '';
                 $tb->items = DB::connection('mysql_sys')
                     ->table('tb_settings_display')
                     ->where('tb_id', '=', $tb->id)
@@ -278,7 +282,7 @@ class AppController extends Controller
 
     private function buildHTMLTree($res_arr, $url, $tab) {
         if ($res_arr->id) {
-            $html = "<li data-type='folder' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
+            $html = "<li data-type='folder' data-jstree='{\"opened\":".($res_arr->state ? 1 : 0)."}' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
         } else {
             $html = "";
         }
@@ -292,10 +296,10 @@ class AppController extends Controller
                         //get subdomain from root folder or fall to 'general'
                         $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
                         $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
-                            .'/data/'
+                            .preg_replace('/'.$pub_subdomain.'\//i','', $url)
                             .$table->db_tb;
                     } else {
-                        $link = config('app.url').'/data/'.$table->db_tb;
+                        $link = config('app.url').$url.$table->db_tb;
                     }
 
                     $html .= '<li 
@@ -358,9 +362,12 @@ class AppController extends Controller
     }
 
     private function tableExist($tableName) {
+        $pathArr = explode('/', $tableName);
+        $tableName = array_pop($pathArr);
         $exist = 0;
 
         if ($this->subdomain) {
+            array_unshift($pathArr, $this->subdomain);
             //check for 'public' tab
             $exist = DB::connection('mysql_sys')->table('tb')
                 ->leftJoin('menutree_2_tb as m2t', function ($q) {
@@ -390,7 +397,32 @@ class AppController extends Controller
             }
         }
 
-        return $exist;
+        //test path
+        $par_id = 0;
+        $exist_path = 1;
+        if ($exist && count($pathArr)) {
+            foreach ($pathArr as $p_elem) {
+                $par_id = DB::connection('mysql_sys')->table('menutree')
+                    ->where('title', '=', $p_elem)
+                    ->where('parent_id', '=', $par_id);
+
+                if ($this->subdomain) {
+                    $par_id->whereNull('user_id');
+                } else {
+                    $par_id->where('user_id', '=', Auth::user() ? Auth::user()->id : 0);
+                }
+                $par_id = $par_id->first();
+
+                if ($par_id) {
+                    $par_id = $par_id->id;
+                } else {
+                    $exist_path = 0;
+                    break;
+                }
+            }
+        }
+
+        return $exist && $exist_path;
     }
 
     public function showSettingsForCreateTable(Request $request) {

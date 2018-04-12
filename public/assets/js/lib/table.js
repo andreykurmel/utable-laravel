@@ -2385,11 +2385,9 @@ function showSettingsDDLDataTable(headers, data, idx) {
         settingsDDL_selectedIndex = idx;
         if (settingsDDLs[idx].type == 'referencing') {
             $('#add_settings_references_btn').show();
-            $('#add_settings_ddl_item_btn').hide();
             data = settingsDDLs[idx].referencing;
             headers = settingsDDL_cdtns_headers;
         } else {
-            $('#add_settings_ddl_item_btn').show();
             $('#add_settings_references_btn').hide();
             data = settingsDDLs[idx].items;
         }
@@ -2413,7 +2411,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'data-idx="' + i + '"' +
                     'data-table="' + add_table_name + '"' +
                     'data-table_idx="' + idx + '"' +
-                    (($.inArray(d_key, edited_fields) || d_key == 'use') ? 'onclick="'+func_name+'(\'' + d_key + i + add_id_name + '\', 1)"' : '') +
+                    (($.inArray(d_key, edited_fields) > -1) ? 'onclick="'+func_name+'(\'' + d_key + i + add_id_name + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && d_key === 'tb_id') {
                     tableData += settingsDDL_TableMeta.name;
@@ -2429,7 +2427,11 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tableData += "</tr>";
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
-        tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
+        if (i == 0) {
+            tbHiddenData += '<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\">Add</a></td>';
+        } else {
+            tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
+        }
         for (key in headers) {
             d_key = headers[key].field;
             if (d_key != 'items') {
@@ -2444,11 +2446,15 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 tbHiddenData += '</td>';
             }
         }
-        tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
+        if (i == 0) {
+            tbHiddenData += '<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\">Add</a></td>';
+        } else {
+            tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
+        }
         tbHiddenData += "</tr>";
     }
 
-    tbAddRow += "<tr style='height: 37px;'><td>auto</td>";
+    tbAddRow += "<tr style='height: 37px;'><td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\" onclick=\"saveSettingsDDLRow('"+add_table_name+"')\">Add</a></td>";
     for (key in headers) {
         d_key = headers[key].field;
         if (d_key != 'items') {
@@ -2456,13 +2462,13 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 'id="add_' + d_key + add_id_name + '"' +
                 'data-key="' + d_key + '"' +
                 'data-table="' + add_table_name + '"' +
-                (($.inArray(d_key, edited_fields) || d_key == 'use') ? 'onclick="'+func_name+'(\'add_' + d_key + add_id_name + '\', 0)"' : '') +
+                (($.inArray(d_key, edited_fields) > -1) ? 'onclick="'+func_name+'(\'add_' + d_key + add_id_name + '\', 0)"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    ((!$.inArray(d_key, edited_fields) && d_key != 'use') ? 'auto' : '') +
+                    (($.inArray(d_key, edited_fields) == -1) ? 'auto' : '') +
                 '</td>';
         }
     }
-    tbAddRow += "<td></td>";
+    tbAddRow += "<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\" onclick=\"saveSettingsDDLRow('"+add_table_name+"')\">Add</a></td>";
     tbAddRow += "</tr>";
 
     if (idx > -1) {
@@ -2471,20 +2477,20 @@ function showSettingsDDLDataTable(headers, data, idx) {
         if (settingsDDLs[idx].type == 'referencing') {
             $('._settings_selected_DDL_reference').show();
             $('._settings_selected_DDL_regular').hide();
-            $('#tbSettingsDDL_References_addrow').html(tbAddRow+tbHiddenData);
+            //$('#tbSettingsDDL_References_addrow').html(tbAddRow+tbHiddenData);
             $('#tbSettingsDDL_References_headers').html(tbHiddenData);
-            $('#tbSettingsDDL_References_data').html(tableData);
+            $('#tbSettingsDDL_References_data').html(tableData+tbAddRow);
         } else {
             $('._settings_selected_DDL_regular').show();
             $('._settings_selected_DDL_reference').hide();
-            $('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
+            //$('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
             $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
-            $('#tbSettingsDDL_Items_data').html(tableData);
+            $('#tbSettingsDDL_Items_data').html(tableData+tbAddRow);
         }
     } else {
-        $('#tbSettingsDDL_addrow').html(tbAddRow+tbHiddenData);
+        //$('#tbSettingsDDL_addrow').html(tbAddRow+tbHiddenData);
         $('#tbSettingsDDL_headers').html(tbHiddenData);
-        $('#tbSettingsDDL_data').html(tableData);
+        $('#tbSettingsDDL_data').html(tableData+tbAddRow);
     }
 }
 
@@ -2705,6 +2711,8 @@ function deleteSettingsDDL(tableName, rowId, idx) {
     if (tableName == 'ddl') {
         settingsDDLs.splice(idx, 1);
         showSettingsDDLDataTable(settingsDDL_hdr, settingsDDLs, -1);
+        $('#tbSettingsDDL_References_data').html('');
+        $('#tbSettingsDDL_Items_data').html('');
     } else {
         if (settingsDDLs[settingsDDL_selectedIndex].type == 'referencing') {
             settingsDDLs[settingsDDL_selectedIndex].referencing.splice(idx, 1);
@@ -2795,7 +2803,7 @@ function saveSettingsDDLRow(tableName) {
 
 
 
-/* ------------------------ Rights / tab 'Settings' ----------------------------*/
+/* ------------------------ Permissions / tab 'Settings' ----------------------------*/
 
 var settingsRights,
     settingsRights_hdr,
@@ -2963,6 +2971,7 @@ function deleteSettingsRights(tableName, rowId, idx) {
         settingsRights.splice(idx, 1);
         settingsRights_selectedIndex = -1;
         showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
+        $('#tbSettingsRights_Fields_data').html('');
     } else {
         settingsRights[settingsRights_selectedIndex].fields.splice(idx, 1);
         showSettingsRightsDataTable(settingsRights_Fields_hdr, settingsRights[settingsRights_selectedIndex].fields, settingsRights_selectedIndex);
@@ -2986,7 +2995,7 @@ function addSettingsRights() {
     $('.loadingFromServer').show();
     $.ajax({
         method: 'GET',
-        url: baseHttpUrl + '/addRightsDatas?tableName=rights&table_id=' + settingsRights_TableMeta.id + '&user_id=' + $('#selectUserSearch').val(),
+        url: baseHttpUrl + '/addRightsDatas?tableName=permissions&table_id=' + settingsRights_TableMeta.id + '&user_id=' + $('#selectUserSearch').val(),
         success: function (response) {
             $('.loadingFromServer').hide();
             alert(response.msg);
@@ -3357,7 +3366,8 @@ function import_show_col_tab() {
 }
 
 function changeImportStyle(sel) {
-    var style = $(sel).val() || (table_meta.source == 'ref' ? 'ref' : 'scratch');
+    var style = $(sel).val() || (table_meta.source == 'ref' ? 'ref' : 'scratch'),
+        action = $('#import_action_type').val();
     if (style == 'scratch') {
         $('.js-import_mysql_style').hide();
         $('.js-import_csv_style').hide();
@@ -3400,17 +3410,57 @@ function changeImportStyle(sel) {
         $('.js-import_column-orders').hide();
         import_show_col_tab();
     }
+
+    var key = getConnNoteKey(style, action);
+    $('#import_method_notes').val( table_meta.conn_notes && table_meta.conn_notes[key] ? table_meta.conn_notes[key] : '' );
 }
 
-function changeImportAction(sel) {
+function changeImportAction (sel) {
     var action = $(sel).val(),
+        type = $('#import_type_import').val(),
         status = (action == '/modifyTable' ? true : false);
     $('.js-import_chb').each(function (i, elem) {
         $(elem).prop('disabled', status);
     });
+
+    var key = getConnNoteKey(type, action);
+    $('#import_method_notes').val( table_meta.conn_notes && table_meta.conn_notes[key] ? table_meta.conn_notes[key] : '' );
 }
 
-function select_import_connection() {
+function getConnNoteKey (type, action) {
+    var res = type;
+    if (type == 'csv' || type == 'mysql') {
+        if (action == '/createTable') {
+            res += '_create';
+        } else
+        if (action == '/replaceTable') {
+        res += '_replace';
+        } else
+        if (action == '/modifyTable') {
+        res += '_modify';
+        }
+    }
+    return res;
+}
+
+var import_method_notes_typing;
+function import_method_notes_changed () {
+    var action = $('#import_action_type').val(),
+        type = $('#import_type_import').val(),
+        key = getConnNoteKey(type, action);
+    if (!table_meta.conn_notes) table_meta.conn_notes = {};
+    table_meta.conn_notes[key] = $('#import_method_notes').val();
+console.log(table_meta);
+    clearTimeout(import_method_notes_typing);
+    import_method_notes_typing = setTimeout(function() {
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/updateTableRow?tableName=tb&id=' + table_meta.id + '&conn_notes=' + JSON.stringify(table_meta.conn_notes)
+        });
+    }, 500);
+}
+
+function select_import_connection () {
     var idx = $('#import_saved_conn').val();
     if (idx >= 0) {
         $('#import_name_conn').val( importConnections[idx].name );
@@ -3730,7 +3780,7 @@ function jsTreeBuild($tab) {
                                 "link": {
                                     "separator_before": false,
                                     "separator_after": false,
-                                    "label": "Link to other Tabs",
+                                    "label": "Create link",
                                     "action": function (obj) {
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                         sidebarPrevSelected = $('#tablebar_'+$tab+'_div').jstree('get_node', sidebarPrevSelected);
@@ -3840,11 +3890,26 @@ function jsTreeBuild($tab) {
             }
         } else {
             var node = data.instance.get_node(data.node);
-            location.href = node.data ? node.data.href : node.li_attr['data-href'];
+            var path = node.data ? node.data.href : node.li_attr['data-href'];
+            location.href = path ? path : '/data/';
         }
     })
     .on('ready.jstree', function() {
-        $("#tablebar_"+$tab+"_div").jstree('open_all');
+        //$("#tablebar_"+$tab+"_div").jstree('open_all');
+    })
+    .on('open_node.jstree', function(e, data) {
+        var m2t_id = data.node.data ? data.node.data.menu_id : data.node.li_attr['data-menu_id'];
+        $.ajax({
+            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+m2t_id+'&state=1',
+            method: 'get'
+        });
+    })
+    .on('close_node.jstree', function(e, data) {
+        var m2t_id = data.node.data ? data.node.data.menu_id : data.node.li_attr['data-menu_id'];
+        $.ajax({
+            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+m2t_id+'&state=0',
+            method: 'get'
+        });
     })
     .on("move_node.jstree", function (e, data) {
         var target = data.instance.get_node(data.parent);
@@ -3870,6 +3935,10 @@ function jsTreeBuild($tab) {
 
     //menu on blanc place
     $('#tablebar_'+$tab+'_div').on('contextmenu', function (evt) {
+        if ($tab == 'public' && !isAdmin) {
+            return;
+        }
+
         if (evt.target.nodeName != 'I' && evt.target.nodeName != 'A') {
             var menu = '<ul id="cxtMenu_tablebar" class="vakata-context jstree-contextmenu jstree-default-contextmenu" style="left: '+(evt.pageX - 10)+'px; top: '+(evt.pageY - 10)+'px; display: block;">';
             if ($tab == 'private') {

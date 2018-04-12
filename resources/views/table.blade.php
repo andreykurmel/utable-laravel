@@ -488,7 +488,7 @@
                         <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
 
                             <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -520,26 +520,9 @@
                                     </table>
                                 </div>
                             </div>
-                            <div style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                <a style="position: absolute;top: 4px;right: 22px;z-index: 200;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl')">Add</a>
-                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
-                                    <thead>
-                                    <tr>
-                                        <th class="sorting nowrap">#</th>
-                                        @foreach($settingsDDL_Headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'tb_id' ? 'Table Name' : $hdr->name }}</th>
-                                        @endforeach
-                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
-                                    </tr>
-                                    </thead>
-
-                                    <tbody id="tbSettingsDDL_addrow">
-                                    </tbody>
-                                </table>
-                            </div>
 
                             <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List <span id="settings_selected_DDL_name"></span></div>
-                            <div class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -571,29 +554,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="_settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('ddl_items')" id="add_settings_ddl_item_btn">Add</a>
-                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
-                                    <thead>
-                                    <tr>
-                                        <th class="sorting nowrap">#</th>
-                                        @foreach($settingsDDL_Items_Headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
-                                        @endforeach
-                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
-                                    </tr>
-                                    </thead>
-
-                                    <tbody id="tbSettingsDDL_Items_addrow">
-                                    <tr style="height: 32px;">
-                                        @foreach($settingsDDL_Items_Headers as $hdr)
-                                            <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
-                                        @endforeach
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -624,28 +585,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                            <div class="_settings_selected_References_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 37px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
-                                <a style="position: absolute;top: 4px;right: 22px;z-index: 200;display: none;" href="javascript:void(0)" class="button blue-gradient glossy" onclick="saveSettingsDDLRow('cdtns')" id="add_settings_references_btn">Add</a>
-                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: -32px;left: 0;right: 0;z-index: 50;">
-                                    <thead>
-                                    <tr>
-                                        <th class="sorting nowrap">#</th>
-                                        @foreach($settingsDDL_References_Headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
-                                        @endforeach
-                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
-                                    </tr>
-                                    </thead>
-
-                                    <tbody id="tbSettingsDDL_References_addrow">
-                                    <tr style="height: 32px;">
-                                        @foreach($settingsDDL_References_Headers as $hdr)
-                                            <td data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}"></td>
-                                        @endforeach
-                                    </tr>
-                                    </tbody>
-                                </table>
                             </div>
 
 
@@ -797,6 +736,8 @@
                                                 <option value="/replaceTable">Replace Existing</option>
                                                 <option value="/modifyTable">Append</option>
                                             </select>
+                                            <label style="padding: 10px;float: left;">Notes:</label>
+                                            <input type="text" id="import_method_notes" class="form-control" style="width: 30%;"onchange="import_method_notes_changed()">
                                         </div>
                                         <div class="form-group js-import_csv_style" style="width: 67%;display: flex;align-items: center; justify-content:  space-between;">
                                             <div style="width: calc(50% - 25px); display: inline-block;">
