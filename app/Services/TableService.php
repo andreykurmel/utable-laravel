@@ -456,47 +456,68 @@ class TableService {
     }
 
     public function getImportHeaders($tableName, $target_tb_id = 0) {
-        $importHeadersMeta = $tableName
-            ?
-            DB::connection('mysql_schema')
-                ->table('COLUMNS')
-                ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
-                ->where('TABLE_NAME', '=', $tableName)
-                ->get()
-            :
-            [];
-
-        if ($target_tb_id) {//get data for 'tb_rfcn'
-            $importHeaders = DB::connection('mysql_sys')
-                ->table('tb_rfcn')
-                ->where('tb_id', '=', $target_tb_id)
-                ->get();
-        } else {
+        if ($target_tb_id == 0) {
+            $importHeadersMeta = $tableName
+                ?
+                DB::connection('mysql_schema')
+                    ->table('COLUMNS')
+                    ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
+                    ->where('TABLE_NAME', '=', $tableName)
+                    ->get()
+                :
+                [];
             $importHeaders = $tableName ? $this->getHeaders($tableName) : $this->emptyTBHeaders();
-        }
 
-        foreach ($importHeaders as &$imp) {
-            if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
-                $imp->auto = 1;
-                $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'Date' : 'Integer');
-                $imp->default = 'auto';
-                $imp->required = 1;
-                $imp->maxlen = '';
-            } else {
-                $curval = [];
-                foreach ($importHeadersMeta as $imeta) {
-                    if ($imeta->COLUMN_NAME == $imp->field) {
-                        $curval = $imeta;
-                        break;
+            foreach ($importHeaders as &$imp) {
+                if (in_array($imp->field, ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    $imp->auto = 1;
+                    $imp->type = ($imp->field == 'createdOn' || $imp->field == 'modifiedOn' ? 'Date' : 'Integer');
+                    $imp->default = 'auto';
+                    $imp->required = 1;
+                    $imp->maxlen = '';
+                } else {
+                    $curval = [];
+                    foreach ($importHeadersMeta as $imeta) {
+                        if ($imeta->COLUMN_NAME == $imp->field) {
+                            $curval = $imeta;
+                            break;
+                        }
+                    }
+                    $imp->auto = 0;
+                    $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
+                    $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
+                    $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
+                    $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+                }
+            }
+        } else {
+            $importHeaders = $tableName
+                ?
+                DB::connection('mysql_sys')
+                    ->table('tb_rfcn')
+                    ->join('tb', 'tb.id', '=', 'tb_rfcn.tb_id')
+                    ->where('tb.db_tb', '=', $tableName)
+                    ->groupBy('tb_rfcn.ref_tb')
+                    ->select('tb_rfcn.*')
+                    ->get()
+                :
+                [];
+
+            if ($importHeaders) {
+                foreach ($importHeaders as &$imp) {
+                    $imp->items = [];
+                    $t_arr = DB::connection('mysql_sys')
+                        ->table('tb_rfcn')
+                        ->where('tb_id', '=', $imp->tb_id)
+                        ->where('ref_tb', '=', $imp->ref_tb)
+                        ->get();
+                    foreach ($t_arr as $t) {
+                        $imp->items[$t->field] = $t->ref_field;
                     }
                 }
-                $imp->auto = 0;
-                $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
-                $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
-                $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
-                $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
             }
         }
+
         return $importHeaders;
     }
 

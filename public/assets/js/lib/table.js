@@ -1479,29 +1479,29 @@ function checkboxAddToggle() {
 
 function deleteCurrentTable() {
     swal({
-            title: "Are you sure?",
-            text: "This action will permanently remove/delete all data associated to current data/table!",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonClass: "btn-danger",
-            confirmButtonText: "Yes, delete it!",
-            closeOnConfirm: false
-        },
-        function () {
-            $.ajax({
-                method: 'GET',
-                url: baseHttpUrl + '/deleteAllTable',
-                data: {
-                    table_name: selectedTableName
-                },
-                success: function (response) {
-                    window.location = '/data/all';
-                },
-                error: function () {
-                    alert("Server error");
-                }
-            })
-        });
+        title: "Are you sure?",
+        text: "This action will permanently remove/delete all data associated to current data/table!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonClass: "btn-danger",
+        confirmButtonText: "Yes, delete it!",
+        closeOnConfirm: false
+    },
+    function () {
+        $.ajax({
+            method: 'GET',
+            url: baseHttpUrl + '/deleteAllTable',
+            data: {
+                table_name: selectedTableName
+            },
+            success: function (response) {
+                window.location = '/data/all';
+            },
+            error: function () {
+                alert("Server error");
+            }
+        })
+    });
 }
 
 
@@ -3061,7 +3061,8 @@ function settingsPermissionsTabShowRows() {
 
 
 /* ------------------- Import tab ----------------------- */
-var ddl_col_numbers = [];
+var ddl_col_numbers = [],
+    selected_import_reference_table = 0;
 
 function import_show_type_group() {
     if ($('#import_type_group_check').is(':checked')) {
@@ -3261,62 +3262,127 @@ function import_test_db_connect() {
 }
 
 function import_add_table_row() {
-    var i = 0, html = '', imp_type = $('#import_type_import').val();
-    if (imp_type == 'ref') {
-        i = Number( $('#import_ref_row_count').val() );
-        html = '<tr id="import_columns_ref_tr_'+i+'">'+
-            '<td>' +
-                '<input type="text" class="form-control" name="columns_ref['+i+'][field]" value="">' +
-                '<input type="hidden" class="form-control" name="columns_ref['+i+'][old_field]" value="">' +
-            '</td>' +
-            '<td><select class="form-control" name="columns_ref['+i+'][type]">';
-        for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
-            html += '<option>'+importTypesDDL[jdx].option+'</option>';
+    var i = 0, html = '',
+        imp_type = $('#import_type_import').val(),
+        inputed_type = $('#import_columns_add_type').val(),
+        option_col = '',
+        inputed_col = $('#import_columns_add_col').val();
+
+    $.each(ddl_col_numbers, function(i, hdr) {
+        if (inputed_col == (i+1)) {
+            option_col = '<option value="'+(i+1)+'">'+hdr+'</option>';
         }
-        html += '</select></td>' +
-            '<td><input type="number" class="form-control" name="columns_ref['+i+'][size]"></td>' +
-            '<td><select id="import_columns_ref_table_'+i+'" class="form-control" name="columns_ref['+i+'][ref_tb]" onchange="import_ref_table_changed('+i+')">' +
-            '<option></option>';
-        for (var k in tablesDropDown) {
-            html += '<option value="'+tablesDropDown[k].db_tb+'">'+tablesDropDown[k].name+'</option>';
-        }
-        html += '</select></td>' +
-            '<td>' +
-            '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns_ref['+i+'][stat]" value="add">' +
-            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button> | ' +
-            '<button type="button" class="btn btn-default" onclick="partially_import_ref_table('+i+')"><span class="fa fa-arrow-right"></span></button>' +
-            '</td>' +
-            '<td><select id="import_columns_ref_field_'+i+'" class="form-control" name="columns_ref['+i+'][ref_field]"></select></td>' +
-            '</tr>';
-        $('#import_table_ref_body').append(html);
-        $('#import_ref_row_count').val(i+1);
-    } else {
-        i = Number( $('#import_row_count').val() );
-        html = '<tr id="import_columns_'+i+'">'+
-            '<td><input type="text" class="form-control" name="columns['+i+'][header]" value=""></td>' +
-            '<td>' +
-                '<input type="text" class="form-control" name="columns['+i+'][field]" value="">' +
-                '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="">' +
-            '</td>' +
-            '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
-                '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()"></select>' +
-            '</td>' +
-            '<td><select class="form-control" name="columns['+i+'][type]">';
-        for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
-            html += '<option>'+importTypesDDL[jdx].option+'</option>';
-        }
-        html += '</select></td>' +
-            '<td><input type="number" class="form-control" name="columns['+i+'][size]"></td>' +
-            '<td><input type="text" class="form-control" name="columns['+i+'][default]"></td>' +
-            '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" checked="checked"></td>' +
-            '<td>' +
+    });
+
+    i = Number( $('#import_row_count').val() );
+
+    html = '<tr id="import_columns_'+i+'">'+
+        '<td>' +
+            '<input type="text" class="form-control" name="columns['+i+'][header]" value="'+$('#import_columns_add_header').val()+'">' +
+        '</td>' +
+        '<td>' +
+            '<input type="text" class="form-control" id="import_columns_'+i+'_field_val" name="columns['+i+'][field]" value="'+$('#import_columns_add_field').val()+'">' +
+            '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="">' +
+        '</td>' +
+        '<td class="js-import_column-orders import_not_reference_columns" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
+            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()">'+option_col+'</select>' +
+        '</td>' +
+        '<td><select class="form-control" name="columns['+i+'][type]">';
+    for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
+        html += '<option '+(inputed_type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
+    }
+    html += '</select></td>' +
+        '<td>' +
+            '<input type="number" class="form-control" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'">' +
+        '</td>' +
+        '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
+            '<input type="text" class="form-control" name="columns['+i+'][default]" value="'+$('#import_columns_add_default').val()+'">' +
+        '</td>' +
+        '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
+            '<input type="checkbox" class="form-control" name="columns['+i+'][required]" '+($('#import_columns_add_required').is(':checked') ? 'checked="checked"' : '')+'>' +
+        '</td>' +
+        '<td>' +
             '<input type="hidden" id="import_columns_ref_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
             '<button type="button" class="btn btn-default" onclick="import_del_row_ref('+i+')">&times;</button>' +
-            '</td>' +
-            '</tr>';
-        $('.js-import-col-createdBy').before(html);
-        $('#import_row_count').val(i+1);
+        '</td>' +
+        '</tr>';
+    $('#import_columns_row_add').before(html);
+    $('#import_row_count').val(i+1);
+    
+    $('.import_columns_add').val('');
+    $('#import_table_ref_col_body').html('');
+    $('.import_row_colors').css('background-color', '#FFF');
+}
+
+function import_add_ref_table_row() {
+    var i = $importReferences.length, html = '',
+        inputed_tb = $('#import_columns_ref_table_add').val();
+
+    if (!inputed_tb) {
+        return;
     }
+
+    html = '<tr id="import_columns_ref_tab_'+i+'" class="import_row_colors">'+
+        '<td>' +
+            '<a onclick="show_import_ref_columns('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+(i+1)+'</b></a>' +
+        '</td>' +
+        '<td><select id="import_columns_ref_table_'+i+'" class="form-control" disabled onchange="import_ref_table_changed('+i+')">';
+    for (var jdx = 0; jdx < tablesDropDown.length; jdx++) {
+        html += '<option '+(inputed_tb == tablesDropDown[jdx].db_tb ? 'selected="selected"' : '')+'>'+tablesDropDown[jdx].name+'</option>';
+    }
+    html += '</select></td>' +
+        '<td>' +
+            '<button type="button" class="btn btn-default" onclick="import_del_row_ref('+i+')">&times;</button> | ' +
+            '<button type="button" class="btn btn-default" onclick="partially_import_ref_table(\''+inputed_tb+'\')"><span class="fa fa-arrow-right"></span></button>' +
+        '</td>' +
+        '</tr>';
+    $('#import_columns_ref_table_add_row').before(html);
+
+    $('#import_columns_ref_table_add').val('');
+
+
+    $importReferences.push({
+        tb_id: table_meta.id,
+        ref_tb: inputed_tb,
+        items: {}
+    });
+}
+
+function show_import_ref_columns(idx) {
+    var len = Number( $('#import_row_count').val() ), html = '', fld;
+
+    for (var i = 0; i< len; i++) {
+        fld = $('#import_columns_'+i+'_field_val').val();
+        if ($.inArray(fld, ['id','refer_tb_id','createdBy','createdOn','modifiedBy','modifiedOn']) > -1) {
+            continue;
+        }
+
+        html += '<tr id="import_columns_ref_col_'+i+'" style="height: 35px;">' +
+            '<td>' +
+            '<select id="import_columns_ref_field_'+i+'" class="form-control" onchange="save_import_references_field(this, '+idx+', \''+fld+'\')">';
+        for (var t in tablesDropDown) {
+            if ($importReferences[idx].ref_tb == tablesDropDown[t].db_tb) {
+                html += '<option></option>';
+                for (var tb in tablesDropDown[t].items) {
+                    html += '<option ' +
+                        (tablesDropDown[t].items[tb].field == $importReferences[idx].items[fld] ? ' selected="true" ' : ' ') +
+                        ' value="'+tablesDropDown[t].items[tb].field+'">' +
+                            tablesDropDown[t].items[tb].name +
+                        '</option>';
+                }
+            }
+        }
+        html += '</select></td></tr>';
+    }
+    $('#import_table_ref_col_body').html(html);
+    $('.import_row_colors').css('background-color', '#FFF');
+    $('#import_columns_ref_tab_' + idx).css('background-color', '#FFA');
+}
+
+function save_import_references_field (elem, idx, fld) {
+    $importReferences[idx].items[fld] = $(elem).val();
+    console.log($importReferences);
+    console.log(idx, fld);
 }
 
 function import_del_row(idx) {
@@ -3345,8 +3411,10 @@ function import_del_row_ref(idx) {
     },
     function ($confirmed) {
         if ($confirmed) {
-            $('#import_columns_ref_tr_'+idx).hide();
-            $('#import_columns_ref_deleted_'+idx).val('del');
+            $importReferences.splice(idx, 1);
+            $('#import_columns_ref_tab_'+idx).hide();
+            $('#import_table_ref_col_body').html('');
+            $('.import_row_colors').css('background-color', '#FFF');
         }
     });
 }
@@ -3372,8 +3440,9 @@ function changeImportStyle(sel) {
         $('.js-import_mysql_style').hide();
         $('.js-import_csv_style').hide();
         $('#import_action_type').hide();
-        $('#import_not_reference_columns').show();
-        $('#import_reference_columns').hide();
+        $('.import_not_reference_columns').show();
+        $('.import_reference_columns').hide();
+        $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').hide();
         import_show_col_tab();
     } else
@@ -3381,32 +3450,36 @@ function changeImportStyle(sel) {
         $('.js-import_mysql_style').hide();
         $('#import_action_type').show();
         $('.js-import_csv_style').show();
-        $('#import_not_reference_columns').show();
-        $('#import_reference_columns').hide();
+        $('.import_not_reference_columns').show();
+        $('.import_reference_columns').hide();
+        $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
     } else
     if (style == 'mysql') {
         $('.js-import_csv_style').hide();
         $('#import_action_type').show();
         $('.js-import_mysql_style').show();
-        $('#import_not_reference_columns').show();
-        $('#import_reference_columns').hide();
+        $('.import_not_reference_columns').show();
+        $('.import_reference_columns').hide();
+        $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
     } else
     if (style == 'remote') {
         $('.js-import_csv_style').hide();
         $('#import_action_type').hide();
         $('.js-import_mysql_style').show();
-        $('#import_not_reference_columns').show();
-        $('#import_reference_columns').hide();
+        $('.import_not_reference_columns').show();
+        $('.import_reference_columns').hide();
+        $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').hide();
     } else
     if (style == 'ref') {
         $('.js-import_csv_style').hide();
         $('#import_action_type').hide();
         $('.js-import_mysql_style').hide();
-        $('#import_reference_columns').show();
-        $('#import_not_reference_columns').hide();
+        $('.import_reference_columns').show();
+        $('.import_not_reference_columns').hide();
+        $('#import_main_columns').css('width', '50%');
         $('.js-import_column-orders').hide();
         import_show_col_tab();
     }
@@ -3450,7 +3523,7 @@ function import_method_notes_changed () {
         key = getConnNoteKey(type, action);
     if (!table_meta.conn_notes) table_meta.conn_notes = {};
     table_meta.conn_notes[key] = $('#import_method_notes').val();
-console.log(table_meta);
+
     clearTimeout(import_method_notes_typing);
     import_method_notes_typing = setTimeout(function() {
         $.ajax({
@@ -3518,6 +3591,8 @@ function show_import_cols_numbers() {
 
 function partially_import_ref_table($ref_tb) {
     if ($ref_tb) {
+        console.log($importReferences);
+        $('#import_tb_rfcn').val( JSON.stringify($importReferences) );
         $('#import_target_db').val($ref_tb);
         jQuery.ajax({
             url: baseHttpUrl + '/refTable',
@@ -3787,6 +3862,44 @@ function jsTreeBuild($tab) {
                                         sidebarPrevSelected.action = 'link';
                                         sidebarPrevSelected.fromtab = $tab;
                                         swal('Create link', 'Please select target folder.');
+                                    }
+                                },
+                                "remove": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Remove",
+                                    "action": function (obj) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var table_db = elem.data ? elem.data.tb_db : elem.li_attr['data-tb_db'];
+                                        swal({
+                                            title: "Are you sure?",
+                                            text: "This action will permanently remove/delete all data associated to selected data/table!",
+                                            type: "warning",
+                                            showCancelButton: true,
+                                            confirmButtonClass: "btn-danger",
+                                            confirmButtonText: "Yes, delete it!",
+                                            closeOnConfirm: false
+                                        },
+                                        function () {
+                                            $.ajax({
+                                                method: 'GET',
+                                                url: baseHttpUrl + '/deleteAllTable',
+                                                data: {
+                                                    table_name: table_db
+                                                },
+                                                success: function (response) {
+                                                    if (table_db == selectedTableName) {
+                                                        window.location = '/data/';
+                                                    } else {
+                                                        $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+                                                    }
+                                                },
+                                                error: function () {
+                                                    alert("Server error");
+                                                }
+                                            })
+                                        });
                                     }
                                 }
                             }

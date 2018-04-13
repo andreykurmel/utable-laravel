@@ -707,6 +707,7 @@
                                 <input type="hidden" id="import_table_name" name="table_name" value="{{ $tableMeta ? $tableMeta->name : '' }}">
                                 <input type="hidden" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}">
                                 <input type="hidden" id="import_target_db" name="import_target_db" value="0">
+                                <input type="hidden" id="import_tb_rfcn" name="import_tb_rfcn" value="">
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 0;bottom: 0;padding-top: 10px;">
                                     <div class="standard-tabs container">
                                         <ul class="tabs">
@@ -849,9 +850,9 @@
                                         <div class="row">
                                             <div class="col-xs-12">
                                                 <div class="form-group">
-                                                    <table class="table table-striped" id="import_not_reference_columns">
+                                                    <table class="table table-striped" id="import_main_columns" style="float: left; width: 100%;">
                                                         <thead>
-                                                            <tr>
+                                                            <tr class="import_not_reference_columns">
                                                                 <th>Table Header</th>
                                                                 <th>tb Field</th>
                                                                 <th class="js-import_column-orders">Column # in CSV</th>
@@ -861,19 +862,29 @@
                                                                 <th>Required</th>
                                                                 <th>Delete</th>
                                                             </tr>
+                                                            <tr class="import_reference_columns">
+                                                                <th colspan="5" style="text-align: center;">Current Table</th>
+                                                            </tr>
+                                                            <tr class="import_reference_columns">
+                                                                <th>Table Header</th>
+                                                                <th>Table Field</th>
+                                                                <th>Type</th>
+                                                                <th>Size</th>
+                                                                <th>Actions</th>
+                                                            </tr>
                                                         </thead>
 
                                                         <tbody id="import_table_body">
                                                         @foreach($importHeaders as $hdr)
-                                                            <tr id="import_columns_{{ $loop->index }}" {{ $hdr->field == 'createdBy' ? 'class=js-import-col-createdBy' : '' }}>
+                                                            <tr id="import_columns_{{ $loop->index }}" style="{{ $hdr->auto ? 'display:none;' : '' }}">
                                                                 <td>
                                                                     <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control" id="import_columns_{{ $loop->index }}_field_val" name="columns[{{ $loop->index }}][field]"  value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                     <input type="hidden" class="form-control" name="columns[{{ $loop->index }}][old_field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
-                                                                <td class="js-import_column-orders">
+                                                                <td class="js-import_column-orders import_not_reference_columns">
                                                                     <select class="form-control" name="columns[{{ $loop->index }}][col]" onfocus="show_import_cols_numbers()" {{ $hdr->auto ? 'readonly' : ''}}></select>
                                                                 </td>
                                                                 <td>
@@ -886,10 +897,10 @@
                                                                 <td>
                                                                     <input type="number" class="form-control" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
-                                                                <td>
+                                                                <td class="import_not_reference_columns">
                                                                     <input type="text" class="form-control" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
-                                                                <td>
+                                                                <td class="import_not_reference_columns">
                                                                     <input type="checkbox" class="form-control" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
                                                                 </td>
                                                                 <td>
@@ -900,69 +911,99 @@
                                                                 </td>
                                                             </tr>
                                                         @endforeach
+                                                        <tr id="import_columns_row_add">
+                                                            <td>
+                                                                <input type="text" class="form-control import_columns_add" id="import_columns_add_header">
+                                                            </td>
+                                                            <td>
+                                                                <input type="text" class="form-control import_columns_add" id="import_columns_add_field">
+                                                            </td>
+                                                            <td class="js-import_column-orders import_columns_add" id="import_not_reference_columns">
+                                                                <select class="form-control import_columns_add" id="import_columns_add_col" onfocus="show_import_cols_numbers()"></select>
+                                                            </td>
+                                                            <td>
+                                                                <select class="form-control import_columns_add" id="import_columns_add_type" >
+                                                                    @foreach($importTypesDDL as $i_ddl)
+                                                                        <option>{{ $i_ddl->option }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <input type="number" class="form-control import_columns_add" id="import_columns_add_size">
+                                                            </td>
+                                                            <td class="import_not_reference_columns">
+                                                                <input type="text" class="form-control import_columns_add" id="import_columns_add_default">
+                                                            </td>
+                                                            <td class="import_not_reference_columns">
+                                                                <input type="checkbox" class="form-control import_columns_add" id="import_columns_add_required">
+                                                            </td>
+                                                            <td>
+                                                                <input type="button" class="btn btn-primary" onclick="import_add_table_row()" value="Add">
+                                                            </td>
+                                                        </tr>
                                                         </tbody>
                                                     </table>
-                                                    <table class="table table-striped" id="import_reference_columns" style="display: none;">
+                                                    
+                                                    
+                                                    <table class="table table-striped import_reference_columns" style="width: 35%; display: none; float: left;">
                                                         <thead>
                                                         <tr>
-                                                            <th colspan="3" style="text-align: center;">Current Table</th>
-                                                            <th colspan="4" style="text-align: center;">Referencing</th>
+                                                            <th colspan="3" style="text-align: center;">Referencing</th>
                                                         </tr>
                                                         <tr>
-                                                            <th>Table Field</th>
-                                                            <th>Type</th>
-                                                            <th>Size</th>
+                                                            <th>#</th>
                                                             <th>Reference Table</th>
                                                             <th>Actions</th>
-                                                            <th>Reference Field</th>
                                                         </tr>
                                                         </thead>
 
-                                                        <tbody id="import_table_ref_body">
+                                                        <tbody id="import_table_ref_tab_body">
                                                         @foreach($importReferences as $hdr)
-                                                            <tr id="import_columns_ref_tr_{{ $loop->index }}">
+                                                            <tr id="import_columns_ref_tab_{{ $loop->index }}" class="import_row_colors">
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns_ref[{{ $loop->index }}][field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <a onclick="show_import_ref_columns({{ $loop->index }})" class="btn-tower-id" ><span class="font-icon">`</span><b>{{ $loop->index+1 }}</b></a>
                                                                 </td>
                                                                 <td>
-                                                                    <select class="form-control" name="columns_ref[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
-                                                                        @foreach($importTypesDDL as $i_ddl)
-                                                                            <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }}>{{ $i_ddl->option }}</option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" class="form-control" name="columns_ref[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
-                                                                </td>
-                                                                <td>
-                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_tb]" {{ $hdr->auto ? 'readonly' : ''}} onchange="import_ref_table_changed({{ $loop->index }})">
-                                                                        <option></option>
+                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" disabled onchange="import_ref_table_changed({{ $loop->index }})">
                                                                         @foreach($tablesDropDown as $tb)
                                                                             <option {{ $hdr->ref_tb == $tb->db_tb ? 'selected="selected"' : '' }} value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="hidden" id="import_columns_ref_deleted_{{ $loop->index }}" name="columns_ref[{{ $loop->index }}][stat]">
-                                                                    @if(!$hdr->auto)
-                                                                        <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
-                                                                        |
-                                                                        <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}')"><span class="fa fa-arrow-right"></span></button>
-                                                                    @endif
-                                                                </td>
-                                                                <td>
-                                                                    <select id="import_columns_ref_field_{{ $loop->index }}" class="form-control" name="columns_ref[{{ $loop->index }}][ref_field]" {{ $hdr->auto ? 'readonly' : ''}}>
-                                                                        @foreach($tablesDropDown as $tb)
-                                                                            @if($hdr->ref_tb == $tb->db_tb)
-                                                                                @foreach($tb->items as $tb_field)
-                                                                                    <option {{ $hdr->ref_field == $tb_field->field ? 'selected="selected"' : '' }} value="{{ $tb_field->field }}">{{ $tb_field->name }}</option>
-                                                                                @endforeach
-                                                                            @endif
-                                                                        @endforeach
-                                                                    </select>
+                                                                    <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
+                                                                    |
+                                                                    <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}')"><span class="fa fa-arrow-right"></span></button>
                                                                 </td>
                                                             </tr>
                                                         @endforeach
+                                                        <tr id="import_columns_ref_table_add_row">
+                                                            <td>auto</td>
+                                                            <td>
+                                                                <select id="import_columns_ref_table_add" class="form-control">
+                                                                    <option></option>
+                                                                    @foreach($tablesDropDown as $tb)
+                                                                        <option value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <input type="button" class="btn btn-primary" onclick="import_add_ref_table_row()" value="Add">
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <table class="table table-striped import_reference_columns" style="width: 14%; display: none; float: left;">
+                                                        <thead>
+                                                        <tr>
+                                                            <th style="text-align: center;">Referencing</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Reference Field</th>
+                                                        </tr>
+                                                        </thead>
+
+                                                        <tbody id="import_table_ref_col_body">
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -971,7 +1012,6 @@
                                         <div class="row">
                                             <div class="col-xs-12">
                                                 <div class="form-group">
-                                                    <input type="button" class="btn btn-primary" onclick="import_add_table_row()" value="Add">
                                                 </div>
                                             </div>
                                         </div>
@@ -1147,6 +1187,7 @@
         importTypesDDL = JSON.parse('{!! json_encode($importTypesDDL) !!}');
         importConnections = JSON.parse('{!! json_encode($importConnections) !!}');
         table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
+        $importReferences = JSON.parse('{!! json_encode($importReferences) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
     </script>
 @endpush

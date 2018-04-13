@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\DB;
 class TableController extends Controller
 {
     private $tableService;
+    private $system_fields;
 
     public function __construct(TableService $ts) {
         $this->tableService = $ts;
+        $this->system_fields = ['id','refer_tb_id','createdBy','createdOn','modifiedBy','modifiedOn'];
     }
 
     public function getUTable(Request $request) {
@@ -700,7 +702,8 @@ class TableController extends Controller
     }
 
     public function refTable(Request $request) {
-        $columns = $request->columns_ref;
+        $tb_rfcn = json_decode($request->import_tb_rfcn);
+        $columns = $request->columns;
         $table_db = $request->table_db_tb;
         $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
 
@@ -715,18 +718,20 @@ class TableController extends Controller
             $exist = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_db)->first();
 
             //add info into the 'tb_rfcn'
-            foreach ($columns as $col) {
-                if ($col['field']) {
-                    DB::connection('mysql_sys')->table('tb_rfcn')->insert([
-                        'tb_id' => $exist->id,
-                        'field' => $col['field'],
-                        'ref_tb' => (!empty($col['ref_tb']) ? $col['ref_tb'] : ''),
-                        'ref_field' => (!empty($col['ref_field']) ? $col['ref_field'] : ''),
-                        'createdBy' => Auth::user()->id,
-                        'createdOn' => now(),
-                        'modifiedBy' => Auth::user()->id,
-                        'modifiedOn' => now()
-                    ]);
+            foreach ($tb_rfcn as $tb) {
+                foreach ($tb->items as $key => $item) {
+                    if ($item && $tb->ref_tb) {
+                        DB::connection('mysql_sys')->table('tb_rfcn')->insert([
+                            'tb_id' => $exist->id,
+                            'field' => $key,
+                            'ref_tb' => $tb->ref_tb,
+                            'ref_field' => $item,
+                            'createdBy' => Auth::user()->id,
+                            'createdOn' => now(),
+                            'modifiedBy' => Auth::user()->id,
+                            'modifiedOn' => now()
+                        ]);
+                    }
                 }
             }
         } else {
@@ -734,18 +739,20 @@ class TableController extends Controller
 
             //modify info in the 'tb_rfcn'
             DB::connection('mysql_sys')->table('tb_rfcn')->where('tb_id', '=', $exist->id)->delete();
-            foreach ($columns as $col) {
-                if ($col['field']) {
-                    DB::connection('mysql_sys')->table('tb_rfcn')->insert([
-                        'tb_id' => $exist->id,
-                        'field' => $col['field'],
-                        'ref_tb' => (!empty($col['ref_tb']) ? $col['ref_tb'] : ''),
-                        'ref_field' => (!empty($col['ref_field']) ? $col['ref_field'] : ''),
-                        'createdBy' => Auth::user()->id,
-                        'createdOn' => now(),
-                        'modifiedBy' => Auth::user()->id,
-                        'modifiedOn' => now()
-                    ]);
+            foreach ($tb_rfcn as $tb) {
+                foreach ($tb->items as $key => $item) {
+                    if ($item && $tb->ref_tb) {
+                        DB::connection('mysql_sys')->table('tb_rfcn')->insert([
+                            'tb_id' => $exist->id,
+                            'field' => $key,
+                            'ref_tb' => $tb->ref_tb,
+                            'ref_field' => $item,
+                            'createdBy' => Auth::user()->id,
+                            'createdOn' => now(),
+                            'modifiedBy' => Auth::user()->id,
+                            'modifiedOn' => now()
+                        ]);
+                    }
                 }
             }
         }
@@ -810,7 +817,7 @@ class TableController extends Controller
                 $insert = [];
                 //fill only those data columns which numbers are setted in 'table columns settings'
                 foreach ($columns as $idx => $col) {
-                    if (!empty($col['col']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if (!empty($col['col']) && !in_array($col['field'], $this->system_fields)) {
                         $insert[ $col['field'] ] = $data[ $col['col']-1 ];
                     }
                 }
@@ -835,7 +842,7 @@ class TableController extends Controller
                     $insert = [];
 
                     foreach ($columns as $col) {
-                        if (!empty($col['col']) && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        if (!empty($col['col']) && !in_array($col['field'], $this->system_fields)) {
                             $insert[ $col['field'] ] = !empty($row[ $col['field'] ]) ? $row[ $col['field'] ] : null;
                         }
                     }
@@ -851,35 +858,39 @@ class TableController extends Controller
             }
         } elseif ($request->type_import == 'ref') {
             //REFERENCE IMPORT
-            $tables_dbs = $request->import_target_db ? [$request->import_target_db] : [];
-            if (!$tables_dbs) {
-                foreach ($columns as $col) {
-                    if ($col['ref_tb'] && !in_array($col['ref_tb'], $tables_dbs)) {
-                        $tables_dbs[] = $col['ref_tb'];
+            $tb_rfcn = json_decode($request->import_tb_rfcn);
+            $tables_dbs = [];
+
+            if ($request->import_target_db) {
+                foreach ($tb_rfcn as $tb) {
+                    if ($tb->ref_tb == $request->import_target_db) {
+                        $tables_dbs = [$tb];
                     }
                 }
+            } else {
+                $tables_dbs = $tb_rfcn;
             }
 
             foreach ($tables_dbs as $t_db) {
-                $refer_tb_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $t_db)->first();
+                $refer_tb_id = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $t_db->ref_tb)->first();
 
-                $corresp_fields = [];
+                /*$corresp_fields = [];
                 foreach ($columns as $col) {
-                    if ($col['ref_tb'] == $t_db && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if ($col['ref_tb'] == $t_db->ref_tb && !in_array($col['field'], $this->system_fields)) {
                         $corresp_fields[ $col['field'] ] = $col['ref_field'];
                     }
-                }
+                }*/
 
                 //delete already present rows before import
                 DB::connection('mysql_data')->table($filename)->where('refer_tb_id', '=', $refer_tb_id->id)->delete();
 
                 //import rows from each referenced tables
-                $all_rows = DB::connection('mysql_data')->table($t_db)->get();
+                $all_rows = DB::connection('mysql_data')->table($t_db->ref_tb)->get();
                 foreach ($all_rows as $row) {
                     $row = (array)$row;
                     $insert = [];
 
-                    foreach ($corresp_fields as $cur => $ref) {
+                    foreach ($t_db->items as $cur => $ref) {
                         $insert[ $cur ] = $row[ $ref ];
                     }
 
@@ -927,7 +938,7 @@ class TableController extends Controller
                         $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
                         if (!isset($col_size[0])) $col_size[0] = 9;
                         if (!isset($col_size[1])) $col_size[1] = 2;
-                        if ($col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                        if ($col['field'] && !in_array($col['field'], $this->system_fields)) {
                             //prevent error if we have two the same names for columns
                             if (in_array($col['field'], $presentCols)) {
                                 continue;
@@ -994,7 +1005,7 @@ class TableController extends Controller
                     'tb_id' => $tb_id,
                     'field' => $col['field'],
                     'name' => (!empty($col['header']) ? $col['header'] : $col['field']),
-                    'web' => 'Yes',
+                    'web' => (!in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
                     'filter' => 'No',
                     'sum' => 'No',
                     'input_type' => 'Input',
@@ -1024,7 +1035,7 @@ class TableController extends Controller
         }
 
         if ($request->type_import == 'remote') {
-            //test that all needed for app working columns are exist ['id','createdBy','createdOn','modifiedBy','modifiedOn']
+            //test that all needed for app working columns are exist $this->system_fields
             $this->tableService->setRemoteConnection($conn_id);
             try {
                 Schema::connection('mysql_data')->table($table_db, function (Blueprint $table) { $table->increments('id'); });
@@ -1063,13 +1074,13 @@ class TableController extends Controller
                     if (!isset($col_size[1])) $col_size[1] = 2;
 
                     //for deleting columns
-                    if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                         //del column
                         $table->dropColumn($col['field']);
                     }
 
                     //for changing columns
-                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], $this->system_fields)) {
                         //edit column
                         if ($col['field'] != $col['old_field']) {
                             $table->renameColumn($col['old_field'], $col['field'])->change();
@@ -1098,7 +1109,7 @@ class TableController extends Controller
                     }
 
                     //for adding columns
-                    if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+                    if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                         //add column
                         if ($col['type'] == 'String') {
                             $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
@@ -1136,7 +1147,7 @@ class TableController extends Controller
         //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
             //for deleting columns
-            if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+            if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                 //del column
                 DB::connection('mysql_sys')->table('tb_settings_display')
                     ->where('tb_id', '=', $table_meta->id)
@@ -1144,7 +1155,7 @@ class TableController extends Controller
                     ->delete();
             }
             //for editing columns
-            if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+            if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], $this->system_fields)) {
                 //edit column
                 DB::connection('mysql_sys')->table('tb_settings_display')
                     ->where('tb_id', '=', $table_meta->id)
@@ -1157,14 +1168,14 @@ class TableController extends Controller
                 ]);
             }
             //for adding columns
-            if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], ['id','createdBy','createdOn','modifiedBy','modifiedOn'])) {
+            if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                 //add column
                 DB::connection('mysql_sys')->table('tb_settings_display')->insert([
                     'user_id' => Auth::user()->id,
                     'tb_id' => $table_meta->id,
                     'field' => $col['field'],
                     'name' => $col['header'],
-                    'web' => 'Yes',
+                    'web' => (!in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
                     'filter' => 'No',
                     'sum' => 'No',
                     'input_type' => 'Input',
