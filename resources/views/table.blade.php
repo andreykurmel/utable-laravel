@@ -700,7 +700,7 @@
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
                                 <div class="container" style="position: relative;">
-                                    <input type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
+                                    <input id="import_form_save_btn" type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
                                 </div>
                                 <input type="hidden" value="<?= csrf_token() ?>" name="_token">
                                 <input type="hidden" id="import_data_csv" name="data_csv" value="">

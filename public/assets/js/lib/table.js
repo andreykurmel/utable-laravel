@@ -3444,6 +3444,7 @@ function changeImportStyle(sel) {
         $('.import_reference_columns').hide();
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').hide();
+        $('#import_form_save_btn').show();
         import_show_col_tab();
     } else
     if (style == 'csv') {
@@ -3454,6 +3455,7 @@ function changeImportStyle(sel) {
         $('.import_reference_columns').hide();
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
+        $('#import_form_save_btn').show();
     } else
     if (style == 'mysql') {
         $('.js-import_csv_style').hide();
@@ -3463,6 +3465,7 @@ function changeImportStyle(sel) {
         $('.import_reference_columns').hide();
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
+        $('#import_form_save_btn').show();
     } else
     if (style == 'remote') {
         $('.js-import_csv_style').hide();
@@ -3472,6 +3475,7 @@ function changeImportStyle(sel) {
         $('.import_reference_columns').hide();
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').hide();
+        $('#import_form_save_btn').show();
     } else
     if (style == 'ref') {
         $('.js-import_csv_style').hide();
@@ -3481,6 +3485,7 @@ function changeImportStyle(sel) {
         $('.import_not_reference_columns').hide();
         $('#import_main_columns').css('width', '50%');
         $('.js-import_column-orders').hide();
+        $('#import_form_save_btn').hide();
         import_show_col_tab();
     }
 
