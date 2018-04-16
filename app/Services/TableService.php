@@ -42,7 +42,7 @@ class TableService {
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
         $fields_for_select = [];
-        if (!$this->subdomain && Auth::user()) {
+        if (Auth::user()) {
             if (
                 //not admin
                 Auth::user()->role_id != 1
@@ -50,13 +50,10 @@ class TableService {
                 //not owner
                 $table_meta->owner != Auth::user()->id
             ) {
-                $tmp_fields_set = DB::connection('mysql_sys')
-                    ->table('permissions as r')
-                    ->join('permissions_fields as rf', 'r.id', '=', 'rf.permissions_id')
-                    ->where('r.user_id', '=', Auth::user()->id)
-                    ->where('r.table_id', '=', $table_meta->id)
-                    ->select('rf.*')
-                    ->get();
+                $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_meta->id);
+                if (!$tmp_fields_set) {
+                    $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
+                }
                 foreach ($tmp_fields_set as $fld) {
                     if ($fld->view) {
                         $fields_for_select[$fld->field] = $fld->edit;
@@ -66,6 +63,14 @@ class TableService {
             } else {
                 $fields_for_select = 1;
             }
+        } else {
+            $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
+            foreach ($tmp_fields_set as $fld) {
+                if ($fld->view) {
+                    $fields_for_select[$fld->field] = $fld->edit;
+                }
+            }
+            $fields_for_select['id'] = 0;
         }
 
         $sql = DB::connection($mysql_conn)->table($tableName);
@@ -563,5 +568,15 @@ class TableService {
             ->update([
                 'view' => 1
             ]);
+    }
+
+    private function getPermissionsFields($user_id, $table_id) {
+        return DB::connection('mysql_sys')
+            ->table('permissions as r')
+            ->join('permissions_fields as rf', 'r.id', '=', 'rf.permissions_id')
+            ->where('r.user_id', '=', $user_id)
+            ->where('r.table_id', '=', $table_id)
+            ->select('rf.*')
+            ->get();
     }
 }

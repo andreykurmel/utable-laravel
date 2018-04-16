@@ -762,7 +762,11 @@ class TableController extends Controller
         return ($request->import_target_db ? 'Success!' : redirect()->to( "/data/".$table_db ) );
     }
 
-    public function deleteAllTable($table_name)
+    public function deleteTable(Request $request) {
+        return $this->deleteAllTable($request->table_name);
+    }
+
+    private function deleteAllTable($table_name)
     {
         $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $table_name)->first();
 
@@ -884,22 +888,24 @@ class TableController extends Controller
                 //delete already present rows before import
                 DB::connection('mysql_data')->table($filename)->where('refer_tb_id', '=', $refer_tb_id->id)->delete();
 
-                //import rows from each referenced tables
-                $all_rows = DB::connection('mysql_data')->table($t_db->ref_tb)->get();
-                foreach ($all_rows as $row) {
-                    $row = (array)$row;
-                    $insert = [];
+                if (!$request->import_target_db_should_del) {
+                    //import rows from each referenced tables
+                    $all_rows = DB::connection('mysql_data')->table($t_db->ref_tb)->get();
+                    foreach ($all_rows as $row) {
+                        $row = (array)$row;
+                        $insert = [];
 
-                    foreach ($t_db->items as $cur => $ref) {
-                        $insert[ $cur ] = $row[ $ref ];
+                        foreach ($t_db->items as $cur => $ref) {
+                            $insert[ $cur ] = $row[ $ref ];
+                        }
+
+                        $insert['refer_tb_id'] = $refer_tb_id->id;
+                        $insert['createdBy'] = Auth::user()->id;
+                        $insert['createdOn'] = now();
+                        $insert['modifiedBy'] = Auth::user()->id;
+                        $insert['modifiedOn'] = now();
+                        DB::connection('mysql_data')->table($filename)->insert($insert);
                     }
-
-                    $insert['refer_tb_id'] = $refer_tb_id->id;
-                    $insert['createdBy'] = Auth::user()->id;
-                    $insert['createdOn'] = now();
-                    $insert['modifiedBy'] = Auth::user()->id;
-                    $insert['modifiedOn'] = now();
-                    DB::connection('mysql_data')->table($filename)->insert($insert);
                 }
             }
         }
@@ -1134,7 +1140,7 @@ class TableController extends Controller
                 }
             });
         } catch (\Exception $e) {
-            return "Seems that your table schema is incorrect!<br>".$e->getMessage();
+            $error = "Seems that your table schema is incorrect!<br>".$e->getMessage();
         }
 
         //modify record in the 'tb'
@@ -1170,22 +1176,24 @@ class TableController extends Controller
             //for adding columns
             if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                 //add column
-                DB::connection('mysql_sys')->table('tb_settings_display')->insert([
-                    'user_id' => Auth::user()->id,
-                    'tb_id' => $table_meta->id,
-                    'field' => $col['field'],
-                    'name' => $col['header'],
-                    'web' => (in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
-                    'filter' => 'No',
-                    'sum' => 'No',
-                    'input_type' => 'Input',
-                    'min_wth' => 0,
-                    'max_wth' => 0,
-                    'createdBy' => Auth::user()->id,
-                    'createdOn' => now(),
-                    'modifiedBy' => Auth::user()->id,
-                    'modifiedOn' => now()
-                ]);
+                if (!DB::connection('mysql_sys')->table('tb_settings_display')->where('tb_id','=',$table_meta->id)->where('field','=',$col['field'])->first()) {
+                    DB::connection('mysql_sys')->table('tb_settings_display')->insert([
+                        'user_id' => Auth::user()->id,
+                        'tb_id' => $table_meta->id,
+                        'field' => $col['field'],
+                        'name' => $col['header'],
+                        'web' => (in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
+                        'filter' => 'No',
+                        'sum' => 'No',
+                        'input_type' => 'Input',
+                        'min_wth' => 0,
+                        'max_wth' => 0,
+                        'createdBy' => Auth::user()->id,
+                        'createdOn' => now(),
+                        'modifiedBy' => Auth::user()->id,
+                        'modifiedOn' => now()
+                    ]);
+                }
             }
         }
 
@@ -1296,6 +1304,14 @@ class TableController extends Controller
             'modifiedBy' => Auth::user()->id,
             'modifiedOn' => now()
         ]);
+
+        //add 'visitor' for table which was sent to the tab 'public'
+        if ($request->tab == 'public') {
+            $this->tableService->addRight('permissions', [
+                'user_id' => 0,
+                'table_id' => $request->tb_id
+            ]);
+        }
 
         if ($id) {
             $responseArray['error'] = FALSE;

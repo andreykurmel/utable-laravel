@@ -21,25 +21,28 @@
                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0; background: #f1f3f4; padding-top: 20px">
                     <ul class="tabs" style="position:relative; left: 10px;">
                         <li {{ Auth::guest() ? 'class=active' : '' }} id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
-                        @if(Auth::user())
-                            <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
-                            <li class="active" id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Favorite</a></li>
-                        @endif
+                        <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
+                        <li {{ Auth::user() ? 'class=active' : '' }} id="tablebar_li_favorite"><a href="javascript:void(0)" onclick="tablebar_show_favorite()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Favorite</a></li>
                     </ul>
 
 
                     <div id="tablebar_public_div" class="tab-content" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                         {!! $treeTables['public'] !!}
                     </div>
-                    @if(Auth::user())
-                        <div id="tablebar_private_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                    <div id="tablebar_private_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                        @if(Auth::user())
                             {!! $treeTables['private'] !!}
-                        </div>
-
-                        <div id="tablebar_favorite_div" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                        @else
+                            Register and Login to add and manage your own collection of data tables.
+                        @endif
+                    </div>
+                    <div id="tablebar_favorite_div" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                        @if(Auth::user())
                             {!! $treeTables['favorite'] !!}
-                        </div>
-                    @endif
+                        @else
+                            Register and Login to add and manage your own collection of data tables.
+                        @endif
+                    </div>
                 </div>
             </div>
             <!-- End content wrapper -->
@@ -359,7 +362,7 @@
                                     <tbody style="visibility: hidden;" id="tbFavoriteHeaders_body">
                                     </tbody>
                                 </table>
-                                <div style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:68px;" class="table_body_viewport">
+                                <div id="tbFavoriteDataDiv" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:68px;" class="table_body_viewport">
                                     <table class="table responsive-table responsive-table-on dataTable" id="tbFavoriteData" style="margin-bottom: 0; margin-top: -32px;">
                                         <thead id="tbFavoriteData_header">
                                         <tr>
@@ -661,7 +664,7 @@
                                     <tbody id="tbSettingsRights_Fields_headers">
                                     </tbody>
                                 </table>
-                                <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                <div style="top: 36px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                     <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                         <thead>
                                         <tr>
@@ -707,6 +710,7 @@
                                 <input type="hidden" id="import_table_name" name="table_name" value="{{ $tableMeta ? $tableMeta->name : '' }}">
                                 <input type="hidden" id="import_table_db_tb" name="table_db_tb" value="{{ $tableName }}">
                                 <input type="hidden" id="import_target_db" name="import_target_db" value="0">
+                                <input type="hidden" id="import_target_db_should_del" name="import_target_db_should_del" value="0">
                                 <input type="hidden" id="import_tb_rfcn" name="import_tb_rfcn" value="">
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 0;bottom: 0;padding-top: 10px;">
                                     <div class="standard-tabs container">
@@ -964,7 +968,7 @@
                                                                     <a onclick="show_import_ref_columns({{ $loop->index }})" class="btn-tower-id" ><span class="font-icon">`</span><b>{{ $loop->index+1 }}</b></a>
                                                                 </td>
                                                                 <td>
-                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" disabled onchange="import_ref_table_changed({{ $loop->index }})">
+                                                                    <select id="import_columns_ref_table_{{ $loop->index }}" class="form-control" disabled>
                                                                         @foreach($tablesDropDown as $tb)
                                                                             <option {{ $hdr->ref_tb == $tb->db_tb ? 'selected="selected"' : '' }} value="{{ $tb->db_tb }}">{{ $tb->name }}</option>
                                                                         @endforeach
@@ -973,7 +977,7 @@
                                                                 <td>
                                                                     <button type="button" class="btn btn-default" onclick="import_del_row_ref({{ $loop->index }})">&times;</button>
                                                                     |
-                                                                    <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}')"><span class="fa fa-arrow-right"></span></button>
+                                                                    <button type="button" class="btn btn-default" onclick="partially_import_ref_table('{{ $hdr->ref_tb }}', 0)"><span class="fa fa-arrow-right"></span></button>
                                                                 </td>
                                                             </tr>
                                                         @endforeach
