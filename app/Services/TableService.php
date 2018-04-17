@@ -489,7 +489,14 @@ class TableService {
                         }
                     }
                     $imp->auto = 0;
-                    $imp->type = ($curval && $curval->NUMERIC_PRECISION ? 'Integer' : ($curval && $curval->DATETIME_PRECISION ? 'Date' : 'String'));
+                    $imp->type = ($curval ? $curval->DATA_TYPE : 'String');
+                    switch ($imp->type) {
+                        case 'int': $imp->type = 'Integer'; break;
+                        case 'decimal': $imp->type = 'Decimal'; break;
+                        case 'datetime': $imp->type = 'Date Time'; break;
+                        case 'date': $imp->type = 'Date'; break;
+                        default: $imp->type = 'String'; break;
+                    }
                     $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
                     $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
                     $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');

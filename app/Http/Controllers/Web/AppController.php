@@ -116,12 +116,31 @@ class AppController extends Controller
             $tablesDropDown = $tablesDropDown->groupBy('tb.id')->select('tb.*')->get();
             //get fields for each tables
             foreach ($tablesDropDown as &$tb) {
+                $tb_meta = DB::connection('mysql_schema')
+                    ->table('COLUMNS')
+                    ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
+                    ->where('TABLE_NAME', '=', $tableName)
+                    ->get();
+
                 $tb->conn_notes = '';
                 $tb->items = DB::connection('mysql_sys')
                     ->table('tb_settings_display')
                     ->where('tb_id', '=', $tb->id)
                     ->where('user_id', '=', $tb->owner)
                     ->get();
+
+                for ($i = 0; $i < count($tb->items); $i++) {
+                    $curval = $tb_meta->where('COLUMN_NAME', '=', $tb->items[$i]->field)->first();
+                    $tb->items[$i]->type = ($curval ? $curval->DATA_TYPE : 'String');
+                    switch ($tb->items[$i]->type) {
+                        case 'int': $tb->items[$i]->type = 'Integer'; break;
+                        case 'decimal': $tb->items[$i]->type = 'Decimal'; break;
+                        case 'datetime': $tb->items[$i]->type = 'Date Time'; break;
+                        case 'date': $tb->items[$i]->type = 'Date'; break;
+                        default: $tb->items[$i]->type = 'String'; break;
+                    }
+                    $tb->items[$i]->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+                }
             }
         } else {
             $tablesDropDown = [];
@@ -282,7 +301,7 @@ class AppController extends Controller
 
     private function buildHTMLTree($res_arr, $url, $tab) {
         if ($res_arr->id) {
-            $html = "<li data-type='folder' data-jstree='{\"opened\":".($res_arr->state ? 1 : 0)."}' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
+            $html = "<li data-type='folder' data-jstree='{\"opened\":".($res_arr->state ? 1 : 0).", \"icon\":\"fa fa-folder".($res_arr->state ? '-open' : '')."\"}' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
         } else {
             $html = "";
         }
@@ -595,11 +614,18 @@ class AppController extends Controller
                         $headers[$idx] = [
                             'header' => $col->COLUMN_NAME,
                             'field' => $col->COLUMN_NAME,
-                            'type' => ($col->NUMERIC_PRECISION ? 'int' : ($col->DATETIME_PRECISION ? 'date' : 'str')),
+                            'type' => ($col ? $col->DATA_TYPE : 'String'),
                             'size' => ($col->CHARACTER_MAXIMUM_LENGTH ? $col->CHARACTER_MAXIMUM_LENGTH : ''),
                             'default' => ($col->COLUMN_DEFAULT ? $col->COLUMN_DEFAULT : ''),
                             'required' => ($col->IS_NULLABLE != 'YES' ? 1 : 0)
                         ];
+                        switch ($headers[$idx]['type']) {
+                            case 'int': $headers[$idx]['type'] = 'Integer'; break;
+                            case 'decimal': $headers[$idx]['type'] = 'Decimal'; break;
+                            case 'datetime': $headers[$idx]['type'] = 'Date Time'; break;
+                            case 'date': $headers[$idx]['type'] = 'Date'; break;
+                            default: $headers[$idx]['type'] = 'String'; break;
+                        }
                         $idx ++;
                     }
                 }

@@ -9,7 +9,7 @@
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
-        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:fixed;top: 59px;bottom: 0;left: -1px;width: 260px;">
+        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:fixed;top: 63px;bottom: 0;left: -1px;width: 260px;">
             <!-- This wrapper is used by several responsive layouts -->
             <div class="menu-content">
 
@@ -69,8 +69,24 @@
                         </a>
                     </div>
                 @endif
-                <div class="showhidemenu" style='width:150px;display:inline-block'>
-                    <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()">Show/Hide Columns</a>
+                <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
+                    <div class="dataTables_filter" style="padding: 0;"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
+                </div>
+                <div class="showhidemenu" style='margin-right: 10px;display: inline-block;width: 65px;position: relative;top: 2px;'>
+                    <span class="select blue-gradient glossy replacement" tabindex="0">
+                        <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
+                        <span class="select-arrow"></span>
+                        <span class="drop-down custom-scroll">
+                            <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
+                            <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
+                            <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
+                            <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
+                            <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
+                        </span>
+                    </span>
+                </div>
+                <div class="showhidemenu" style='margin-right: 10px;display:inline-block'>
+                    <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 3px 0 0 0;"><img src="/img/eye.png" height="25"></a>
                 </div>
                 @if(Auth::user())
                     <div style="padding: 5px;display: inline-block;">
@@ -92,17 +108,22 @@
                         <input type="hidden" name="q" id="downloader_query" value="">
                         <input type="hidden" name="fields" id="downloader_fields" value="">
                         <input type="hidden" name="filterData" id="downloader_filters" value="">
-                        <button type="button" class="btn btn-default" onclick="openPrintDialog()">Print</button>
-                        <button type="button" class="btn btn-default" onclick="downloaderGo('CSV')">CSV</button>
-                        <button type="button" class="btn btn-default" onclick="downloaderGo('PDF')">PDF</button>
-                        <button type="button" class="btn btn-default" onclick="downloaderGo('XLS')">Excel</button>
+                        <select class="form-control" style="width: 80px; display: inline-block;" id="downloader_type">
+                            <option value="PRINT">Print</option>
+                            <option value="CSV">CSV</option>
+                            <option value="PDF">PDF</option>
+                            <option value="XLS">Excel</option>
+                            <option value="JSON">JSON</option>
+                            <option value="XML">XML</option>
+                        </select>
+                        <button type="button" class="btn btn-default" onclick="downloaderGo()"><i class="fa fa-download"></i></button>
                     </form>
                 </div>
             </div>
 
 
             <!-- Wrapper, set tabs style class here -->
-            <div class="standard-tabs js-table_lib_hide" style="position: fixed ;top: 70px; left: 280px; width: 500px;">
+            <div class="standard-tabs js-table_lib_hide" style="position: fixed ;top: 70px; left: 270px; width: 500px;">
 
                 <!-- Tabs -->
                 <ul class="tabs js-leftPosition">
@@ -122,9 +143,9 @@
                 </ul>
 
                 <!-- Content -->
-                <div class="tabs-content js-filterMenuHide js-leftPosition js-table_lib_hide" style="position: fixed; left: 280px; bottom: 10px; top: 100px;right: 20px;">
+                <div class="tabs-content js-filterMenuHide js-leftPosition js-table_lib_hide" style="position: fixed; left: 270px; bottom: 10px; top: 100px;right: 20px;">
 
-                    <div id="list_view" style='padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
+                    <div id="list_view" style='padding:5px 10px 10px 10px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
                         @if($tableName == 'st')
                             <h2 style='font-size:14px;' id='main-search-wrapper'>
                                 <span class="input ">
@@ -225,33 +246,15 @@
                             </h2>
                         @endif
 
-                        <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
+                        <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 10px; left: 10px;top: 10px;">
 
-                            <div class="dataTables_header">
-                                <div class="dataTables_length">
-                                    <label>
-                                        Show
-                                        <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
-                                            <span class="select-arrow"></span>
-                                            <span class="drop-down custom-scroll">
-                                                <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
-                                                <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
-                                                <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
-                                                <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
-                                                <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
-                                            </span>
-                                        </span>
-                                        entries
-                                    </label>
-                                </div>
+                            <div class="dataTables_header" style="position: absolute;top: 0;left: 0;z-index: 100;border-radius: 10px;padding: 0 10px;">
                                 @if(Auth::user())
                                     <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
-                                    <input type="checkbox" style="margin-left: 10px;position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
+                                    <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
                                 @endif
-                                <div class="dataTables_filter"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
                             </div>
-                            <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
+                            <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-64px;z-index: 25;display: none;">
                                     <thead id="tbAddRow_header">
                                     <tr>
@@ -273,7 +276,7 @@
                                     </tr>
                                     </thead>
 
-                                    <tbody style="visibility: hidden;" id="tbHeaders_body">
+                                    <tbody style="" id="tbHeaders_body">
                                     </tbody>
                                 </table>
                                 <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:64px;" class="table_body_viewport">
@@ -291,7 +294,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
                                 <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
                                     Showing <span id="showing_from_span">0</span>
                                     to <span id="showing_to_span">0</span>
@@ -307,12 +310,12 @@
                         </div>
                     </div>
 
-                    <div id="favorite_view" style='display:none;padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
+                    <div id="favorite_view" style='display:none;padding:5px 10px 10px 10px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
 
-                        <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 20px; left: 20px;top: 10px;">
+                        <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 10px; left: 10px;top: 10px;">
 
-                            <div class="dataTables_header">
-                                <div class="dataTables_length">
+                            <div class="dataTables_header" style="position: absolute;top: 0;left: 0;z-index: 100;border-radius: 10px;padding: 0 10px;">
+                                <!--<div class="dataTables_length">
                                     <label>
                                         Show
                                         <span class="select blue-gradient glossy replacement" tabindex="0">
@@ -328,15 +331,15 @@
                                         </span>
                                         entries
                                     </label>
-                                </div>
-                                <button class="button blue-gradient glossy" style="margin-top: 9px;margin-left: 20px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
+                                </div>-->
+                                <button class="button blue-gradient glossy" style="margin-top: 9px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
                                 <input id="favourite_copy_with_headers" type="checkbox">
                                 <label for="favourite_copy_with_headers">Headers</label>
                                 @if($tableMeta && $tableMeta->source == 'remote')
                                     <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
                                 @endif
                             </div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
+                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
                                     <thead id="tbFavoriteCheckRow_header">
                                     <tr>
@@ -378,7 +381,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute; bottom: 0; right: 0; left: 0; height: 52px;">
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
                                 <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
                                     Showing
                                     @if(Auth::user())
@@ -401,12 +404,12 @@
                         </div>
                     </div>
 
-                    <div id="map_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
+                    <div id="map_view" class="with-padding" style="display:none; position: absolute; bottom: 10px; top: 10px; left: 10px; right: 10px;">
                         <div id="map-google" style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;"></div>
                     </div>
 
                     @if(Auth::user())
-                    <div id="settings_view" style="display:none; padding:5px 20px 20px 20px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
+                    <div id="settings_view" style="display:none; padding:5px 10px 10px 10px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;">
 
                         <!-- Tabs -->
                         <div class="standard-tabs" style="margin: 15px 10px;position: absolute;width: 250px;transform: rotate(-90deg);left: -100px;top: 80px;">
@@ -422,8 +425,8 @@
                         </div>
 
                         <!-- Content -->
-                        <div id="div_settings_display" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;">
-                            <div class="dataTables_header">
+                        <div id="div_settings_display" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 10px; left: 40px;">
+                        <!--<div class="dataTables_header">
                                 <div class="dataTables_length">
                                     <label>
                                         Show
@@ -442,8 +445,8 @@
                                     </label>
                                 </div>
                                 <div class="dataTables_filter"><label>Search by Keyword:<input id="searchSettingsKeywordInp" onchange="searchSettingsKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
-                            </div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 52px; bottom: 52px; right: 0; left: 0;">
+                            </div>-->
+                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" style="margin-bottom: 0;">
                                     <thead id="tbSettingsHeaders_head">
                                     <tr>
@@ -473,7 +476,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute; bottom: 0px; right: 0; left: 0">
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
                                 <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
                                     Showing <span id="showing_settings_from_span"></span>
                                     to <span id="showing_settings_to_span"></span>
@@ -488,7 +491,7 @@
                             </div>
                         </div>
 
-                        <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
+                        <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 10px; left: 40px;display: none;">
 
                             <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
@@ -598,7 +601,7 @@
                             </div>
                         </div>
 
-                        <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 20px; left: 40px;display: none;">
+                        <div id="div_settings_rights" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 10px; left: 40px;display: none;">
                             <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Permissions list</div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 70px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
@@ -699,7 +702,7 @@
                     @endif
 
                     @if($owner && $tableName)
-                    <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 20px; top: 20px; left: 20px; right: 20px;">
+                    <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 10px; top: 10px; left: 10px; right: 10px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
                                 <div class="container" style="position: relative;">
@@ -866,10 +869,10 @@
                                                                 <th>Required</th>
                                                                 <th>Delete</th>
                                                             </tr>
-                                                            <tr class="import_reference_columns">
+                                                            <tr class="import_reference_columns" style="display: none;">
                                                                 <th colspan="5" style="text-align: center;">Current Table</th>
                                                             </tr>
-                                                            <tr class="import_reference_columns">
+                                                            <tr class="import_reference_columns" style="display: none;">
                                                                 <th>Table Header</th>
                                                                 <th>Table Field</th>
                                                                 <th>Type</th>
@@ -949,7 +952,7 @@
                                                     </table>
                                                     
                                                     
-                                                    <table class="table table-striped import_reference_columns" style="width: 35%; display: none; float: left;">
+                                                    <table class="table table-striped import_reference_columns" style="width: 30%; display: none; float: left;">
                                                         <thead>
                                                         <tr>
                                                             <th colspan="3" style="text-align: center;">Referencing</th>
@@ -997,13 +1000,15 @@
                                                         </tr>
                                                         </tbody>
                                                     </table>
-                                                    <table class="table table-striped import_reference_columns" style="width: 14%; display: none; float: left;">
+                                                    <table class="table table-striped import_reference_columns" style="width: 25%; display: none; float: left;">
                                                         <thead>
                                                         <tr>
-                                                            <th style="text-align: center;">Referencing</th>
+                                                            <th colspan="3" style="text-align: center;">Referencing</th>
                                                         </tr>
                                                         <tr>
                                                             <th>Reference Field</th>
+                                                            <th>Type</th>
+                                                            <th>Size</th>
                                                         </tr>
                                                         </thead>
 
@@ -1035,7 +1040,7 @@
 
 
         <!-- Filters -->
-        <section class="menu" id="showHideMenuBody" role="complementary" style="position:fixed;top: 59px;bottom: 0;right: -1px;width: 0;">
+        <section class="menu" id="showHideMenuBody" role="complementary" style="position:fixed;top: 63px;bottom: 0;right: -1px;width: 0;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
                     Filter Results
