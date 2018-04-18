@@ -566,7 +566,7 @@
                                     <tr>
                                         <th class="sorting nowrap">#</th>
                                         @foreach($settingsDDL_References_Headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
+                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                         @endforeach
                                         <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                     </tr>
@@ -581,7 +581,7 @@
                                         <tr>
                                             <th class="sorting nowrap">#</th>
                                             @foreach($settingsDDL_References_Headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->field == 'list_id' ? 'DDL Name' : $hdr->name }}</th>
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
                                             @endforeach
                                             <th class="sorting nowrap" style="width: 30px;">Actions</th>
                                         </tr>

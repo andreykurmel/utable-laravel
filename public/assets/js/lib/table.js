@@ -1252,8 +1252,19 @@ function showInlineEdit(id, instant) {
                     }
                 }
             }
+        }  else
+        if (ltableDDls[key].req_obj) {//if reference ddl which needs request to the server
+            var resp = $.ajax({
+                url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(ltableDDls[key].req_obj) + '&row=' + JSON.stringify(tableData[idx]),
+                method: 'get',
+                async: false
+            }).responseText;
+            resp = JSON.parse(resp);
+            for (var i in resp) {
+                html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+            }
         } else {
-            for(var i in ltableDDls[key]) {
+            for (var i in ltableDDls[key]) {
                 html += '<option value="'+ltableDDls[key][i]+'">'+ltableDDls[key][i]+'</option>';
             }
         }
@@ -2490,7 +2501,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
     var add_id_name = (idx == -1 ? '_settings_ddl' : (settingsDDLs[idx].type != 'referencing' ? '_settings_items_ddl' : '_settings_references')),
         add_table_name = (idx == -1 ? 'ddl' : (settingsDDLs[idx].type != 'referencing' ? 'ddl_items' : 'cdtns')),
         func_name = (idx == -1 ? 'showInlineEdit_SDDL' : (settingsDDLs[idx].type != 'referencing' ? 'showInlineEdit_SDDL' : 'showInlineEdit_REFDDL')),
-        edited_fields = (idx == -1 ? ['name','type','notes'] : (settingsDDLs[idx].type != 'referencing' ? ['option','notes'] : ['use','ref_tb','ref_tb_field','sampleing','logic_opr','comp_field','notes']));
+        edited_fields = (idx == -1 ? ['name','type','notes'] : (settingsDDLs[idx].type != 'referencing' ? ['option','notes'] : ['use','ref_tb','ref_tb_field','sampleing','logic_opr','comp_ref_field','compare','comp_tar_field','notes']));
 
     for (var i = 0; i < data.length; i++) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
@@ -2606,9 +2617,12 @@ function showInlineEdit_REFDDL(id, isUpdate) {
     } else
     if (key == 'logic_opr') {
         options = '<option>AND</option><option>OR</option>';
+    } else
+    if (key == 'compare') {
+        options = '<option><</option><option>=</option><option>></option>';
     }
 
-    if (key == 'use' || key == 'sampleing' || key == 'logic_opr') {
+    if (key == 'use' || key == 'sampleing' || key == 'logic_opr' || key == 'compare') {
         html = '<select ' +
             'id="'+id+'_inp" ' +
             'data-key="' + $('#'+id).data('key') + '"' +
@@ -2636,9 +2650,8 @@ function showInlineEdit_REFDDL(id, isUpdate) {
         }
         html += '</select>';
     } else
-    if (key == 'ref_tb_field') {
+    if (key == 'ref_tb_field' || key == 'comp_ref_field') {
         var table_name = (idx !== undefined ? settingsDDLs[settingsDDL_selectedIndex].referencing[idx]['ref_tb'] : settingsDDL_REFObj.ref_tb);
-        console.log('table_name', table_name);
         html = '<select ' +
             'id="'+id+'_inp" ' +
             'data-key="' + $('#'+id).data('key') + '"' +
@@ -2658,7 +2671,7 @@ function showInlineEdit_REFDDL(id, isUpdate) {
         }
         html += '</select>';
     } else
-    if (key == 'comp_field') {
+    if (key == 'comp_tar_field') {
         html = '<select ' +
             'id="'+id+'_inp" ' +
             'data-key="' + $('#'+id).data('key') + '"' +

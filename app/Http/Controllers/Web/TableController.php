@@ -1336,4 +1336,32 @@ class TableController extends Controller
         }
         return $responseArray;
     }
+
+    public function getRefDDL(Request $request) {
+        $row = (array)json_decode($request->row);
+        $req = json_decode($request->req);
+
+        $refTb = $req[0]->ref_tb;
+        $refField = $req[0]->ref_field;
+        $dictinct = $req[0]->distinct == 'Distinctive' ? true : false;
+
+        $data = DB::connection('mysql_data')->table($refTb);
+        foreach ($req as $one_r) {
+            if ($one_r->operator == 'OR') {
+                $data->orWhere($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $row[ $one_r->comp_tar_field ]);
+            } else {
+                $data->where($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $row[ $one_r->comp_tar_field ]);
+            }
+        }
+        if ($dictinct) {
+            $data->distinct();
+        }
+        
+        $data = $data->get([$refField]);
+        $data_return = [];
+        foreach ($data as $d) {
+            $data_return[] = $d->$refField;
+        }
+        return $data_return;
+    }
 }

@@ -276,13 +276,27 @@ class TableService {
                 if ($row->sampleing == 'Distinctive') {
                     $options->distinct();
                 }
-                if ($row->comp_field) {
-                    $options->join($table_meta->db_tb, $table_meta->db_tb.'.'.$row->comp_field, '=', $row->ref_tb.'.'.$row->ref_tb_field);
-                }
-                $options = $options->select($row->ref_tb.'.'.$row->ref_tb_field)->get();
-                foreach ($options as $opt) {
-                    $opt = (array)$opt;
-                    $respDDLs[$row->field][] = $opt[$row->ref_tb_field];
+                //reference ddl which needs request to the server
+                if ($row->comp_ref_field && $row->comp_tar_field) {
+                    if (empty($respDDLs[$row->field])) $respDDLs[$row->field] = [];
+                    if (empty($respDDLs[$row->field]['req_obj'])) $respDDLs[$row->field]['req_obj'] = [];
+
+                    array_push($respDDLs[$row->field]['req_obj'], [
+                        'distinct' => $row->sampleing,
+                        'ref_tb' => $row->ref_tb,
+                        'ref_field' => $row->ref_tb_field,
+                        'operator' => $row->logic_opr,
+                        'comp_ref_field' => $row->comp_ref_field,
+                        'compare' => $row->compare,
+                        'comp_tar_field' => $row->comp_tar_field
+                    ]);
+
+                } else {//not needs request to the server
+                    $options = $options->select($row->ref_tb.'.'.$row->ref_tb_field)->get();
+                    foreach ($options as $opt) {
+                        $opt = (array)$opt;
+                        $respDDLs[$row->field][] = $opt[$row->ref_tb_field];
+                    }
                 }
             }
 

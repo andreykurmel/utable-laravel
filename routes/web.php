@@ -384,6 +384,7 @@ Route::get('/api/favoriteToggleTable', 'TableController@favoriteToggleTable')->n
 Route::get('/api/favoriteToggleRow', 'TableController@favoriteToggleRow')->name('favoriteToggleRow');
 Route::get('/api/showHideColumnToggle', 'TableController@showHideColumnToggle')->name('showHideColumnToggle');
 Route::get('/api/getDDLdatas', 'TableController@getDDLdatas')->name('getDDLdatas');
+Route::get('/api/getRefDDL', 'TableController@getRefDDL')->name('getRefDDL');
 Route::get('/api/getRightsDatas', 'TableController@getRightsDatas')->name('getRightsDatas');
 Route::get('/api/addRightsDatas', 'TableController@addRightsDatas')->name('addRightsDatas');
 Route::get('/api/updateRightsDatas', 'TableController@updateRightsDatas')->name('updateRightsDatas');
