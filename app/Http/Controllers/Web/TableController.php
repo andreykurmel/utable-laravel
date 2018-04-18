@@ -1356,7 +1356,7 @@ class TableController extends Controller
         if ($dictinct) {
             $data->distinct();
         }
-        
+
         $data = $data->get([$refField]);
         $data_return = [];
         foreach ($data as $d) {

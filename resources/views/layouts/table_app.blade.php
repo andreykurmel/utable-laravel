@@ -32,6 +32,7 @@
             position: fixed;
             top: 63px;
             right: 0;
+            z-index: 500;
         }
         .open-menu > span {
             display: block;
@@ -132,6 +133,11 @@
             vertical-align: middle;
             overflow: hidden;
         }
+        .table>thead>tr>th {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         #tbHeaders_header .over,
         #tbSettingsHeaders_head .over {
@@ -170,6 +176,15 @@
 
         .standard-tabs > .tabs > li.active > a {
             background: none;
+        }
+
+        .jstree-container-ul .fa-folder-open {
+            color: #EC0;
+        }
+
+        .jstree-contextmenu {
+            position: absolute;
+            z-index: 1000;
         }
     </style>
 

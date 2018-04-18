@@ -49,7 +49,7 @@ $(document).ready(function () {
     });
 
     $(document).keydown(function (e) {
-        if (e.keyCode == 37) {
+        if (e.keyCode == 37) {//left arrow
             if (e.ctrlKey) {
                 showHideTableLib();
             } else {
@@ -57,7 +57,16 @@ $(document).ready(function () {
                 left.scrollLeft -= 40;
             }
         }
-        if (e.keyCode == 39) {
+        if (e.keyCode == 38) {//up arrow
+            if ($('.navbar').is(':visible')) {
+                $('.navbar').hide();
+                $('.div-screen').css('top', '0');
+            } else {
+                $('.navbar').show();
+                $('.div-screen').css('top', '50px');
+            }
+        }
+        if (e.keyCode == 39) {//right arrow
             if (e.ctrlKey) {
                 showHideMenu();
             } else {
@@ -73,13 +82,13 @@ $(document).ready(function () {
         $('#showHideMenuBody').css('width', '260px');
         $(".table_body_viewport > .mCSB_scrollTools").css("right", '276px');
         $(".js-filterMenuHide").css("right", '270px');
-        $(".js-filterMenuHide_2").css("right", '680px');
     }
     //hide menutree
     if (localStorage.getItem('menutree_hide') == 1) {
         $('#showTableLibBtn').addClass('menu-hidden');
         $('#showTableLibBody').css('width', '0');
         $(".js-table_lib_hide").css("left", '10px');
+        $("#tables_btns").css("left", "490px");
         $("#showTableLibBody .standard-tabs").css("display", "none");
     }
 
@@ -645,6 +654,7 @@ function showHideTableLib() {
     }
 
     $(".js-table_lib_hide").css("left", MenutreeHide ? "10px" : "270px");
+    $("#tables_btns").css("left", MenutreeHide ? "490px" : "750px");
     $("#showTableLibBody .standard-tabs").css("display", MenutreeHide ? "none" : "");
 }
 
@@ -653,9 +663,9 @@ function tablebar_show_public() {
     $("#tablebar_li_public").addClass("active");
     $("#tablebar_li_private").removeClass("active");
     $("#tablebar_li_favorite").removeClass("active");
-    $("#tablebar_public_div").show();
-    $("#tablebar_private_div").hide();
-    $("#tablebar_favorite_div").hide();
+    $("#tablebar_public_wrapper").show();
+    $("#tablebar_private_wrapper").hide();
+    $("#tablebar_favorite_wrapper").hide();
     //sidebarPrevSelected = '';
     if (authUser) {
         jsTreeBuild('public');
@@ -667,9 +677,9 @@ function tablebar_show_private() {
     $("#tablebar_li_private").addClass("active");
     $("#tablebar_li_public").removeClass("active");
     $("#tablebar_li_favorite").removeClass("active");
-    $("#tablebar_private_div").show();
-    $("#tablebar_public_div").hide();
-    $("#tablebar_favorite_div").hide();
+    $("#tablebar_private_wrapper").show();
+    $("#tablebar_public_wrapper").hide();
+    $("#tablebar_favorite_wrapper").hide();
     //sidebarPrevSelected = '';
     if (authUser) {
         jsTreeBuild('private');
@@ -681,9 +691,9 @@ function tablebar_show_favorite() {
     $("#tablebar_li_favorite").addClass("active");
     $("#tablebar_li_private").removeClass("active");
     $("#tablebar_li_public").removeClass("active");
-    $("#tablebar_favorite_div").show();
-    $("#tablebar_private_div").hide();
-    $("#tablebar_public_div").hide();
+    $("#tablebar_favorite_wrapper").show();
+    $("#tablebar_private_wrapper").hide();
+    $("#tablebar_public_wrapper").hide();
     //sidebarPrevSelected = '';
     if (authUser) {
         jsTreeBuild('favorite');
@@ -703,11 +713,9 @@ function showHideMenu() {
     }
 
     var right_scr = filterMenuHide ? "26px" : "276px";
-    var right = filterMenuHide ? "20px" : "270px";
-    var right_2 = filterMenuHide ? "420px" : "680px";
+    var right = filterMenuHide ? "10px" : "270px";
     $(".table_body_viewport > .mCSB_scrollTools").css("right", right_scr);
     $(".js-filterMenuHide").css("right", right);
-    $(".js-filterMenuHide_2").css("right", right_2);
 }
 
 function toggleSearchType() {
@@ -737,6 +745,10 @@ function showAddressSearch() {
 }
 
 function showHideColumnsList() {
+    var btn = document.getElementById('showHideColumnsList_btn'),
+        left_bound = btn.offsetLeft + btn.parentNode.offsetLeft;
+    $('#showHideColumnsList').css('left', left_bound+'px');
+
     if ($('#showHideColumnsList').is(':visible')) {
         $('#showHideColumnsList').hide();
     } else {
@@ -906,6 +918,8 @@ function showMap() {
     $("#favorite_view").hide();
     $("#settings_view").hide();
     $("#import_view").hide();
+    $(".listview_btns").hide();
+    $("#favorite_btns").hide();
     $("#map_view").show();
     initMap();
     $('.showhidemenu').hide();
@@ -923,6 +937,8 @@ function showList() {
     $("#map_view").hide();
     $("#settings_view").hide();
     $("#import_view").hide();
+    $(".listview_btns").show();
+    $("#favorite_btns").hide();
     $('.showhidemenu').show();
     selectedForChangeOrder = -1;
 }
@@ -938,6 +954,8 @@ function showFavorite() {
     $("#map_view").hide();
     $("#settings_view").hide();
     $("#import_view").hide();
+    $(".listview_btns").hide();
+    $("#favorite_btns").show();
     $('.showhidemenu').show();
     changeFavoritePage(1);
 }
@@ -953,6 +971,8 @@ function showImport() {
     $("#favorite_view").hide();
     $("#list_view").hide();
     $("#map_view").hide();
+    $(".listview_btns").hide();
+    $("#favorite_btns").hide();
     $('.showhidemenu').hide();
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
@@ -970,6 +990,8 @@ function showSettings() {
     $("#map_view").hide();
     $("#import_view").hide();
     $('.showhidemenu').hide();
+    $(".listview_btns").hide();
+    $("#favorite_btns").hide();
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
 }
@@ -3836,7 +3858,7 @@ function jsTreeBuild($tab) {
             {}
         :
             {
-                "plugins": ["contextmenu", "dnd"],
+                "plugins": ["contextmenu", "dnd", "search"],
                 "contextmenu": {
                     "items": function ($node) {
                         var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
@@ -3896,9 +3918,10 @@ function jsTreeBuild($tab) {
                                                     var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                                     var newNode = {
                                                         text: inputValu,
+                                                        icon: 'fa fa-folder',
                                                         li_attr: {
                                                             'data-type':'folder',
-                                                            'data-menu_id':resp.last_id,
+                                                            'data-menu_id':resp.last_id
                                                         }
                                                     };
 
@@ -4242,9 +4265,10 @@ function jsTreeBuild($tab) {
                             success: function (resp) {
                                 var newNode = {
                                     text: inputValu,
+                                    icon: 'fa fa-folder',
                                     li_attr: {
                                         'data-type':'folder',
-                                        'data-menu_id':resp.last_id,
+                                        'data-menu_id':resp.last_id
                                     }
                                 };
 
@@ -4327,6 +4351,22 @@ function popup_sidebar_table() {
                 alert("Server error");
             }
         });
+    }
+}
+
+function searchInTab($tab) {
+    $('#tablebar_'+$tab+'_div').jstree().search( $('#searchValInTab_'+$tab).val() );
+}
+
+function changeDataTableRowHeight(sel) {
+    if ($(sel).val() == 'Small') {
+        $('.table>tbody>tr>td').css('line-height', '0.7em');
+    } else
+    if ($(sel).val() == 'Medium') {
+        $('.table>tbody>tr>td').css('line-height', '1em');
+    } else
+    if ($(sel).val() == 'Big') {
+        $('.table>tbody>tr>td').css('line-height', '1.3em');
     }
 }
 

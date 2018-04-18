@@ -1,7 +1,7 @@
 @extends('layouts.table_app')
 
 @section('content')
-    <div class="div-screen">
+    <div class="div-screen" style="position:absolute; top: 50px; bottom: 0; right: 0; left: 0;z-index: 1;">
         <input type="hidden" id="inpServerName" value="{{ $server }}">
         <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
         <input type="hidden" id="inpSelectedEntries" value="{{ $selectedEntries ? $selectedEntries : 10 }}">
@@ -9,9 +9,10 @@
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
-        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:fixed;top: 63px;bottom: 0;left: -1px;width: 260px;">
+        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:absolute;top: 13px;bottom: 0;left: -1px;width: 260px;z-index: 500;">
             <!-- This wrapper is used by several responsive layouts -->
             <div class="menu-content">
+                <div id="ctxMenu_tablebar" style="position: fixed;top:0;z-index: 1000;"></div>
 
                 <header style="text-align: right;">
                     Table Library
@@ -26,19 +27,37 @@
                     </ul>
 
 
-                    <div id="tablebar_public_div" class="tab-content" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
-                        {!! $treeTables['public'] !!}
+                    <div id="tablebar_public_wrapper" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
+                        <div id="tablebar_public_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
+                            {!! $treeTables['public'] !!}
+                        </div>
+                        <div style="position: absolute;bottom: 0; left: 0; right: 0;">
+                            <input id="searchValInTab_public" type="text" class="form-control" style="display: inline-block; width: 77%;">
+                            <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('public')"><i class="fa fa-search"></i></button>
+                        </div>
                     </div>
-                    <div id="tablebar_private_div" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                    <div id="tablebar_private_wrapper" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
                         @if(Auth::user())
-                            {!! $treeTables['private'] !!}
+                            <div id="tablebar_private_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
+                                {!! $treeTables['private'] !!}
+                            </div>
+                            <div style="position: absolute;bottom: 0; left: 0; right: 0;">
+                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 77%;">
+                                <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
+                            </div>
                         @else
                             Register and Login to add and manage your own collection of data tables.
                         @endif
                     </div>
-                    <div id="tablebar_favorite_div" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                    <div id="tablebar_favorite_wrapper" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
                         @if(Auth::user())
-                            {!! $treeTables['favorite'] !!}
+                            <div id="tablebar_favorite_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
+                                {!! $treeTables['favorite'] !!}
+                            </div>
+                            <div style="position: absolute;bottom: 0; left: 0; right: 0;">
+                                <input id="searchValInTab_favorite" type="text" class="form-control" style="display: inline-block; width: 77%;">
+                                <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
+                            </div>
                         @else
                             Register and Login to add and manage your own collection of data tables.
                         @endif
@@ -48,13 +67,13 @@
             <!-- End content wrapper -->
         </section>
 
-        <section role="main" id="main">
+        <section role="main" id="main" style="position:absolute; top: 0; bottom: 0; right: 0; left: 0; margin: 0; z-index: 2;" class="js-filterMenuHide">
 
             <!-- Visible only to browsers without javascript -->
             <noscript class="message black-gradient simpler">Your browser does not support JavaScript! Some features won't work as expected...</noscript>
 
             <!-- Main title -->
-            <div class="colvisopts with-small-padding js-filterMenuHide" style="position: fixed; top: 54px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 20px;">
+            <div class="colvisopts with-small-padding" style="position: absolute; top: 4px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 10px;">
                 @if($owner && $tableName)
                     <div style="display: inline-block;">
                         <a href="javascript:void(0)" style="padding: 15px;" onclick="deleteCurrentTable()" title="Delete table">
@@ -85,7 +104,7 @@
                         </span>
                     </span>
                 </div>
-                <div class="showhidemenu" style='margin-right: 10px;display:inline-block'>
+                <div class="showhidemenu" style='margin-right: 10px;display:inline-block'  id="showHideColumnsList_btn">
                     <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 3px 0 0 0;"><img src="/img/eye.png" height="25"></a>
                 </div>
                 @if(Auth::user())
@@ -122,11 +141,32 @@
             </div>
 
 
+            <div id="tables_btns" style="position: absolute ;top: 0; left: 750px; z-index: 500;">
+                <select class="listview_btns form-control" style="width: 100px;display: inline-block;" onchange="changeDataTableRowHeight(this)">
+                    <option>Small</option>
+                    <option selected>Medium</option>
+                    <option>Big</option>
+                </select>
+                @if(Auth::user())
+                    <div class="listview_btns" style="display: inline-block">
+                        <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
+                        <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
+                    </div>
+                @endif
+                <div id="favorite_btns" style="display: none;">
+                    <button class="button blue-gradient glossy" style="margin-top: 9px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
+                    <input id="favourite_copy_with_headers" type="checkbox">
+                    <label for="favourite_copy_with_headers">Headers</label>
+                    @if($tableMeta && $tableMeta->source == 'remote')
+                        <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
+                    @endif
+                </div>
+            </div>
             <!-- Wrapper, set tabs style class here -->
-            <div class="standard-tabs js-table_lib_hide" style="position: fixed ;top: 70px; left: 270px; width: 500px;">
+            <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 20px; left: 270px; right: 0; bottom: 0;">
 
                 <!-- Tabs -->
-                <ul class="tabs js-leftPosition">
+                <ul class="tabs" style="width: 450px;">
                     <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                     @if($tableName)
                         <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
@@ -143,7 +183,7 @@
                 </ul>
 
                 <!-- Content -->
-                <div class="tabs-content js-filterMenuHide js-leftPosition js-table_lib_hide" style="position: fixed; left: 270px; bottom: 10px; top: 100px;right: 20px;">
+                <div class="tabs-content" style="position: absolute; left: 0; bottom: 0; top: 30px; right: 0;">
 
                     <div id="list_view" style='padding:5px 10px 10px 10px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
                         @if($tableName == 'st')
@@ -246,14 +286,8 @@
                             </h2>
                         @endif
 
-                        <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 10px; right: 10px; left: 10px;top: 10px;">
+                        <div class="dataTables_wrapper no-footer js_tableNameST" style="position: absolute; bottom: 0; right: 0; left: 0;top: 0;">
 
-                            <div class="dataTables_header" style="position: absolute;top: 0;left: 0;z-index: 100;border-radius: 10px;padding: 0 10px;">
-                                @if(Auth::user())
-                                    <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
-                                    <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
-                                @endif
-                            </div>
                             <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-64px;z-index: 25;display: none;">
                                     <thead id="tbAddRow_header">
@@ -294,12 +328,14 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
-                                <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
+                                <div class="dataTables_info" role="status" aria-live="polite" style="padding: 0 10px;">
                                     Showing <span id="showing_from_span">0</span>
                                     to <span id="showing_to_span">0</span>
                                     of <span id="showing_all_span">0</span> entries</div>
-                                <div class="dataTables_paginate paging_full_numbers">
+                            </div>
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
+                                <div class="dataTables_paginate paging_full_numbers" style="padding: 0;">
                                     <a class="paginate_button first" onclick="changePage(1)">First
                                     </a><a class="paginate_button previous" onclick="changePage(selectedPage>1 ? selectedPage : 1)">Previous
                                     </a><span id="paginate_btns_span">
@@ -312,33 +348,8 @@
 
                     <div id="favorite_view" style='display:none;padding:5px 10px 10px 10px; position: absolute; bottom: 0; top: 0; left: 0; right: 0;'>
 
-                        <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; right: 10px; left: 10px;top: 10px;">
+                        <div class="dataTables_wrapper no-footer" style="position: absolute; bottom: 0; right: 0; left: 0;top: 0;">
 
-                            <div class="dataTables_header" style="position: absolute;top: 0;left: 0;z-index: 100;border-radius: 10px;padding: 0 10px;">
-                                <!--<div class="dataTables_length">
-                                    <label>
-                                        Show
-                                        <span class="select blue-gradient glossy replacement" tabindex="0">
-                                            <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
-                                            <span class="select-arrow"></span>
-                                            <span class="drop-down custom-scroll">
-                                                <span class="entry-elem entry10 {{ $selectedEntries == 10 ? 'selected' : '' }}" onclick="changeEntries(10)">10</span>
-                                                <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
-                                                <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
-                                                <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
-                                                <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
-                                            </span>
-                                        </span>
-                                        entries
-                                    </label>
-                                </div>-->
-                                <button class="button blue-gradient glossy" style="margin-top: 9px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
-                                <input id="favourite_copy_with_headers" type="checkbox">
-                                <label for="favourite_copy_with_headers">Headers</label>
-                                @if($tableMeta && $tableMeta->source == 'remote')
-                                    <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
-                                @endif
-                            </div>
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
                                     <thead id="tbFavoriteCheckRow_header">
@@ -381,8 +392,8 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
-                                <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
+                                <div class="dataTables_info" role="status" aria-live="polite" style="padding: 0 10px;">
                                     Showing
                                     @if(Auth::user())
                                         <span id="favorite_showing_from_span"></span>
@@ -393,7 +404,9 @@
                                     @endif
                                     entries
                                 </div>
-                                <div class="dataTables_paginate paging_full_numbers">
+                            </div>
+                            <div class="dataTables_footer" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
+                                <div class="dataTables_paginate paging_full_numbers" style="padding: 0;">
                                     <a class="paginate_button first" onclick="changeFavoritePage(1)">First
                                     </a><a class="paginate_button previous" onclick="changeFavoritePage(selectedFavoritePage>1 ? selectedFavoritePage : 1)">Previous
                                     </a><span id="favorite_paginate_btns_span">
@@ -1040,7 +1053,7 @@
 
 
         <!-- Filters -->
-        <section class="menu" id="showHideMenuBody" role="complementary" style="position:fixed;top: 63px;bottom: 0;right: -1px;width: 0;">
+        <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 13px;bottom: 0;right: -1px;width: 0;z-index: 500;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
                     Filter Results
@@ -1112,8 +1125,8 @@
         </div>
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 420px;display: none;" class="js-filterMenuHide_2" id="showHideColumnsList">
-            <div class="message tooltip  tracking" style="position: absolute; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
+        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 420px;display: none;" id="showHideColumnsList">
+            <div class="message tooltip  tracking" style="position: fixed; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
                         @foreach($headers as $hdr)
@@ -1183,7 +1196,6 @@
         </div>
         <div class="editSidebarTableForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.editSidebarTableForm').hide()"></div>
     </div>
-    <div id="ctxMenu_tablebar"></div>
 
     <div class="div-print" id="div-print"></div>
 @endsection
