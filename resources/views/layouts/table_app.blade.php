@@ -134,9 +134,17 @@
             overflow: hidden;
         }
         .table>thead>tr>th {
+            height: 32px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .table>tbody>tr>td .td_wrap {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #tbHeaders_header .over,
@@ -440,6 +448,7 @@
 
 {!! HTML::script('https://maps.googleapis.com/maps/api/js?key=AIzaSyAGaaPdBTpcf_z_lLmhwxNwHESJhFQ4MGM&hl=en&language=en') !!}
 {!! HTML::script('assets/js/lib/jquery.mCustomScrollbar.concat.min.js') !!}
+{!! HTML::script('assets/js/lib/jquery.simulate.js') !!}
 {!! HTML::script('assets/js/lib/lodash.min.js') !!}
 {!! HTML::script('assets/js/lib/setup.js') !!}
 {!! HTML::script('assets/js/lib/developr.auto-resizing.js') !!}

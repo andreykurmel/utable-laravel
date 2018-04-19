@@ -1342,15 +1342,16 @@ class TableController extends Controller
         $req = json_decode($request->req);
 
         $refTb = $req[0]->ref_tb;
-        $refField = $req[0]->ref_field;
-        $dictinct = $req[0]->distinct == 'Distinctive' ? true : false;
+        $refField = $req[0]->ref_tb_field;
+        $dictinct = $req[0]->sampleing == 'Distinctive' ? true : false;
 
         $data = DB::connection('mysql_data')->table($refTb);
         foreach ($req as $one_r) {
-            if ($one_r->operator == 'OR') {
-                $data->orWhere($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $row[ $one_r->comp_tar_field ]);
+            $compare_val = ($one_r->compare_ref_val ? $one_r->compare_ref_val : $row[ $one_r->comp_tar_field ]);
+            if ($one_r->logic_opr == 'OR') {
+                $data->orWhere($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $compare_val);
             } else {
-                $data->where($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $row[ $one_r->comp_tar_field ]);
+                $data->where($one_r->comp_ref_field, ($one_r->compare ? $one_r->compare : '='), $compare_val);
             }
         }
         if ($dictinct) {
@@ -1361,6 +1362,16 @@ class TableController extends Controller
         $data_return = [];
         foreach ($data as $d) {
             $data_return[] = $d->$refField;
+        }
+        return $data_return;
+    }
+
+    public function getDistinctData(Request $request) {
+        $field = $request->field;
+        $data = DB::connection('mysql_data')->table($request->table)->distinct()->get([$field]);
+        $data_return = [];
+        foreach ($data as $d) {
+            $data_return[] = $d->$field;
         }
         return $data_return;
     }

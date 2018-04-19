@@ -49,15 +49,15 @@ $(document).ready(function () {
     });
 
     $(document).keydown(function (e) {
-        if (e.keyCode == 37) {//left arrow
-            if (e.ctrlKey) {
+        if (e.keyCode == 37) {
+            if (e.ctrlKey) {//ctrl+left arrow (show/hide menutree)
                 showHideTableLib();
-            } else {
+            } else {//left arrow (horizontal table scroll)
                 var left = document.getElementById('div_for_horizontal_scroll');
                 left.scrollLeft -= 40;
             }
         }
-        if (e.keyCode == 38) {//up arrow
+        if (e.keyCode == 38 && e.ctrlKey) {//ctrl+up arrow (show/hide navbar)
             if ($('.navbar').is(':visible')) {
                 $('.navbar').hide();
                 $('.div-screen').css('top', '0');
@@ -66,12 +66,19 @@ $(document).ready(function () {
                 $('.div-screen').css('top', '50px');
             }
         }
-        if (e.keyCode == 39) {//right arrow
-            if (e.ctrlKey) {
+        if (e.keyCode == 39) {
+            if (e.ctrlKey) {//ctrl+right arrow (show/hide filters)
                 showHideMenu();
-            } else {
+            } else {//left arrow (horizontal table scroll)
                 var left = document.getElementById('div_for_horizontal_scroll');
                 left.scrollLeft += 40;
+            }
+        }
+        if (e.keyCode == 40 && e.ctrlKey) {//ctrl+down arrow (show/hide tables pagination)
+            if ($('._tables_pagination').is(':visible')) {
+                $('._tables_pagination').hide();
+            } else {
+                $('._tables_pagination').show();
             }
         }
     });
@@ -347,19 +354,21 @@ function showDataTable(headers, data) {
                 tableData +=
                     '<td ' +
                     'id="' + headers[key].field + i + '_dataT"' +
+                    'data-wrapped="true"' +
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
-                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
+                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
+                    '<div class="td_wrap">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
-                tableData += '</td>';
+                tableData += '</div></td>';
             }
         }
         tableData += "</tr>";
@@ -413,13 +422,14 @@ function showDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
-                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">';
+                    (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
+                    '<div class="td_wrap">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
-                tbHiddenData += '</td>';
+                tbHiddenData += '</div></td>';
             }
         }
         tbHiddenData += "</tr>";
@@ -441,7 +451,7 @@ function showDataTable(headers, data) {
             '">' +
             '<span draggable="true">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</span>' +
             '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
-            '<i style="display: block; height:1px; '+(headers[$hdr].min_wth > 0 ? 'width: '+(headers[$hdr].min_wth-20)+'px;' : '')+'"></i>' +
+            '<i style="display: block; height:1px; '+(headers[$hdr].dfot_wth > 0 ? 'width: '+(headers[$hdr].dfot_wth-20)+'px;' : '')+'"></i>' +
             '</th>';
 
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
@@ -481,7 +491,13 @@ function showDataTable(headers, data) {
 
     $('#tbAddRow').css('top', headerHasUnit ? '-64px' : '-32px');
     $('#tbData').css('margin-top', headerHasUnit ? '-64px' : '-32px');
-    $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
+    if ($('#addingIsInline').is(':checked')) {
+        $('#tbHeaders').css('top', '53px');
+        $('#divTbData').css('top', headerHasUnit ? '117px' : '85px');
+    } else {
+        $('#tbHeaders').css('top', '0');
+        $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
+    }
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -506,10 +522,12 @@ function showDataTable(headers, data) {
 
     if (authUser) {
         //add drag listeners for table headers
-        var cols = document.querySelectorAll('#tbHeaders_header th span[draggable="true"]');
+        var cols = document.querySelectorAll('#tbHeaders_header th > span[draggable="true"]');
         [].forEach.call(cols, function(col) {
             col.addEventListener('dragstart', handleDragStart, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
             col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
             col.addEventListener('drop', handleDrop, false);
         });
 
@@ -534,7 +552,6 @@ function handleStartResize(e) {
 
 function handleElemResize(e) {
     if (startResizeElem) {
-        console.log(startResizeElem);
         if (startX) {
             startWidth += e.x - startX;
             startX = e.x;
@@ -552,10 +569,9 @@ function handleEndResize(e) {
 
         for (var i in tableHeaders) {
             if (tableHeaders[i].field == field_name) {
-                tableHeaders[i].min_wth = startWidth;
-                tableHeaders[i].max_wth = startWidth;
+                tableHeaders[i].dfot_wth = startWidth;
                 $.ajax({
-                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + tableHeaders[i].id + '&min_wth=' + startWidth + '&max_wth=' + startWidth,
+                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + tableHeaders[i].id + '&dfot_wth=' + startWidth,
                     method: 'get'
                 });
                 break;
@@ -899,7 +915,7 @@ function handleDrop(e) {
 }
 
 function handleDragEnd(e) {
-    var cols = document.querySelectorAll('#tbHeaders_header th span[draggable="true"]');
+    var cols = document.querySelectorAll('#tbHeaders_header th > span[draggable="true"]');
     this.parentNode.style.opacity = '1';
 
     [].forEach.call(cols, function (col) {
@@ -1242,7 +1258,11 @@ function showInlineEdit(id, instant) {
     }
 
     //save current cell data
-    $('#'+id).data('innerHTML', $('#'+id).html());
+    if ($('#'+id).data('wrapped')) {
+        $('#'+id).data('innerHTML', $('#'+id+' > .td_wrap').html());
+    } else {
+        $('#'+id).data('innerHTML', $('#'+id).html());
+    }
 
     var not_instant_func = $('#'+id).data('settings') ?
         'onchange="updateSettingsRowLocal('+idx+',\''+key+'\',\''+id+'_inp\')"' :
@@ -1299,9 +1319,15 @@ function showInlineEdit(id, instant) {
 }
 
 function hideInlineEdit(id) {
-    $('#'+id)
-        .html( $('#'+id).data('innerHTML') )
-        .data('innerHTML', '');
+    if ($('#'+id).data('wrapped')) {
+        $('#'+id)
+            .html( '<div class="td_wrap">'+$('#'+id).data('innerHTML')+'</div>' )
+            .data('innerHTML', '');
+    } else {
+        $('#'+id)
+            .html( $('#'+id).data('innerHTML') )
+            .data('innerHTML', '');
+    }
 }
 
 function deleteRow(params, idx) {
@@ -1349,6 +1375,7 @@ function addRow(params) {
         url: baseHttpUrl + '/addTableRow?tableName=' + lselectedTableName + '&' + strParams,
         success: function (response) {
             $('.loadingFromServer').hide();
+            tableData[ tableData.length-1 ].id = response.last_id;
             alert(response.msg);
         },
         error: function () {
@@ -1413,7 +1440,7 @@ function updateRowData(idx, key, id, to_change) {
     ltableData[idx][key] = $('#'+id).val();
 
     var par_id = id.substr(0, id.length-4);
-    $('#'+id).data('innerHTML', ltableData[idx][key]);
+    $('#'+par_id).data('innerHTML', ltableData[idx][key]);
 
     updateRow(ltableData[idx], to_change);
 }
@@ -1479,6 +1506,10 @@ function editSelectedData(idx) {
 
     var html = "", d_key;
     for(var key in ltableHeaders) {
+        if (ltableHeaders[key].web == 'No' || !ltableHeaders[key].is_showed) {
+            continue;//show fields only showed in the 'list view'
+        }
+
         d_key = ltableHeaders[key].field;
         if (d_key != 'id' && d_key != 'is_favorited') {
             html += "<tr>";
@@ -1489,9 +1520,47 @@ function editSelectedData(idx) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
             } else
             if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
-                html += '<select class="form-control" id="modals_inp_'+d_key+'" class="form-control" style="margin-bottom: 5px">';
-                for(var i in ltableDDLs[key]) {
-                    html += '<option val="'+ltableDDLs[key][i]+'">'+ltableDDLs[key][i]+'</option>';
+                if (ltableDDLs[d_key]) {
+                    var tmp_ddl = ltableDDLs[d_key];
+                }
+                html += '<select class="form-control" id="modals_inp_'+d_key+'" ' +
+                    ' data-idx="'+idx+'" ' +
+                    ' data-key="'+d_key+'" ' +
+                    (tmp_ddl && tmp_ddl.req_obj ? 'onfocus="getRefDDL(this)"' : '') +
+                    ' class="form-control" style="margin-bottom: 5px">';
+                if (d_key == 'ddl_id' || d_key == 'unit_ddl') {
+                    for(var i in ltableDDls['ddl_id']) {
+                        html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
+                    }
+                } else
+                if (d_key == 'unit') {
+                    for (var i in settingsDDLs) {
+                        if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
+                            for (var j in settingsDDLs[i].items) {
+                                html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+                            }
+                        }
+                    }
+                }  else
+                if (tmp_ddl && tmp_ddl.req_obj) {//if reference ddl which needs request to the server
+                    if(idx > -1) {
+                        var resp = $.ajax({
+                            url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(tmp_ddl.req_obj) + '&row=' + JSON.stringify(tableData[idx]),
+                            method: 'get',
+                            async: false
+                        }).responseText;
+                        resp = JSON.parse(resp);
+                        for (var i in resp) {
+                            html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+                        }
+                    } else {
+                        html += '<option></option>';
+                    }
+                } else
+                if (tmp_ddl) {
+                    for (var i in tmp_ddl) {
+                        html += '<option value="'+tmp_ddl[i]+'">'+tmp_ddl[i]+'</option>';
+                    }
                 }
                 html += '</select>';
             }
@@ -1516,6 +1585,32 @@ function editSelectedData(idx) {
     if (!$('#addingIsInline').is(':checked') || idx > -1 || !lv) {
         $('.js-editmodal').show();
     }
+}
+
+function getRefDDL(sel) {
+    var idx = $(sel).data('idx');
+    var key = $(sel).data('key');
+    var val = $(sel).val();
+
+    var d_key, row = {};
+    for(var i in tableHeaders) {
+        d_key = tableHeaders[i].field;
+        if (d_key != 'id') {
+            row[d_key] = $('#modals_inp_'+d_key).val();
+        }
+    }
+
+    var html = '';
+    var resp = $.ajax({
+        url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(tableDDLs[key].req_obj) + '&row=' + JSON.stringify(row),
+        method: 'get',
+        async: false
+    }).responseText;
+    resp = JSON.parse(resp);
+    for (var i in resp) {
+        html += '<option '+(val == resp[i] ? 'selected' : '')+' value="'+resp[i]+'">'+resp[i]+'</option>';
+    }
+    $(sel).html(html);
 }
 
 function addData() {
@@ -1698,8 +1793,9 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
+                    '<div class="td_wrap">' +
                         (data[i][d_key] !== null ? data[i][d_key] : '') +
-                    '</td>';
+                    '</div></td>';
             }
         }
         tableData += "</tr>";
@@ -1716,8 +1812,9 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
+                    '<div class="td_wrap">' +
                         (data[i][d_key] !== null ? data[i][d_key] : '') +
-                    '</td>';
+                    '</div></td>';
             }
         }
         tbHiddenData += "</tr>";
@@ -1893,7 +1990,6 @@ function favoritesCopyToClipboard() {
             textToClip += "</tr>";
         });
         textToClip += "</table>";
-        console.log(textToClip);
 
         copyToClipboard(textToClip);
     } else {
@@ -2039,7 +2135,7 @@ function showSettingsDataTable(headers, data) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
-        tableData += '<td data-order="'+i+'" draggable="true"><i style="width: 100%;text-align: center;" class="fa fa-bars"></i></td>';
+        tableData += '<td data-order="'+i+'"><span draggable="true"><i style="width: 100%;text-align: center;" class="fa fa-bars"></i></span></td>';
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
@@ -2047,23 +2143,25 @@ function showSettingsDataTable(headers, data) {
                 tableData +=
                     '<td ' +
                     'id="' + headers[key].field + i + '_settingsDisplay"' +
+                    'data-wrapped="true"' +
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
                     (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    '<div class="td_wrap">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key === 'dfot_odr') {
-                    tableData += '<button draggable="true" class="btn btn-sm" style="width: 100%">'
-                        + get_calc_odr(data[i].field) +
+                    tableData += '<button class="btn btn-sm" style="width: 100%" data-odr="' + get_calc_odr(data[i].field) + '">'+
+                        '<span draggable="true">' + get_calc_odr(data[i].field) + '</span>' +
                         '</button>';
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
-                tableData += '</td>';
+                tableData += '</div></td>';
             }
         }
         tableData += "</tr>";
@@ -2077,7 +2175,8 @@ function showSettingsDataTable(headers, data) {
                 tbHiddenData +=
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
-                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    '<div class="td_wrap">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -2086,7 +2185,7 @@ function showSettingsDataTable(headers, data) {
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
-                tbHiddenData += '</td>';
+                tbHiddenData += '</div></td>';
             }
         }
         tbHiddenData += "</tr>";
@@ -2096,7 +2195,6 @@ function showSettingsDataTable(headers, data) {
     tbSettingsHeaders += "<tr> <th class='sorting nowrap'><b>Ord</b></th> <th class='sorting nowrap'><b>#</b> </th>";
     for(var $hdr in headers) {
         tbSettingsHeaders += '<th ' +
-            'draggable="true" ' +
             'class="sorting nowrap" ' +
             'data-key="' + headers[$hdr].field + '" ' +
             'data-order="' + $hdr + '" ' +
@@ -2104,7 +2202,7 @@ function showSettingsDataTable(headers, data) {
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
-            ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+            '<span draggable="true">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</span>'
             '</th>';
     }
     tbSettingsHeaders += "</tr>";
@@ -2117,7 +2215,7 @@ function showSettingsDataTable(headers, data) {
 
     //add drag listeners for table headers
     if (authUser) {
-        var cols = document.querySelectorAll('#tbSettingsHeaders_head th[draggable="true"]');
+        var cols = document.querySelectorAll('#tbSettingsHeaders_head th > span[draggable="true"]');
         [].forEach.call(cols, function(col) {
             col.addEventListener('dragstart', handleDragStart, false);
             col.addEventListener('dragenter', handleDragEnter, false);
@@ -2127,7 +2225,7 @@ function showSettingsDataTable(headers, data) {
             col.addEventListener('dragend', handleDragEndSettings, false);
         });
 
-        var cols_dfot = document.querySelectorAll('#tbSettingsData_body button[draggable="true"]');
+        var cols_dfot = document.querySelectorAll('#tbSettingsData_body button > span[draggable="true"]');
         [].forEach.call(cols_dfot, function(col) {
             col.addEventListener('dragstart', handleDragStartSettings_dfot, false);
             col.addEventListener('dragenter', handleDragEnter, false);
@@ -2137,7 +2235,7 @@ function showSettingsDataTable(headers, data) {
             col.addEventListener('dragend', handleDragEndSettings_dfot, false);
         });
 
-        var rows = document.querySelectorAll('#tbSettingsData_body td[draggable="true"]');
+        var rows = document.querySelectorAll('#tbSettingsData_body td > span[draggable="true"]');
         [].forEach.call(rows, function(col) {
             col.addEventListener('dragstart', handleDragStart, false);
             col.addEventListener('dragenter', handleDragEnter, false);
@@ -2215,7 +2313,7 @@ function handleDropSettings(e) {
         e.stopPropagation(); // stops the browser from redirecting.
     }
 
-    var target = this.dataset.order;
+    var target = this.parentNode.dataset.order;
     if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
         var reoderedArr = [];
         for (var i in settingsTableHeaders) {
@@ -2248,8 +2346,8 @@ function handleDropSettings(e) {
 }
 
 function handleDragEndSettings(e) {
-    var cols = document.querySelectorAll('#tbSettingsHeaders_head th[draggable="true"]');
-    this.style.opacity = '1';
+    var cols = document.querySelectorAll('#tbSettingsHeaders_head th > span[draggable="true"]');
+    this.parentNode.style.opacity = '1';
 
     [].forEach.call(cols, function (col) {
         col.classList.remove('over');
@@ -2257,8 +2355,8 @@ function handleDragEndSettings(e) {
 }
 
 function handleDragStartSettings_dfot(e) {
-    selectedForChangeOrder = Number(this.innerHTML)-1;
-    this.style.opacity = '0.6';
+    selectedForChangeOrder = Number(this.parentNode.dataset.odr)-1;
+    this.parentNode.style.opacity = '0.6';
 }
 
 function handleDropSettings_dfot(e) {
@@ -2266,7 +2364,7 @@ function handleDropSettings_dfot(e) {
         e.stopPropagation(); // stops the browser from redirecting.
     }
 
-    var target = Number(this.innerHTML)-1;
+    var target = Number(this.parentNode.dataset.odr)-1;
     if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
         var reoderedArr = [];
         for (var i in tableHeaders) {
@@ -2300,11 +2398,11 @@ function handleDropSettings_dfot(e) {
 }
 
 function handleDragEndSettings_dfot(e) {
-    var cols = document.querySelectorAll('#tbSettingsData_body button[draggable="true"]');
-    this.style.opacity = '1';
+    var cols = document.querySelectorAll('#tbSettingsData_body button > span[draggable="true"]');
+    this.parentNode.style.opacity = '1';
 
     [].forEach.call(cols, function (col) {
-        col.classList.remove('over');
+        col.parentNode.classList.remove('over');
     });
 }
 
@@ -2313,7 +2411,7 @@ function handleDropSettings_rows(e) {
         e.stopPropagation(); // stops the browser from redirecting.
     }
 
-    var target = this.dataset.order;
+    var target = this.parentNode.dataset.order;
     if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
         var reoderedArr = [];
         for (var i in settingsTableData) {
@@ -2346,8 +2444,8 @@ function handleDropSettings_rows(e) {
 }
 
 function handleDragEndSettings_rows(e) {
-    var cols = document.querySelectorAll('#tbSettingsData_body td[draggable="true"]');
-    this.style.opacity = '1';
+    var cols = document.querySelectorAll('#tbSettingsData_body td > span[draggable="true"]');
+    this.parentNode.style.opacity = '1';
 
     [].forEach.call(cols, function (col) {
         col.classList.remove('over');
@@ -2523,7 +2621,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
     var add_id_name = (idx == -1 ? '_settings_ddl' : (settingsDDLs[idx].type != 'referencing' ? '_settings_items_ddl' : '_settings_references')),
         add_table_name = (idx == -1 ? 'ddl' : (settingsDDLs[idx].type != 'referencing' ? 'ddl_items' : 'cdtns')),
         func_name = (idx == -1 ? 'showInlineEdit_SDDL' : (settingsDDLs[idx].type != 'referencing' ? 'showInlineEdit_SDDL' : 'showInlineEdit_REFDDL')),
-        edited_fields = (idx == -1 ? ['name','type','notes'] : (settingsDDLs[idx].type != 'referencing' ? ['option','notes'] : ['use','ref_tb','ref_tb_field','sampleing','logic_opr','comp_ref_field','compare','comp_tar_field','notes']));
+        edited_fields = (idx == -1 ? ['name','type','notes'] : (settingsDDLs[idx].type != 'referencing' ? ['option','notes'] : ['use','ref_tb','ref_tb_field','sampleing','logic_opr','comp_ref_field','compare','compare_ref_val','comp_tar_field','notes']));
 
     for (var i = 0; i < data.length; i++) {
         tableData += "<tr id='row_" + i + "_settings_ddl' class='settings_ddl_rows'>";
@@ -2554,11 +2652,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tableData += "</tr>";
 
         tbHiddenData += "<tr style='visibility: hidden;'>";
-        if (i == 0) {
-            tbHiddenData += '<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\">Add</a></td>';
-        } else {
-            tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
-        }
+        tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for (key in headers) {
             d_key = headers[key].field;
             if (d_key != 'items') {
@@ -2581,7 +2675,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
         tbHiddenData += "</tr>";
     }
 
-    tbAddRow += "<tr style='height: 37px;'><td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\" onclick=\"saveSettingsDDLRow('"+add_table_name+"')\">Add</a></td>";
+    tbAddRow += "<tr style='height: 37px;'><td></td>";
     for (key in headers) {
         d_key = headers[key].field;
         if (d_key != 'items') {
@@ -2604,16 +2698,15 @@ function showSettingsDDLDataTable(headers, data, idx) {
         if (settingsDDLs[idx].type == 'referencing') {
             $('._settings_selected_DDL_reference').show();
             $('._settings_selected_DDL_regular').hide();
-            //$('#tbSettingsDDL_References_addrow').html(tbAddRow+tbHiddenData);
             $('#tbSettingsDDL_References_headers').html(tbHiddenData);
             $('#tbSettingsDDL_References_data').html(tableData+tbAddRow);
         } else {
             $('._settings_selected_DDL_regular').show();
             $('._settings_selected_DDL_reference').hide();
-            //$('#tbSettingsDDL_Items_addrow').html(tbAddRow+tbHiddenData);
             $('#tbSettingsDDL_Items_headers').html(tbHiddenData);
             $('#tbSettingsDDL_Items_data').html(tableData+tbAddRow);
         }
+        ddlTabShowOptions();
     } else {
         //$('#tbSettingsDDL_addrow').html(tbAddRow+tbHiddenData);
         $('#tbSettingsDDL_headers').html(tbHiddenData);
@@ -2638,10 +2731,10 @@ function showInlineEdit_REFDDL(id, isUpdate) {
         options = '<option>Distinctive</option><option>Full</option>';
     } else
     if (key == 'logic_opr') {
-        options = '<option>AND</option><option>OR</option>';
+        options = '<option></option><option>AND</option><option>OR</option>';
     } else
     if (key == 'compare') {
-        options = '<option><</option><option>=</option><option>></option>';
+        options = '<option></option><option><</option><option>=</option><option>></option>';
     }
 
     if (key == 'use' || key == 'sampleing' || key == 'logic_opr' || key == 'compare') {
@@ -2682,7 +2775,8 @@ function showInlineEdit_REFDDL(id, isUpdate) {
             'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            '<option></option>';
         for (var i in tablesDropDown) {
             if (tablesDropDown[i].db_tb == table_name) {
                 for (var j in tablesDropDown[i].items) {
@@ -2693,6 +2787,36 @@ function showInlineEdit_REFDDL(id, isUpdate) {
         }
         html += '</select>';
     } else
+    if (key == 'compare_ref_val') {
+        var table_name = (idx !== undefined ? settingsDDLs[settingsDDL_selectedIndex].referencing[idx]['ref_tb'] : settingsDDL_REFObj.ref_tb);
+        var table_field = (idx !== undefined ? settingsDDLs[settingsDDL_selectedIndex].referencing[idx]['comp_ref_field'] : settingsDDL_REFObj.comp_ref_field);
+
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            '<option></option>';
+
+        console.log(table_name, table_field);
+        if (table_name && table_field) {
+            var resp = $.ajax({
+                url: baseHttpUrl + '/getDistinctData?table=' + table_name + '&field=' + table_field,
+                method: 'get',
+                async: false
+            }).responseText;
+            resp = JSON.parse(resp);
+            for (var i in resp) {
+                html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+            }
+        }
+
+        html += '</select>';
+    }  else
     if (key == 'comp_tar_field') {
         html = '<select ' +
             'id="'+id+'_inp" ' +
@@ -2702,7 +2826,8 @@ function showInlineEdit_REFDDL(id, isUpdate) {
             'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             'onchange="' + (isUpdate ? 'updateSettingsDDL(\''+id+'_inp\')' : 'addSettingsDDL(\''+id+'_inp\')') + '" ' +
-            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            '<option></option>';
         for (var i in tablesDropDown) {
             if (tablesDropDown[i].id == settingsDDL_TableMeta.id) {
                 for (var j in tablesDropDown[i].items) {
@@ -2920,6 +3045,27 @@ function saveSettingsDDLRow(tableName) {
             alert("Server error");
         }
     });
+}
+
+function ddlTabShowLists() {
+    $('#ddl_tab_lists').show();
+    $('#ddl_tab_options').hide();
+    $('#ddl_tab_refs').hide();
+    $('#ddl_tab_li_lists').addClass('active');
+    $('#ddl_tab_li_options').removeClass('active');
+}
+
+function ddlTabShowOptions() {
+    if (settingsDDL_selectedIndex > -1 && settingsDDLs[settingsDDL_selectedIndex].type == 'referencing') {
+        $('#ddl_tab_refs').show();
+        $('#ddl_tab_options').hide();
+    } else {
+        $('#ddl_tab_options').show();
+        $('#ddl_tab_refs').hide();
+    }
+    $('#ddl_tab_lists').hide();
+    $('#ddl_tab_li_lists').removeClass('active');
+    $('#ddl_tab_li_options').addClass('active');
 }
 
 
@@ -3550,7 +3696,6 @@ function import_del_row(idx) {
             $('#import_columns_deleted_'+idx).val('del');
             if ($('#import_type_import').val() == 'ref' && $importReferences) {
                 var del_field = $('#import_columns_'+idx+'_field_val').val();
-                console.log(del_field, $importReferences);
                 for (var i in $importReferences) {
                     for (var j in $importReferences[i].items) {
                         if (j == del_field) {
@@ -3863,7 +4008,6 @@ function jsTreeBuild($tab) {
                     "items": function ($node) {
                         var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
                         var menu = {};
-                        console.log($node);
                         if (type == 'folder') {
                             if ($tab == 'private') {
                                 menu.add_table = {
@@ -4360,13 +4504,13 @@ function searchInTab($tab) {
 
 function changeDataTableRowHeight(sel) {
     if ($(sel).val() == 'Small') {
-        $('.table>tbody>tr>td').css('line-height', '0.7em');
+        $('.table>tbody>tr>td .td_wrap').css('height', '30px');
     } else
     if ($(sel).val() == 'Medium') {
-        $('.table>tbody>tr>td').css('line-height', '1em');
+        $('.table>tbody>tr>td .td_wrap').css('height', '40px');
     } else
     if ($(sel).val() == 'Big') {
-        $('.table>tbody>tr>td').css('line-height', '1.3em');
+        $('.table>tbody>tr>td .td_wrap').css('height', '60px');
     }
 }
 

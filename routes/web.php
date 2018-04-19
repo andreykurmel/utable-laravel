@@ -392,6 +392,7 @@ Route::get('/api/deleteRightsDatas', 'TableController@deleteRightsDatas')->name(
 Route::get('/api/toggleAllrights', 'TableController@toggleAllrights')->name('toggleAllrights');
 Route::get('/api/ajaxSearchUser', 'TableController@ajaxSearchUser')->name('ajaxSearchUser');
 Route::get('/api/getFavoritesForTable', 'TableController@getFavoritesForTable')->name('getFavoritesForTable');
+Route::get('/api/getDistinctData', 'TableController@getDistinctData')->name('getDistinctData');
 Route::get('/api/changeOrder', 'TableController@changeOrder')->name('changeOrder');
 Route::get('/api/changeSettingsRowOrder', 'TableController@changeSettingsRowOrder')->name('changeSettingsRowOrder');
 Route::get('/api/settingsForCreateMySQL', 'AppController@showSettingsForCreateTableMySQL')->name('showSettingsForCreateTableMySQL');

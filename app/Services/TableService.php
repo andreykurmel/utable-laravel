@@ -281,15 +281,7 @@ class TableService {
                     if (empty($respDDLs[$row->field])) $respDDLs[$row->field] = [];
                     if (empty($respDDLs[$row->field]['req_obj'])) $respDDLs[$row->field]['req_obj'] = [];
 
-                    array_push($respDDLs[$row->field]['req_obj'], [
-                        'distinct' => $row->sampleing,
-                        'ref_tb' => $row->ref_tb,
-                        'ref_field' => $row->ref_tb_field,
-                        'operator' => $row->logic_opr,
-                        'comp_ref_field' => $row->comp_ref_field,
-                        'compare' => $row->compare,
-                        'comp_tar_field' => $row->comp_tar_field
-                    ]);
+                    array_push($respDDLs[$row->field]['req_obj'], (array)$row);
 
                 } else {//not needs request to the server
                     $options = $options->select($row->ref_tb.'.'.$row->ref_tb_field)->get();

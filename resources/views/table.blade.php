@@ -46,7 +46,7 @@
                                 <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
-                            Register and Login to add and manage your own collection of data tables.
+                            <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
                         @endif
                     </div>
                     <div id="tablebar_favorite_wrapper" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
@@ -59,7 +59,7 @@
                                 <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
-                            Register and Login to add and manage your own collection of data tables.
+                            <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
                         @endif
                     </div>
                 </div>
@@ -142,7 +142,7 @@
 
 
             <div id="tables_btns" style="position: absolute ;top: 0; left: 750px; z-index: 500;">
-                <select class="listview_btns form-control" style="width: 100px;display: inline-block;" onchange="changeDataTableRowHeight(this)">
+                <select id="hsgbfa" class="listview_btns form-control" style="width: 100px;display: inline-block;{{Auth::guest() ? 'margin-top:11px;' : ''}}" onchange="changeDataTableRowHeight(this)">
                     <option>Small</option>
                     <option selected>Medium</option>
                     <option>Big</option>
@@ -328,13 +328,13 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
                                 <div class="dataTables_info" role="status" aria-live="polite" style="padding: 0 10px;">
                                     Showing <span id="showing_from_span">0</span>
                                     to <span id="showing_to_span">0</span>
                                     of <span id="showing_all_span">0</span> entries</div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
                                 <div class="dataTables_paginate paging_full_numbers" style="padding: 0;">
                                     <a class="paginate_button first" onclick="changePage(1)">First
                                     </a><a class="paginate_button previous" onclick="changePage(selectedPage>1 ? selectedPage : 1)">Previous
@@ -392,7 +392,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;left: 0;z-index: 300;border-radius: 3px;">
                                 <div class="dataTables_info" role="status" aria-live="polite" style="padding: 0 10px;">
                                     Showing
                                     @if(Auth::user())
@@ -405,7 +405,7 @@
                                     entries
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;right: 0;z-index: 300;border-radius: 3px;">
                                 <div class="dataTables_paginate paging_full_numbers" style="padding: 0;">
                                     <a class="paginate_button first" onclick="changeFavoritePage(1)">First
                                     </a><a class="paginate_button previous" onclick="changeFavoritePage(selectedFavoritePage>1 ? selectedFavoritePage : 1)">Previous
@@ -489,12 +489,14 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_footer" style="position: absolute;bottom: 0px;right: 0;z-index: 100;border-radius: 10px;">
-                                <div class="dataTables_info" role="status" aria-live="polite" style="position:absolute;">
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;felt: 0;z-index: 100;border-radius: 3px;">
+                                <div class="dataTables_info" role="status" aria-live="polite" style="padding: 0 10px;">
                                     Showing <span id="showing_settings_from_span"></span>
                                     to <span id="showing_settings_to_span"></span>
                                     of <span id="showing_settings_all_span"></span> entries</div>
-                                <div class="dataTables_paginate paging_full_numbers">
+                            </div>
+                            <div class="dataTables_footer _tables_pagination" style="position: absolute;bottom: 0;right: 0;z-index: 100;border-radius: 3px;">
+                                <div class="dataTables_paginate paging_full_numbers" style="padding: 0;">
                                     <a class="paginate_button first" onclick="changeSettingsPage(1)">First
                                     </a><a class="paginate_button previous" onclick="changeSettingsPage(settingsPage+1>1 ? settingsPage+1 : 1)">Previous
                                     </a><span id="paginate_settings_btns_span">
@@ -506,8 +508,15 @@
 
                         <div id="div_settings_ddl" class="dataTables_wrapper no-footer" style="position: absolute; bottom: 10px; top: 10px; right: 10px; left: 40px;display: none;">
 
-                            <div style="position:absolute; font-size: 1.2em; left: 10px; width: calc(50% - 20px); top: 15px;">Dropdown Lists</div>
-                            <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; left: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <!-- Tabs -->
+                            <div class="standard-tabs" style="position: absolute; left: 15px; top: 17px; width: calc(100% - 30px);">
+                                <ul class="tabs" style="background-color: #FFF; padding: 5px;">
+                                    <li class="active" id="ddl_tab_li_lists" style="float: left;"><a href="javascript:void(0)" onclick="ddlTabShowLists()" class='with-med-padding'>Lists</a></li>
+                                    <li id="ddl_tab_li_options" style="float: left;"><a href="javascript:void(0)" onclick="ddlTabShowOptions()" class='with-med-padding'>Options <span id="settings_selected_DDL_name"></span></a></li>
+                                </ul>
+                            </div>
+                            <!-- content -->
+                            <div id="ddl_tab_lists" class="dataTables_body" style="overflow: auto; position: absolute; top: 42px; bottom: 32px; left: 10px; right: 10px; background-color: #fff;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -539,9 +548,7 @@
                                     </table>
                                 </div>
                             </div>
-
-                            <div style="position:absolute; font-size: 1.2em; right: 10px; width: calc(50% - 20px); top: 15px;">Options of Current Selected Dropdown List <span id="settings_selected_DDL_name"></span></div>
-                            <div class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div id="ddl_tab_options" class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -573,7 +580,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff;">
+                            <div id="ddl_tab_refs" class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
