@@ -80,13 +80,6 @@ html, body {
     white-space:nowrap;
 }
 
-.table_body_viewport > .mCSB_scrollTools {
-    position: fixed;
-    top: 200px;
-    right: 26px;
-    bottom: 80px;
-}
-
 .div-print {
     display: none;
 }

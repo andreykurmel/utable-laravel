@@ -847,7 +847,7 @@ class TableController extends Controller
 
                     foreach ($columns as $col) {
                         if (!empty($col['col']) && !in_array($col['field'], $this->system_fields)) {
-                            $insert[ $col['field'] ] = !empty($row[ $col['field'] ]) ? $row[ $col['field'] ] : null;
+                            $insert[ $col['field'] ] = !empty($row[ $columns[ $col['col'] ]['field'] ]) ? $row[ $columns[ $col['col'] ]['field'] ] : null;
                         }
                     }
 

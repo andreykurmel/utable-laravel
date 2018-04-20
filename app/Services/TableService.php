@@ -277,7 +277,7 @@ class TableService {
                     $options->distinct();
                 }
                 //reference ddl which needs request to the server
-                if ($row->comp_ref_field && $row->comp_tar_field) {
+                if ($row->comp_ref_field) {
                     if (empty($respDDLs[$row->field])) $respDDLs[$row->field] = [];
                     if (empty($respDDLs[$row->field]['req_obj'])) $respDDLs[$row->field]['req_obj'] = [];
 

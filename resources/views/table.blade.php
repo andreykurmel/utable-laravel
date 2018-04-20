@@ -9,6 +9,7 @@
         <!-- Prompt IE 6 users to install Chrome Frame -->
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
+        <a id="showTableLibBtn" class="open-menu" onclick="showHideTableLib()" style="left: 0;"><span></span></a>
         <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:absolute;top: 13px;bottom: 0;left: -1px;width: 260px;z-index: 500;">
             <!-- This wrapper is used by several responsive layouts -->
             <div class="menu-content">
@@ -16,7 +17,6 @@
 
                 <header style="text-align: right;">
                     Table Library
-                    <a id="showTableLibBtn" class="open-menu" onclick="showHideTableLib()"><span></span></a>
                 </header>
 
                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0; background: #f1f3f4; padding-top: 20px">
@@ -89,7 +89,11 @@
                     </div>
                 @endif
                 <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
-                    <div class="dataTables_filter" style="padding: 0;"><label>Search by Keyword:<input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Within listed entries"></label></div>
+                    <button class="btn btn-default" onclick="$('#searchKeywordDiv').toggle();"><i class="fa fa-search"></i></button>
+                    <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 3px;width: 220px;border: 1px solid #ccc;background-color: #fff;display: none;">
+                        <input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Find in view">
+                        <a class="btn" onclick="$('#searchKeywordInp').val('');searchKeywordChanged();">&times;</a>
+                    </div>
                 </div>
                 <div class="showhidemenu" style='margin-right: 10px;display: inline-block;width: 65px;position: relative;top: 2px;'>
                     <span class="select blue-gradient glossy replacement" tabindex="0">
@@ -100,6 +104,8 @@
                             <span class="entry-elem entry20 {{ $selectedEntries == 20 ? 'selected' : '' }}" onclick="changeEntries(20)">20</span>
                             <span class="entry-elem entry50 {{ $selectedEntries == 50 ? 'selected' : '' }}" onclick="changeEntries(50)">50</span>
                             <span class="entry-elem entry100 {{ $selectedEntries == 100 ? 'selected' : '' }}" onclick="changeEntries(100)">100</span>
+                            <span class="entry-elem entry200 {{ $selectedEntries == 200 ? 'selected' : '' }}" onclick="changeEntries(200)">200</span>
+                            <span class="entry-elem entry500 {{ $selectedEntries == 500 ? 'selected' : '' }}" onclick="changeEntries(500)">500</span>
                             <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
                         </span>
                     </span>
@@ -141,32 +147,11 @@
             </div>
 
 
-            <div id="tables_btns" style="position: absolute ;top: 0; left: 750px; z-index: 500;">
-                <select id="hsgbfa" class="listview_btns form-control" style="width: 100px;display: inline-block;{{Auth::guest() ? 'margin-top:11px;' : ''}}" onchange="changeDataTableRowHeight(this)">
-                    <option>Small</option>
-                    <option selected>Medium</option>
-                    <option>Big</option>
-                </select>
-                @if(Auth::user())
-                    <div class="listview_btns" style="display: inline-block">
-                        <a style="margin-top:11px" href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
-                        <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
-                    </div>
-                @endif
-                <div id="favorite_btns" style="display: none;">
-                    <button class="button blue-gradient glossy" style="margin-top: 9px;margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
-                    <input id="favourite_copy_with_headers" type="checkbox">
-                    <label for="favourite_copy_with_headers">Headers</label>
-                    @if($tableMeta && $tableMeta->source == 'remote')
-                        <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
-                    @endif
-                </div>
-            </div>
             <!-- Wrapper, set tabs style class here -->
             <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 20px; left: 270px; right: 0; bottom: 0;">
 
                 <!-- Tabs -->
-                <ul class="tabs" style="width: 450px;">
+                <ul class="tabs" style="width: fit-content;">
                     <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                     @if($tableName)
                         <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
@@ -180,6 +165,27 @@
                     @if($owner && $tableName)
                     <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                     @endif
+                    <div id="tables_btns" style="display: inline-block;margin-left: 15px;">
+                        <select class="listview_btns form-control" style="width: 58px;display: inline-block;padding: 4px;" onchange="changeDataTableRowHeight(this)">
+                            <option>Small</option>
+                            <option selected>Medium</option>
+                            <option>Big</option>
+                        </select>
+                        @if(Auth::user())
+                            <div class="listview_btns" style="display: inline-block">
+                                <a href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
+                                <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
+                            </div>
+                        @endif
+                        <div id="favorite_btns" style="display: none;">
+                            <button class="button blue-gradient glossy" style="margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
+                            <input id="favourite_copy_with_headers" type="checkbox">
+                            <label for="favourite_copy_with_headers">Headers</label>
+                            @if($tableMeta && $tableMeta->source == 'remote')
+                                <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
+                            @endif
+                        </div>
+                    </div>
                 </ul>
 
                 <!-- Content -->
@@ -473,7 +479,7 @@
                                     <tbody id="tbSettingsHeaders_body">
                                     </tbody>
                                 </table>
-                                <div style="top: 32px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                <div  id="div_settings_display_body" style="top: 32px; position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
                                     <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
                                         <thead id="tbSettingsData_head">
                                         <tr>
@@ -725,7 +731,7 @@
                     <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 10px; top: 10px; left: 10px; right: 10px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
                             <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
-                                <div class="container" style="position: relative;">
+                                <div class="fluid-container" style="position: relative;">
                                     <input id="import_form_save_btn" type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
                                 </div>
                                 <input type="hidden" value="<?= csrf_token() ?>" name="_token">
@@ -736,7 +742,7 @@
                                 <input type="hidden" id="import_target_db_should_del" name="import_target_db_should_del" value="0">
                                 <input type="hidden" id="import_tb_rfcn" name="import_tb_rfcn" value="">
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 0;bottom: 0;padding-top: 10px;">
-                                    <div class="standard-tabs container">
+                                    <div class="standard-tabs fluid-container">
                                         <ul class="tabs">
                                             <li id="import_li_csv_tab" onclick="import_show_csv_tab()">
                                                 <a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
@@ -750,13 +756,13 @@
                                             </li>
                                         </ul>
                                     </div>
-                                    <div id="import_csv_tab" class="tab-content container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
+                                    <div id="import_csv_tab" class="tab-content fluid-container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                         <div class="row form-group" style="padding: 0 15px;">
                                             <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
-                                                <option {{ ($tableMeta->source != 'ref' ? 'selected' : '') }} value="scratch">From Scratch</option>
-                                                <option value="csv">CSV Import</option>
-                                                <option value="mysql">MySQL Import</option>
-                                                <option value="remote">Remote</option>
+                                                <option {{ ($tableMeta->source == 'scratch' ? 'selected' : '') }} value="scratch">From Scratch</option>
+                                                <option {{ ($tableMeta->source == 'csv' ? 'selected' : '') }} value="csv">CSV Import</option>
+                                                <option {{ ($tableMeta->source == 'mysql' ? 'selected' : '') }} value="mysql">MySQL Import</option>
+                                                <option {{ ($tableMeta->source == 'remote' ? 'selected' : '') }} value="remote">Remote</option>
                                                 <option {{ ($tableMeta->source == 'ref' ? 'selected' : '') }} value="ref">Referencing</option>
                                             </select>
                                             <select class="form-control" id="import_action_type" onchange="changeImportAction(this)" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
@@ -765,7 +771,8 @@
                                                 <option value="/modifyTable">Append</option>
                                             </select>
                                             <label style="padding: 10px;float: left;">Notes:</label>
-                                            <input type="text" id="import_method_notes" class="form-control" style="width: 30%;"onchange="import_method_notes_changed()">
+                                            <label style="padding: 10px;float: left;">some notes will be here in the future...</label>
+                                            <!--<input type="text" id="import_method_notes" class="form-control" style="width: 30%;"onchange="import_method_notes_changed()">-->
                                         </div>
                                         <div class="form-group js-import_csv_style" style="width: 67%;display: flex;align-items: center; justify-content:  space-between;">
                                             <div style="width: calc(50% - 25px); display: inline-block;">
@@ -871,7 +878,7 @@
                                         <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
                                     </div>
 
-                                    <div id="import_col_tab" class="tab-content container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
+                                    <div id="import_col_tab" class="tab-content fluid-container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
                                         <input type="hidden" id="import_row_count" value="{{ count($importHeaders) }}">
                                         <input type="hidden" id="import_ref_row_count" value="{{ count($importReferences) }}">
                                         <div class="row">
@@ -980,7 +987,7 @@
                                                         <tr>
                                                             <th>#</th>
                                                             <th>Reference Table</th>
-                                                            <th>Actions</th>
+                                                            <th style="min-width: 100px;">Actions</th>
                                                         </tr>
                                                         </thead>
 
@@ -1060,11 +1067,11 @@
 
 
         <!-- Filters -->
-        <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 13px;bottom: 0;right: -1px;width: 0;z-index: 500;">
+        <a class="open-menu menu-hidden" id="showHideMenuBtn" onclick="showHideMenu()" style="right: 0;"><span></span></a>
+        <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 13px;bottom: 0;right: 0;width: 0;z-index: 500;overflow: hidden;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
                     Filter Results
-                    <a class="open-menu menu-hidden" id="showHideMenuBtn" onclick="showHideMenu()"><span></span></a>
                 </header>
                 <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
                 </dl>
@@ -1132,8 +1139,8 @@
         </div>
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: fixed;top: 94px;bottom: 10px;z-index: 1500;right: 420px;display: none;" id="showHideColumnsList">
-            <div class="message tooltip  tracking" style="position: fixed; top: 0; opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
+        <div style="position: absolute;top: 44px;bottom: 10px;z-index: 1500;right: 420px;display: none;" id="showHideColumnsList">
+            <div class="message tooltip  tracking" style="opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
                         @foreach($headers as $hdr)

@@ -116,10 +116,12 @@ class AppController extends Controller
             $tablesDropDown = $tablesDropDown->groupBy('tb.id')->select('tb.*')->get();
             //get fields for each tables
             foreach ($tablesDropDown as &$tb) {
+                $refTbName = DB::connection('mysql_sys')->table('tb')->where('id', '=', $tb->id)->first();
+                $refTbName = DB::connection('mysql_sys')->table('tb')->where('id', '=', $tb->id)->first();
                 $tb_meta = DB::connection('mysql_schema')
                     ->table('COLUMNS')
                     ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
-                    ->where('TABLE_NAME', '=', $tableName)
+                    ->where('TABLE_NAME', '=', $refTbName->db_tb)
                     ->get();
 
                 $tb->conn_notes = '';

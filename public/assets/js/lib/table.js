@@ -65,6 +65,7 @@ $(document).ready(function () {
                 $('.navbar').show();
                 $('.div-screen').css('top', '50px');
             }
+            $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
         }
         if (e.keyCode == 39) {
             if (e.ctrlKey) {//ctrl+right arrow (show/hide filters)
@@ -87,7 +88,7 @@ $(document).ready(function () {
     if (localStorage.getItem('filter_hide') == 0) {
         $('#showHideMenuBtn').removeClass('menu-hidden');
         $('#showHideMenuBody').css('width', '260px');
-        $(".table_body_viewport > .mCSB_scrollTools").css("right", '276px');
+        $(".table_body_viewport > .mCSB_scrollTools").css("right", '262px');
         $(".js-filterMenuHide").css("right", '270px');
     }
     //hide menutree
@@ -449,9 +450,10 @@ function showDataTable(headers, data) {
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
-            '<span draggable="true">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</span>' +
-            '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
-            '<i style="display: block; height:1px; '+(headers[$hdr].dfot_wth > 0 ? 'width: '+(headers[$hdr].dfot_wth-20)+'px;' : '')+'"></i>' +
+                '<span draggable="true" style="display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-20)+'px;' : '')+'">' +
+                    ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+                '</span>' +
+                '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
             '</th>';
 
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
@@ -472,7 +474,9 @@ function showDataTable(headers, data) {
                 'style="position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
                 (headers[$hdr].unit_ddl ? 'onclick="showInlineEdit(\'' + headers[key].field + $hdr + headers[key].input_type + '_header\', \'settings\')"' : '') +
                 '>' +
-                headers[$hdr].unit +
+                '<span draggable="true" style="display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-20)+'px;' : '')+'">' +
+                    headers[$hdr].unit +
+                '</span>' +
                 '</th>';
         }
     }
@@ -498,6 +502,8 @@ function showDataTable(headers, data) {
         $('#tbHeaders').css('top', '0');
         $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
     }
+
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset()+'px');
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -532,7 +538,7 @@ function showDataTable(headers, data) {
         });
 
         //add resize listeners for table headers
-        cols = document.querySelectorAll('#tbHeaders_header th div');
+        cols = document.querySelectorAll('#tbHeaders_header th > div');
         [].forEach.call(cols, function(col) {
             col.addEventListener('mousedown', handleStartResize, false);
         });
@@ -545,7 +551,7 @@ var startX = 0, startWidth = 0, startResizeElem = false;
 function handleStartResize(e) {
     startX = 0;
     startWidth = this.parentNode.clientWidth;
-    startResizeElem = this.nextSibling;
+    startResizeElem = this;
     this.parentNode.style.minWidth = "0";
     this.parentNode.style.maxWidth = "1000px";
 }
@@ -553,9 +559,17 @@ function handleStartResize(e) {
 function handleElemResize(e) {
     if (startResizeElem) {
         if (startX) {
+            var fieldKey = startResizeElem.parentNode.dataset.key;
             startWidth += e.x - startX;
             startX = e.x;
-            startResizeElem.style.width = (startWidth-20)+'px';
+            //resize header
+            $('#tbAddRow th[data-key="'+fieldKey+'"] span').css('width', (startWidth-27)+'px');
+            $('#tbHeaders th[data-key="'+fieldKey+'"] span').css('width', (startWidth-27)+'px');
+            $('#tbData th[data-key="'+fieldKey+'"] span').css('width', (startWidth-27)+'px');
+            //resize columns
+            $('#tbAddRow td[data-key="'+fieldKey+'"] .td_wrap').css('width', (startWidth-14)+'px');
+            $('#tbHeaders td[data-key="'+fieldKey+'"] .td_wrap').css('width', (startWidth-14)+'px');
+            $('#tbData td[data-key="'+fieldKey+'"] .td_wrap').css('width', (startWidth-14)+'px');
         } else {
             startX = e.x;
         }
@@ -728,7 +742,7 @@ function showHideMenu() {
         $('#showHideMenuBody').css('width', '260px');
     }
 
-    var right_scr = filterMenuHide ? "26px" : "276px";
+    var right_scr = filterMenuHide ? "0" : "262px";
     var right = filterMenuHide ? "10px" : "270px";
     $(".table_body_viewport > .mCSB_scrollTools").css("right", right_scr);
     $(".js-filterMenuHide").css("right", right);
@@ -957,6 +971,7 @@ function showList() {
     $("#favorite_btns").hide();
     $('.showhidemenu').show();
     selectedForChangeOrder = -1;
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
 }
 
 function showFavorite() {
@@ -974,6 +989,7 @@ function showFavorite() {
     $("#favorite_btns").show();
     $('.showhidemenu').show();
     changeFavoritePage(1);
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
 }
 
 function showImport() {
@@ -1010,6 +1026,7 @@ function showSettings() {
     $("#favorite_btns").hide();
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
 }
 
 function detailsShowMap() {
@@ -1752,7 +1769,7 @@ function showFavoriteDataTable(headers, data) {
         if (i === 0) { //first row with checkboxes
             tbCheckRow += "<tr>";
             tbCheckRow += '<td></td> <td></td> ';
-            tbCheckRow += '<td style="padding: 4px;">' +
+            tbCheckRow += '<td style="padding: 4px;min-width: 70px;">' +
                 'R:<input type="checkbox" id="favCheckAllRow" onchange="favCheckAll(\'row\')"> ' +
                 'H:<input type="checkbox" id="favCheckAllCol" onchange="favCheckAll(\'col\')">' +
                 '</td>';
@@ -1783,7 +1800,7 @@ function showFavoriteDataTable(headers, data) {
             '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' +
             '</a></td>';
         //checkbox for selecting
-        tableData += '<td style="text-align: center;">' +
+        tableData += '<td style="text-align: center;min-width: 70px;">' +
             '<input type="checkbox" class="js-favoriteRowsChecked" data-idx="' + i + '" onchange="favTestCheckAll(\'row\')">' +
             '</td>';
         for(key in headers) {
@@ -1804,7 +1821,7 @@ function showFavoriteDataTable(headers, data) {
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1+Number(selectedFavoritePage*lselectedEntries)) +'</b></td>';
         //second column ("star")
         tbHiddenData += '<td>' + '<i class="fa fa-star" style="font-size: 1.5em;color: #FD0;"></i>' + '</td>';
-        tbHiddenData += '<td></td>';
+        tbHiddenData += '<td style="min-width: 70px;"></td>';
         for(key in headers) {
             d_key = headers[key].field;
             if ($.inArray(d_key, arrAddFieldsInData) == -1) {
@@ -1823,7 +1840,7 @@ function showFavoriteDataTable(headers, data) {
     //first header row
     tbDataHeaders += "<tr><th class='sorting nowrap' rowspan='2'><b>#</b></th>";
     tbDataHeaders += "<th class='sorting nowrap' rowspan='2'><b>Favorite</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap' rowspan='2'><b>Copy</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap' rowspan='2' style='min-width: 70px;'><b>Copy</b></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th class="sorting nowrap" ' +
             (!headers[$hdr].unit ? 'rowspan="2" ' : '') +
@@ -3629,7 +3646,7 @@ function import_add_ref_table_row() {
 
 function show_import_ref_columns(idx) {
     var len = Number( $('#import_table_body > tr').length ), html = '', fld, found_field;
-
+console.log(tablesDropDown);
     for (var i = 0; i< len; i++) {
         found_field = false;
         fld = $('#import_columns_'+i+'_field_val').val();
@@ -3746,7 +3763,7 @@ function import_show_col_tab() {
 }
 
 function changeImportStyle(sel) {
-    var style = $(sel).val() || (table_meta.source == 'ref' ? 'ref' : 'scratch'),
+    var style = $(sel).val() || (table_meta.source ? table_meta.source : 'scratch'),
         action = $('#import_action_type').val();
     if (style == 'scratch') {
         $('.js-import_mysql_style').hide();
@@ -4282,11 +4299,11 @@ function jsTreeBuild($tab) {
         var button = evt.which || evt.button;
         if( button != 1 && ( typeof button != "undefined")) return false;
         //
+        var target = data.instance.get_node(data.node);
+        var target_type = target.data ? target.data.type : target.li_attr['data-type'];
+        var target_id = target.data ? target.data.menu_id : target.li_attr['data-menu_id'];
 
         if (sidebarPrevSelected) {
-            var target = data.instance.get_node(data.node);
-            var target_type = target.data ? target.data.type : target.li_attr['data-type'];
-            var target_id = target.data ? target.data.menu_id : target.li_attr['data-menu_id'];
 
             if (target_type != 'folder') {
                 swal('Error', 'You should select folder', 'error');
@@ -4321,9 +4338,13 @@ function jsTreeBuild($tab) {
                 }
             }
         } else {
-            var node = data.instance.get_node(data.node);
-            var path = node.data ? node.data.href : node.li_attr['data-href'];
-            location.href = path ? path : '/data/';
+            if (target_type == 'folder') {
+                $('#tablebar_'+$tab+'_div').jstree().toggle_node(target);
+            } else {
+                var node = data.instance.get_node(data.node);
+                var path = node.data ? node.data.href : node.li_attr['data-href'];
+                location.href = path ? path : '/data/';
+            }
         }
     })
     .on('ready.jstree', function() {
@@ -4512,6 +4533,18 @@ function changeDataTableRowHeight(sel) {
     if ($(sel).val() == 'Big') {
         $('.table>tbody>tr>td .td_wrap').css('height', '60px');
     }
+}
+
+function getGlobalOffset() {
+    var id = $('#li_list_view').hasClass('active') ? 'divTbData' : ($('#li_favorite_view').hasClass('active') ? 'tbFavoriteDataDiv' : 'div_settings_display_body');
+
+    var elem = document.getElementById(id), offset = 0;
+    while (elem) {
+        offset += elem.offsetTop ? elem.offsetTop : 0;
+        elem = elem.parentNode;
+    }
+    console.log(offset);
+    return offset;
 }
 
 //auto logout after 30min idle

@@ -29,10 +29,9 @@
             padding: 10px;
             width: 40px;
             cursor: pointer;
-            position: fixed;
-            top: 63px;
-            right: 0;
-            z-index: 500;
+            position: absolute;
+            top: 13px;
+            z-index: 750;
         }
         .open-menu > span {
             display: block;
@@ -193,6 +192,24 @@
         .jstree-contextmenu {
             position: absolute;
             z-index: 1000;
+        }
+
+        #tbFavoriteCheckRow_body > tr {
+            height: 36px;
+            text-align: center;
+        }
+        #tbFavoriteCheckRow_body > tr > td {
+            overflow: hidden;
+        }
+
+        ._tables_pagination {
+            display: none;
+        }
+
+        .table_body_viewport > .mCSB_scrollTools {
+            position: fixed;
+            bottom: 0;
+            right: 0;
         }
     </style>
 
@@ -448,7 +465,6 @@
 
 {!! HTML::script('https://maps.googleapis.com/maps/api/js?key=AIzaSyAGaaPdBTpcf_z_lLmhwxNwHESJhFQ4MGM&hl=en&language=en') !!}
 {!! HTML::script('assets/js/lib/jquery.mCustomScrollbar.concat.min.js') !!}
-{!! HTML::script('assets/js/lib/jquery.simulate.js') !!}
 {!! HTML::script('assets/js/lib/lodash.min.js') !!}
 {!! HTML::script('assets/js/lib/setup.js') !!}
 {!! HTML::script('assets/js/lib/developr.auto-resizing.js') !!}
