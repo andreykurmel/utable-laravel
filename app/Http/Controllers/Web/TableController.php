@@ -543,18 +543,25 @@ class TableController extends Controller
                 ->orderBy('id')
                 ->get();
 
-            //set selected column before target column
-            $reoderedArr = [];
-            for ($i = 0; $i < count($orders); $i++) {
-                if ($i == $request->target) {
-                    $reoderedArr[] = ($orders[$request->select]);
-                    $reoderedArr[] = ($orders[$i]);
-                } else
-                    if ($i != $request->select) {
+            if ($request->replace) {
+                //change selected column position and target column position
+                $reoderedTmp = $orders[$request->target];
+                $orders[$request->target] = $orders[$request->select];
+                $orders[$request->select] = $reoderedTmp;
+            } else {
+                //set selected column before target column
+                $reoderedArr = [];
+                for ($i = 0; $i < count($orders); $i++) {
+                    if ($i == $request->target) {
+                        $reoderedArr[] = ($orders[$request->select]);
                         $reoderedArr[] = ($orders[$i]);
-                    }
+                    } else
+                        if ($i != $request->select) {
+                            $reoderedArr[] = ($orders[$i]);
+                        }
+                }
+                $orders = $reoderedArr;
             }
-            $orders = $reoderedArr;
 
             for ($i = 0; $i < count($orders); $i++) {
                 DB::connection('mysql_sys')
@@ -664,8 +671,8 @@ class TableController extends Controller
     }
 
     public function replaceTable(Request $request) {
-        if ($request->table_name) {
-            $this->deleteAllTable($request->table_name);
+        if ($request->table_db_tb) {
+            $this->deleteAllTable($request->table_db_tb);
         }
         return $this->createTable($request);
     }
@@ -677,7 +684,9 @@ class TableController extends Controller
 
         $tableMeta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $filename)->first();
 
-        $this->modifyTableColumns($request, $tableMeta, $columns);
+        if ($request->type_import != 'csv' && $request->type_import != 'mysql') {
+            $this->modifyTableColumns($request, $tableMeta, $columns);
+        }
 
         //import data
         if (($request->data_csv || $request->import_host) && $tableMeta->source != 'remote') {
@@ -989,7 +998,7 @@ class TableController extends Controller
 
         //add record to 'tb'
         DB::connection('mysql_sys')->table('tb')->insert([
-            'name' => $request->type_import == 'remote' ? $request->table_name : $table_db,
+            'name' => $request->type_import != 'remote' ? $request->table_name : $table_db,
             'owner' => Auth::user()->id,
             'nbr_entry_listing' => $request->nbr_entry_listing ? $request->nbr_entry_listing : 0,
             'notes' => $request->notes,
@@ -1069,28 +1078,54 @@ class TableController extends Controller
     private function modifyTableColumns($request, $table_meta, $columns) {
         if ($table_meta->source == 'remote') {
             $this->tableService->setRemoteConnection($table_meta->conn_id);
-        }
-        //modify table
-        try {
-            Schema::connection('mysql_data')->table($table_meta->db_tb, function (Blueprint $table) use ($columns) {
-                foreach ($columns as $col) {
-                    if (empty($col['size'])) $col['size'] = 0;
-                    $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
-                    if (!isset($col_size[0])) $col_size[0] = 9;
-                    if (!isset($col_size[1])) $col_size[1] = 2;
+        } else {
+            //modify table
+            try {
+                Schema::connection('mysql_data')->table($table_meta->db_tb, function (Blueprint $table) use ($columns) {
+                    foreach ($columns as $col) {
+                        if (empty($col['size'])) $col['size'] = 0;
+                        $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
+                        if (!isset($col_size[0])) $col_size[0] = 9;
+                        if (!isset($col_size[1])) $col_size[1] = 2;
 
-                    //for deleting columns
-                    if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
-                        //del column
-                        $table->dropColumn($col['field']);
-                    }
+                        //for deleting columns
+                        if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
+                            //del column
+                            $table->dropColumn($col['field']);
+                        }
 
-                    //for changing columns
-                    if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], $this->system_fields)) {
-                        //edit column
-                        if ($col['field'] != $col['old_field']) {
-                            $table->renameColumn($col['old_field'], $col['field'])->change();
-                        } else {
+                        //for changing columns
+                        if (($col['stat'] == '') && $col['field'] && $col['old_field'] && !in_array($col['field'], $this->system_fields)) {
+                            //edit column
+                            if ($col['field'] != $col['old_field']) {
+                                $table->renameColumn($col['old_field'], $col['field'])->change();
+                            } else {
+                                if ($col['type'] == 'String') {
+                                    $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
+                                } elseif ($col['type'] == 'Date') {
+                                    $t = $table->date($col['field']);
+                                } elseif ($col['type'] == 'Date Time') {
+                                    $t = $table->dateTime($col['field']);
+                                } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
+                                    $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
+                                } else {
+                                    $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                                }
+
+                                if (empty($col['required'])) {
+                                    $t->nullable();
+                                }
+
+                                if (!empty($col['default'])) {
+                                    $t->default($col['default']);
+                                }
+                                $t->change();
+                            }
+                        }
+
+                        //for adding columns
+                        if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
+                            //add column
                             if ($col['type'] == 'String') {
                                 $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
                             } elseif ($col['type'] == 'Date') {
@@ -1110,37 +1145,12 @@ class TableController extends Controller
                             if (!empty($col['default'])) {
                                 $t->default($col['default']);
                             }
-                            $t->change();
                         }
                     }
-
-                    //for adding columns
-                    if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
-                        //add column
-                        if ($col['type'] == 'String') {
-                            $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
-                        } elseif ($col['type'] == 'Date') {
-                            $t = $table->date($col['field']);
-                        } elseif ($col['type'] == 'Date Time') {
-                            $t = $table->dateTime($col['field']);
-                        } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
-                            $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
-                        } else {
-                            $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
-                        }
-
-                        if (empty($col['required'])) {
-                            $t->nullable();
-                        }
-
-                        if (!empty($col['default'])) {
-                            $t->default($col['default']);
-                        }
-                    }
-                }
-            });
-        } catch (\Exception $e) {
-            $error = "Seems that your table schema is incorrect!<br>".$e->getMessage();
+                });
+            } catch (\Exception $e) {
+                $error = "Seems that your table schema is incorrect!<br>".$e->getMessage();
+            }
         }
 
         //modify record in the 'tb'

@@ -171,7 +171,7 @@ class TableService {
         }
 
         if ($tableName == 'tb_settings_display' && !$fromMainData) {
-            $sql->orderBy($tableName.'.rows_ord');
+            $sql->orderBy($tableName.'.order');
         }
         $sql->orderBy($tableName.'.id');
         $result = $sql->get();
@@ -505,7 +505,7 @@ class TableService {
                     }
                     $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
                     $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
-                    $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+                    $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : ($curval && $curval->NUMERIC_PRECISION ? $curval->NUMERIC_PRECISION : ''));
                 }
             }
         } else {

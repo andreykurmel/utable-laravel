@@ -141,7 +141,7 @@ class AppController extends Controller
                         case 'date': $tb->items[$i]->type = 'Date'; break;
                         default: $tb->items[$i]->type = 'String'; break;
                     }
-                    $tb->items[$i]->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : '');
+                    $tb->items[$i]->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : ($curval && $curval->NUMERIC_PRECISION ? $curval->NUMERIC_PRECISION : ''));
                 }
             }
         } else {
@@ -498,7 +498,7 @@ class AppController extends Controller
             }
             if ($row_idx == 3) {
                 foreach ($data as $key => $val) {
-                    $headers[$key]['type'] = $request->check_3 ? $val : 'str';
+                    $headers[$key]['type'] = $request->check_3 ? ucfirst(strtolower($val)) : 'String';
                 }
             }
             if ($row_idx == 4) {
@@ -617,7 +617,7 @@ class AppController extends Controller
                             'header' => $col->COLUMN_NAME,
                             'field' => $col->COLUMN_NAME,
                             'type' => ($col ? $col->DATA_TYPE : 'String'),
-                            'size' => ($col->CHARACTER_MAXIMUM_LENGTH ? $col->CHARACTER_MAXIMUM_LENGTH : ''),
+                            'size' => ($col->CHARACTER_MAXIMUM_LENGTH ? $col->CHARACTER_MAXIMUM_LENGTH : ($col->NUMERIC_PRECISION ? $col->NUMERIC_PRECISION : '')),
                             'default' => ($col->COLUMN_DEFAULT ? $col->COLUMN_DEFAULT : ''),
                             'required' => ($col->IS_NULLABLE != 'YES' ? 1 : 0)
                         ];

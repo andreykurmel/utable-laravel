@@ -73,29 +73,48 @@
             <noscript class="message black-gradient simpler">Your browser does not support JavaScript! Some features won't work as expected...</noscript>
 
             <!-- Main title -->
-            <div class="colvisopts with-small-padding" style="position: absolute; top: 4px; font-size:14px;z-index:1000;display: flex;align-items: center;right: 10px;">
-                @if($owner && $tableName)
-                    <div style="display: inline-block;">
-                        <a href="javascript:void(0)" style="padding: 15px;" onclick="deleteCurrentTable()" title="Delete table">
-                            <i class="fa fa-remove" style="font-size: 1.5em;"></i>
-                        </a>
+            <div class="colvisopts with-small-padding" style="position: absolute; top: 4px; font-size:14px;z-index:1000;right: 10px;display: none;">
+                <div style="display: flex;align-items: center;">
+                    <div id="tables_btns" style="display: inline-block;margin-left: 15px;">
+                        <select id="rowHeightSize" class="listview_btns form-control" style="width: 58px;display: inline-block;padding: 4px;" onchange="changeDataTableRowHeight(this)">
+                            <option>Small</option>
+                            <option selected>Medium</option>
+                            <option>Big</option>
+                        </select>
+                        @if(Auth::user())
+                            <div class="listview_btns" style="display: inline-block">
+                                <a href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
+                                <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
+                            </div>
+                        @endif
+                        <div id="favorite_btns" style="display: none;">
+                            <button class="btn btn-default" style="margin-right: 10px;border: none;" onclick="favoritesCopyToClipboard()">
+                                <i class="fa fa-copy" style="font-size: 1.5em;"></i>
+                            </button>
+                            <input id="favourite_copy_with_headers" type="checkbox">
+                            <label for="favourite_copy_with_headers">Headers</label>
+                            @if($tableMeta && $tableMeta->source == 'remote')
+                                <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
+                            @endif
+                        </div>
                     </div>
-                @endif
-                @if(Auth::user() && $tableName)
-                    <div style="display: inline-block;">
-                        <a href="javascript:void(0)" style="padding: 15px;" onclick="toggleFavoriteTable(this)" title="Favorite table">
-                            <i class="fa {{ ($favorite == 'Active' ? 'fa-star' : 'fa-star-o') }}" style="font-size: 1.5em;"></i>
-                        </a>
+                    @if(Auth::user() && $tableName)
+                        <div style="display: inline-block;">
+                            <a href="javascript:void(0)" style="padding: 15px;" onclick="toggleFavoriteTable(this)" title="Favorite table">
+                                <i class="fa {{ ($favorite == 'Active' ? 'fa-star' : 'fa-star-o') }}" style="font-size: 1.5em;"></i>
+                            </a>
+                        </div>
+                    @endif
+                    <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
+                        <button class="btn btn-default" style="border: none;" onclick="$('#searchKeywordDiv').toggle();">
+                            <i class="fa fa-search" style="font-size: 1.5em;"></i>
+                        </button>
+                        <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 3px;width: 220px;border: 1px solid #ccc;background-color: #fff;display: none;">
+                            <input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Find in view">
+                            <a class="btn" onclick="$('#searchKeywordInp').val('');searchKeywordChanged();">&times;</a>
+                        </div>
                     </div>
-                @endif
-                <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
-                    <button class="btn btn-default" onclick="$('#searchKeywordDiv').toggle();"><i class="fa fa-search"></i></button>
-                    <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 3px;width: 220px;border: 1px solid #ccc;background-color: #fff;display: none;">
-                        <input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Find in view">
-                        <a class="btn" onclick="$('#searchKeywordInp').val('');searchKeywordChanged();">&times;</a>
-                    </div>
-                </div>
-                <div class="showhidemenu" style='margin-right: 10px;display: inline-block;width: 65px;position: relative;top: 2px;'>
+                    <div class="showhidemenu" style='margin-right: 10px;display: inline-block;width: 65px;position: relative;top: 2px;'>
                     <span class="select blue-gradient glossy replacement" tabindex="0">
                         <span class="select-value js-selected_entries_span" style="height: inherit">{{ $selectedEntries ? $selectedEntries : 10 }}</span>
                         <span class="select-arrow"></span>
@@ -109,40 +128,44 @@
                             <span class="entry-elem entryAll {{ $selectedEntries == 'All' ? 'selected' : '' }}" onclick="changeEntries('All')">All</span>
                         </span>
                     </span>
-                </div>
-                <div class="showhidemenu" style='margin-right: 10px;display:inline-block'  id="showHideColumnsList_btn">
-                    <a href="javascript:void(0)" class="button blue-gradient glossy thin"  onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 3px 0 0 0;"><img src="/img/eye.png" height="25"></a>
-                </div>
-                @if(Auth::user())
-                    <div style="padding: 5px;display: inline-block;">
-                        <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
-                            <option value="{{ '/data/all' }}"></option>
-                            @foreach($treeTables['custom_select'] as $tb)
-                                <option value="{{ $tb['li'] }}">
-                                    {{ $tb['name'] }}
-                                </option>
-                            @endforeach
-                        </select>
                     </div>
-                @endif
-                <div style="display: inline-block;margin-left: 8px;">
-                    <form action="{{ route('downloader') }}" method="post" id="downloader_form">
-                        {{ csrf_field() }}
-                        <input type="hidden" name="tableName" id="downloader_tableName" value="">
-                        <input type="hidden" name="filename" id="downloader_method" value="">
-                        <input type="hidden" name="q" id="downloader_query" value="">
-                        <input type="hidden" name="fields" id="downloader_fields" value="">
-                        <input type="hidden" name="filterData" id="downloader_filters" value="">
-                        <select class="form-control" style="width: 80px; display: inline-block;" id="downloader_type">
-                            <option value="PRINT">Print</option>
-                            <option value="CSV">CSV</option>
-                            <option value="PDF">PDF</option>
-                            <option value="XLS">Excel</option>
-                            <option value="JSON">JSON</option>
-                            <option value="XML">XML</option>
-                        </select>
-                        <button type="button" class="btn btn-default" onclick="downloaderGo()"><i class="fa fa-download"></i></button>
-                    </form>
+                    <div class="showhidemenu" style='margin-right: 10px;display:inline-block'>
+                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" id="tableStretch_btn" onclick="tableStretch()" title="Table full width"><i class="fa fa-arrows-h"></i></a>
+                    </div>
+                    <div class="showhidemenu" style='margin-right: 10px;display:inline-block' id="showHideColumnsList_btn">
+                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 3px 0 0 0;"><img src="/img/eye.png" height="25"></a>
+                    </div>
+                    @if(Auth::user())
+                        <div style="padding: 5px;display: inline-block;">
+                            <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
+                                <option value="{{ '/data/all' }}"></option>
+                                @foreach($treeTables['custom_select'] as $tb)
+                                    <option value="{{ $tb['li'] }}">
+                                        {{ $tb['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+                    <div style="display: inline-block;margin-left: 8px;">
+                        <form action="{{ route('downloader') }}" method="post" id="downloader_form">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="tableName" id="downloader_tableName" value="">
+                            <input type="hidden" name="filename" id="downloader_method" value="">
+                            <input type="hidden" name="q" id="downloader_query" value="">
+                            <input type="hidden" name="fields" id="downloader_fields" value="">
+                            <input type="hidden" name="filterData" id="downloader_filters" value="">
+                            <select class="form-control" style="width: 80px; display: inline-block;" id="downloader_type">
+                                <option value="PRINT">Print</option>
+                                <option value="CSV">CSV</option>
+                                <option value="PDF">PDF</option>
+                                <option value="XLS">Excel</option>
+                                <option value="JSON">JSON</option>
+                                <option value="XML">XML</option>
+                            </select>
+                            <button type="button" class="btn btn-default" onclick="downloaderGo()"><i class="fa fa-download"></i></button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -165,27 +188,6 @@
                     @if($owner && $tableName)
                     <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                     @endif
-                    <div id="tables_btns" style="display: inline-block;margin-left: 15px;">
-                        <select class="listview_btns form-control" style="width: 58px;display: inline-block;padding: 4px;" onchange="changeDataTableRowHeight(this)">
-                            <option>Small</option>
-                            <option selected>Medium</option>
-                            <option>Big</option>
-                        </select>
-                        @if(Auth::user())
-                            <div class="listview_btns" style="display: inline-block">
-                                <a href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
-                                <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
-                            </div>
-                        @endif
-                        <div id="favorite_btns" style="display: none;">
-                            <button class="button blue-gradient glossy" style="margin-right: 10px;" onclick="favoritesCopyToClipboard()">Copy</button>
-                            <input id="favourite_copy_with_headers" type="checkbox">
-                            <label for="favourite_copy_with_headers">Headers</label>
-                            @if($tableMeta && $tableMeta->source == 'remote')
-                                <span style="margin-left: 30px; color: #F00;font-size: 1.5em;font-weight: bold;">Table is remote (save function is unavailable)!</span>
-                            @endif
-                        </div>
-                    </div>
                 </ul>
 
                 <!-- Content -->
@@ -759,29 +761,30 @@
                                     <div id="import_csv_tab" class="tab-content fluid-container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px; display: none;">
                                         <div class="row form-group" style="padding: 0 15px;">
                                             <select id="import_type_import" name="type_import" class="form-control" onchange="changeImportStyle(this)" style="width: 15%; display: inline-block; float: left;height: 36px;">
-                                                <option {{ ($tableMeta->source == 'scratch' ? 'selected' : '') }} value="scratch">From Scratch</option>
+                                                <option {{ ($tableMeta->source == 'scratch' ? 'selected' : '') }} value="scratch">Build/Update</option>
                                                 <option {{ ($tableMeta->source == 'csv' ? 'selected' : '') }} value="csv">CSV Import</option>
                                                 <option {{ ($tableMeta->source == 'mysql' ? 'selected' : '') }} value="mysql">MySQL Import</option>
-                                                <option {{ ($tableMeta->source == 'remote' ? 'selected' : '') }} value="remote">Remote</option>
+                                                <option {{ ($tableMeta->source == 'remote' ? 'selected' : '') }} value="remote">Remote MySQL</option>
                                                 <option {{ ($tableMeta->source == 'ref' ? 'selected' : '') }} value="ref">Referencing</option>
                                             </select>
                                             <select class="form-control" id="import_action_type" onchange="changeImportAction(this)" style="width: 15%; display: inline-block; float: left;height: 36px;margin-left: 5px;">
-                                                <option value="/createTable">New</option>
-                                                <option value="/replaceTable">Replace Existing</option>
+                                                <!--<option value="/createTable">New</option>-->
+                                                <option value="/replaceTable">New</option>
                                                 <option value="/modifyTable">Append</option>
                                             </select>
                                             <label style="padding: 10px;float: left;">Notes:</label>
-                                            <label style="padding: 10px;float: left;">some notes will be here in the future...</label>
+                                            <label id="import_notes_label" style="width:calc(69% - 65px);padding: 10px;float: left;"></label>
                                             <!--<input type="text" id="import_method_notes" class="form-control" style="width: 30%;"onchange="import_method_notes_changed()">-->
                                         </div>
-                                        <div class="form-group js-import_csv_style" style="width: 67%;display: flex;align-items: center; justify-content:  space-between;">
-                                            <div style="width: calc(50% - 25px); display: inline-block;">
+                                        <div class="form-group js-import_csv_style" style="width: 75%;display: flex;align-items: center; justify-content:  space-between;">
+                                            <div style="width: calc(50% - 50px); display: inline-block;">
                                                 <input type="file" id="import_csv" class="form-control" placeholder="Your csv file" accept=".csv" onchange="sent_csv_to_backend(1)">
                                             </div>
                                             OR
-                                            <div style="width: calc(50% - 25px); display: inline-block;">
+                                            <div style="width: calc(50% - 50px); display: inline-block;">
                                                 <input type="text" id="import_file_link" class="form-control" placeholder="www address of file">
                                             </div>
+                                            <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
                                         </div>
                                         <div class="row form-group js-import_mysql_style" style="display: none;">
                                             <div class="col-xs-8 form-group">
@@ -875,7 +878,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
                                     </div>
 
                                     <div id="import_col_tab" class="tab-content fluid-container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
@@ -889,7 +891,7 @@
                                                             <tr class="import_not_reference_columns">
                                                                 <th>Table Header</th>
                                                                 <th>tb Field</th>
-                                                                <th class="js-import_column-orders">Column # in CSV</th>
+                                                                <th class="js-import_column-orders">Source Field</th>
                                                                 <th>Type</th>
                                                                 <th>Max. Size</th>
                                                                 <th>Default Value</th>
@@ -912,35 +914,35 @@
                                                         @foreach($importHeaders as $hdr)
                                                             <tr id="import_columns_{{ $loop->index }}" style="{{ $hdr->auto ? 'display:none;' : '' }}">
                                                                 <td>
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control _freeze_for_modify" name="columns[{{ $loop->index }}][header]" value="{{ $hdr->name }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control" id="import_columns_{{ $loop->index }}_field_val" name="columns[{{ $loop->index }}][field]"  value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control _freeze_for_modify _freeze_for_remote" id="import_columns_{{ $loop->index }}_field_val" name="columns[{{ $loop->index }}][field]"  value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                     <input type="hidden" class="form-control" name="columns[{{ $loop->index }}][old_field]" value="{{ $hdr->field }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="js-import_column-orders import_not_reference_columns">
-                                                                    <select class="form-control" name="columns[{{ $loop->index }}][col]" onfocus="show_import_cols_numbers()" {{ $hdr->auto ? 'readonly' : ''}}></select>
+                                                                    <select class="form-control _freeze_for_remote" name="columns[{{ $loop->index }}][col]" onfocus="show_import_cols_numbers()" {{ $hdr->auto ? 'readonly' : ''}}></select>
                                                                 </td>
                                                                 <td>
-                                                                    <select class="form-control" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <select class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                         @foreach($importTypesDDL as $i_ddl)
                                                                             <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }}>{{ $i_ddl->option }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="number" class="form-control" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="import_not_reference_columns">
-                                                                    <input type="text" class="form-control" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="import_not_reference_columns">
-                                                                    <input type="checkbox" class="form-control" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
+                                                                    <input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
                                                                 </td>
                                                                 <td>
                                                                     <input type="hidden" id="import_columns_deleted_{{ $loop->index }}" name="columns[{{ $loop->index }}][stat]">
                                                                     @if(!$hdr->auto)
-                                                                    <button type="button" class="btn btn-default" onclick="import_del_row({{ $loop->index }})">&times;</button>
+                                                                    <button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row({{ $loop->index }})">&times;</button>
                                                                     @endif
                                                                 </td>
                                                             </tr>
@@ -1157,8 +1159,8 @@
         <div class="editSidebarTableForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
             <div class="auth" style="font-size: 14px;">
                 <div class="auth-form" style="padding: 15px 15px 5px 15px;">
-                    <div class="form-wrap">
-                        <h1>Edit table</h1>
+                    <div class="form-wrap" style="padding: 15px;">
+                        <h1 style="margin: 0; padding: 0;">Edit table</h1>
                         <div style="width: 350px;">
                             <input type="hidden" id="sidebar_table_id">
                             <input type="hidden" id="sidebar_table_action">
@@ -1167,17 +1169,17 @@
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_name">Table name</label>
-                                <input type="text" id="sidebar_table_name" class="form-control" placeholder="Table name" required>
+                                <input type="text" id="sidebar_table_name" class="form-control" placeholder="Table name" required style="padding: 10px;">
                             </div>
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_db">Database name</label>
-                                <input type="text" id="sidebar_table_db" class="form-control" disabled>
+                                <input type="text" id="sidebar_table_db" class="form-control" disabled style="padding: 10px;">
                             </div>
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_nbr">Entries per page</label>
-                                <select id="sidebar_table_nbr" class="form-control">
+                                <select id="sidebar_table_nbr" class="form-control" style="padding: 5px 10px;">
                                     <option>100</option>
                                     <option>200</option>
                                     <option>500</option>
@@ -1186,14 +1188,14 @@
 
                             <div class="form-group input-icon">
                                 <label for="sidebar_table_notes">Notes</label>
-                                <input type="text" id="sidebar_table_notes" class="form-control">
+                                <input type="text" id="sidebar_table_notes" class="form-control" style="padding: 10px;">
                             </div>
 
                             <div class="form-group">
-                                <button type="button" class="btn btn-custom btn-lg btn-block" onclick="popup_sidebar_table()">
+                                <button type="button" class="btn btn-custom btn-lg btn-block" style="width: 49%;display: inline-block;" onclick="popup_sidebar_table()">
                                     Save
                                 </button>
-                                <a href="javascript:void(0)" onclick="$('.editSidebarTableForm').hide();" class="btn btn-default btn-lg btn-block">
+                                <a href="javascript:void(0)" onclick="$('.editSidebarTableForm').hide();" style="width: 49%;display: inline-block;margin: 0;" class="btn btn-default btn-lg btn-block">
                                     Cancel
                                 </a>
                             </div>

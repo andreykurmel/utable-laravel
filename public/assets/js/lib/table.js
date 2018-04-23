@@ -182,6 +182,10 @@ function selectTable(tableName) {
             showFiltersList(response.filters);
             showTableFooter();
             $('.loadingFromServer').hide();
+            $('.colvisopts').show();
+            if (rowsCount > selectedEntries) {
+                $('._tables_pagination').show();
+            }
 
             selectSettingsTable();
         },
@@ -363,7 +367,7 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
-                    '<div class="td_wrap">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
@@ -376,7 +380,7 @@ function showDataTable(headers, data) {
 
         //add row data
         if (i == 0) {
-            tbAddRow += "<tr style='height: 53px;'>";
+            tbAddRow += "<tr>";
             tbAddRow += '<td></td>';
             tbAddRow += '<td></td>';
             for(key in headers) {
@@ -385,13 +389,16 @@ function showDataTable(headers, data) {
                     tbAddRow +=
                         '<td ' +
                         'id="' + headers[key].field + i + headers[key].input_type + '_addrow"' +
+                        'data-wrapped="true"' +
                         'data-key="' + headers[key].field + '"' +
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
                         (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
                         'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                         (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
-                        (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '"></td>';
+                        (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
+                        '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                        '</div></td>';
                     /*if (d_key == 'id') {
                      tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
                      } else {
@@ -401,7 +408,7 @@ function showDataTable(headers, data) {
             }
             tbAddRow += "</tr>";
 
-            tbAddRow_h += "<tr style='visibility: hidden;height: 53px'><td></td>";
+            tbAddRow_h += "<tr style='visibility: hidden;'><td></td>";
             for(key in headers) {
                 d_key = headers[key].field;
                 if ($.inArray(d_key, arrAddFieldsInData) == -1) {
@@ -424,7 +431,7 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
-                    '<div class="td_wrap">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else {
@@ -450,7 +457,7 @@ function showDataTable(headers, data) {
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
-                '<span draggable="true" style="display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-20)+'px;' : '')+'">' +
+                '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                     ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
                 '</span>' +
                 '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
@@ -474,7 +481,7 @@ function showDataTable(headers, data) {
                 'style="position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
                 (headers[$hdr].unit_ddl ? 'onclick="showInlineEdit(\'' + headers[key].field + $hdr + headers[key].input_type + '_header\', \'settings\')"' : '') +
                 '>' +
-                '<span draggable="true" style="display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-20)+'px;' : '')+'">' +
+                '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                     headers[$hdr].unit +
                 '</span>' +
                 '</th>';
@@ -493,11 +500,16 @@ function showDataTable(headers, data) {
     $('#tbHeaders_body').html(tbHiddenData);
     $('#tbData_body').html(tableData);
 
+    //set rows height
+    var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
+    $('.table>tbody>tr>td .td_wrap').css('height', (rh-7)+'px');
+
+    //show 'add row' if checked
     $('#tbAddRow').css('top', headerHasUnit ? '-64px' : '-32px');
     $('#tbData').css('margin-top', headerHasUnit ? '-64px' : '-32px');
     if ($('#addingIsInline').is(':checked')) {
-        $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', headerHasUnit ? '117px' : '85px');
+        $('#tbHeaders').css('top', rh+'px');
+        $('#divTbData').css('top', headerHasUnit ? (rh+64)+'px' : (rh+32)+'px');
     } else {
         $('#tbHeaders').css('top', '0');
         $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
@@ -534,6 +546,7 @@ function showDataTable(headers, data) {
             col.addEventListener('dragenter', handleDragEnter, false);
             col.addEventListener('dragover', handleDragOver, false);
             col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('dragend', handleDragEnd, false);
             col.addEventListener('drop', handleDrop, false);
         });
 
@@ -914,7 +927,7 @@ function handleDrop(e) {
 
         $.ajax({
             method: 'GET',
-            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target+'&replace=0',
             success: function () {
                 //
             },
@@ -1027,6 +1040,7 @@ function showSettings() {
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
     $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
+    showSettingsDataTable(settingsTableHeaders, settingsTableData);
 }
 
 function detailsShowMap() {
@@ -1312,7 +1326,7 @@ function showInlineEdit(id, instant) {
                 }
             }
         }  else
-        if (ltableDDls[key].req_obj) {//if reference ddl which needs request to the server
+        if (ltableDDls[key] && ltableDDls[key].req_obj) {//if reference ddl which needs request to the server
             var resp = $.ajax({
                 url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(ltableDDls[key].req_obj) + '&row=' + JSON.stringify(tableData[idx]),
                 method: 'get',
@@ -1510,7 +1524,9 @@ function editSelectedData(idx) {
     var lv = $('#list_view').is(':visible'),
         ltableData = (lv ? tableData : settingsTableData),
         ltableHeaders = (lv ? tableHeaders : settingsTableHeaders),
-        ltableDDLs = (lv ? tableDDLs : settingsTableDDLs);
+        ltableDDLs = (lv ? tableDDLs : settingsTableDDLs),
+        not_editable = (lv ? ['id','is_favorited'] : ['id','is_favorited','field','name']);
+    var tmp_ddl_id = ltableDDLs['ddl_id'];
 
     if (idx > -1) {
         lv ? $('#modal_btn_delete').show() : $('#modal_btn_delete').hide();
@@ -1528,7 +1544,7 @@ function editSelectedData(idx) {
         }
 
         d_key = ltableHeaders[key].field;
-        if (d_key != 'id' && d_key != 'is_favorited') {
+        if ($.inArray(d_key, not_editable) == -1) {
             html += "<tr>";
             html +=
                 '<td><label>' + ltableHeaders[key].name + '</label></td>' +
@@ -1546,8 +1562,8 @@ function editSelectedData(idx) {
                     (tmp_ddl && tmp_ddl.req_obj ? 'onfocus="getRefDDL(this)"' : '') +
                     ' class="form-control" style="margin-bottom: 5px">';
                 if (d_key == 'ddl_id' || d_key == 'unit_ddl') {
-                    for(var i in ltableDDls['ddl_id']) {
-                        html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
+                    for(var i in tmp_ddl_id) {
+                        html += '<option value="'+i+'">'+tmp_ddl_id[i]+'</option>';
                     }
                 } else
                 if (d_key == 'unit') {
@@ -1673,9 +1689,10 @@ function checkboxAddToggle() {
             emptyDataObject[d_key] = "";
         }
 
+        var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
         $('#tbAddRow').show();
-        $('#tbHeaders').css('top', '53px');
-        $('#divTbData').css('top', headerHasUnit ? '117px' : '85px');
+        $('#tbHeaders').css('top', rh+'px');
+        $('#divTbData').css('top', headerHasUnit ? (rh+64)+'px' : (rh+32)+'px');
 
         editSelectedData(-1);
     } else {
@@ -1810,7 +1827,7 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap">' +
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">' +
                         (data[i][d_key] !== null ? data[i][d_key] : '') +
                     '</div></td>';
             }
@@ -1829,7 +1846,7 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap">' +
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">' +
                         (data[i][d_key] !== null ? data[i][d_key] : '') +
                     '</div></td>';
             }
@@ -1839,14 +1856,19 @@ function showFavoriteDataTable(headers, data) {
 
     //first header row
     tbDataHeaders += "<tr><th class='sorting nowrap' rowspan='2'><b>#</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap' rowspan='2'><b>Favorite</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap' rowspan='2' style='min-width: 70px;'><b>Copy</b></th>";
+    tbDataHeaders += "<th class='sorting nowrap' rowspan='2'></th>";
+    tbDataHeaders += "<th class='sorting nowrap' rowspan='2' style='min-width: 70px;'></th>";
     for(var $hdr in headers) {
         tbDataHeaders += '<th class="sorting nowrap" ' +
             (!headers[$hdr].unit ? 'rowspan="2" ' : '') +
             'data-key="' + headers[$hdr].field + '" ' +
-            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' +
-            ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+            (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
+            (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
+            '">' +
+                '<span style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                    ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+                '</span>' +
             '</th>';
     }
     tbDataHeaders += "</tr>";
@@ -2152,7 +2174,7 @@ function showSettingsDataTable(headers, data) {
 
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
-        tableData += '<td data-order="'+i+'"><span draggable="true"><i style="width: 100%;text-align: center;" class="fa fa-bars"></i></span></td>';
+        //tableData += '<td data-order="'+i+'"><span draggable="true"><i style="width: 100%;text-align: center;" class="fa fa-bars"></i></span></td>';
         tableData += '<td><a onclick="editSelectedData('+i+')" class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
@@ -2165,9 +2187,9 @@ function showSettingsDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
-                    (d_key != 'id' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
+                    (d_key != 'id' && d_key != 'field' && d_key != 'name' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    '<div class="td_wrap">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -2184,7 +2206,7 @@ function showSettingsDataTable(headers, data) {
         tableData += "</tr>";
 
         tbHiddenData += "<tr>";
-        tbHiddenData += "<td></td>";
+        //tbHiddenData += "<td></td>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(settingsPage*lsettingsEntries)) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
@@ -2193,7 +2215,7 @@ function showSettingsDataTable(headers, data) {
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    '<div class="td_wrap">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -2209,7 +2231,7 @@ function showSettingsDataTable(headers, data) {
     }
 
     //recreate headers for main data
-    tbSettingsHeaders += "<tr> <th class='sorting nowrap'><b>Ord</b></th> <th class='sorting nowrap'><b>#</b> </th>";
+    tbSettingsHeaders += "<tr> <th class='sorting nowrap'><b>#</b> </th>";
     for(var $hdr in headers) {
         tbSettingsHeaders += '<th ' +
             'class="sorting nowrap" ' +
@@ -2348,7 +2370,7 @@ function handleDropSettings(e) {
 
         $.ajax({
             method: 'GET',
-            url: baseHttpUrl + '/changeOrder?tableName='+settingsTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            url: baseHttpUrl + '/changeOrder?tableName='+settingsTableName+'&select='+selectedForChangeOrder+'&target='+target+'&replace=0',
             success: function () {
                 //
             },
@@ -2383,24 +2405,21 @@ function handleDropSettings_dfot(e) {
 
     var target = Number(this.parentNode.dataset.odr)-1;
     if (selectedForChangeOrder > -1 && selectedForChangeOrder !== target) {
-        var reoderedArr = [];
-        for (var i in tableHeaders) {
-            if (i == target) {
-                reoderedArr.push(tableHeaders[selectedForChangeOrder]);
-                reoderedArr.push(tableHeaders[i]);
-            } else
-            if (i != selectedForChangeOrder) {
-                reoderedArr.push(tableHeaders[i]);
-            }
-        }
-        tableHeaders = reoderedArr;
+        //change main columns
+        var reoderedTmp = tableHeaders[selectedForChangeOrder];
+        tableHeaders[selectedForChangeOrder] = tableHeaders[target];
+        tableHeaders[target] = reoderedTmp;
+        //change settings rows
+        reoderedTmp = settingsTableData[selectedForChangeOrder];
+        settingsTableData[selectedForChangeOrder] = settingsTableData[target];
+        settingsTableData[target] = reoderedTmp;
 
         showDataTable(tableHeaders, tableData);
         showSettingsDataTable(settingsTableHeaders, settingsTableData);
 
         $.ajax({
             method: 'GET',
-            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target,
+            url: baseHttpUrl + '/changeOrder?tableName='+selectedTableName+'&select='+selectedForChangeOrder+'&target='+target+'&replace=1',
             success: function () {
                 //
             },
@@ -3383,6 +3402,8 @@ function import_changed_type_group() {
 }
 
 function sent_csv_to_backend(is_upload) {
+    event.preventDefault();
+
     var data = new FormData();
     var data_csv = $('#import_data_csv').val();
     var file_link = $('#import_file_link').val();
@@ -3442,31 +3463,28 @@ function sent_csv_to_backend(is_upload) {
                 var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
-                        '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
-                            '<input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
                             '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
-                            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
+                            '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
                         '</td>' +
-                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="text" class="form-control" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
                             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
-                            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+                            '<button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row('+i+')">&times;</button>' +
                         '</td>' +
                         '</tr>';
                 });
                 $('#import_table_body').html(html);
-            }
-            if (file_link) {
-                import_show_col_tab();
             }
 
             if (!resp.error) {
@@ -3475,6 +3493,7 @@ function sent_csv_to_backend(is_upload) {
                     ddl_col_numbers.push(hdr.field);
                 });
             }
+            import_show_col_tab();
         }
     });
 }
@@ -3512,25 +3531,25 @@ function import_test_db_connect() {
                 var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
                     html += '<tr id="import_columns_'+i+'" '+(hdr.field == 'createdBy' ? 'class="js-import-col-createdBy"' : '')+'>'+
-                        '<td><input type="text" class="form-control" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify" name="columns['+i+'][header]" value="'+hdr.name+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
-                            '<input type="text" class="form-control" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
+                            '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
                             '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="'+hdr.field+'" '+(hdr.auto ? 'readonly' : '')+'>' +
                         '</td>' +
                         '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
-                            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
+                            '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
                         '</td>' +
-                        '<td><select class="form-control" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="text" class="form-control" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="checkbox" class="form-control" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
                             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
-                            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+                            '<button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row('+i+')">&times;</button>' +
                         '</td>' +
                         '</tr>';
                 });
@@ -3574,32 +3593,32 @@ function import_add_table_row() {
 
     html = '<tr id="import_columns_'+i+'">'+
         '<td>' +
-            '<input type="text" class="form-control" name="columns['+i+'][header]" value="'+$('#import_columns_add_header').val()+'">' +
+            '<input type="text" class="form-control _freeze_for_modify" name="columns['+i+'][header]" value="'+$('#import_columns_add_header').val()+'">' +
         '</td>' +
         '<td>' +
-            '<input type="text" class="form-control" id="import_columns_'+i+'_field_val" name="columns['+i+'][field]" value="'+$('#import_columns_add_field').val()+'">' +
+            '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" id="import_columns_'+i+'_field_val" name="columns['+i+'][field]" value="'+$('#import_columns_add_field').val()+'">' +
             '<input type="hidden" class="form-control" name="columns['+i+'][old_field]" value="">' +
         '</td>' +
         '<td class="js-import_column-orders import_not_reference_columns" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
-            '<select class="form-control" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()">'+option_col+'</select>' +
+            '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()">'+option_col+'</select>' +
         '</td>' +
-        '<td><select class="form-control" name="columns['+i+'][type]">';
+        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]">';
     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
         html += '<option '+(inputed_type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
     }
     html += '</select></td>' +
         '<td>' +
-            '<input type="number" class="form-control" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'">' +
+            '<input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'">' +
         '</td>' +
         '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
-            '<input type="text" class="form-control" name="columns['+i+'][default]" value="'+$('#import_columns_add_default').val()+'">' +
+            '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+$('#import_columns_add_default').val()+'">' +
         '</td>' +
         '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
-            '<input type="checkbox" class="form-control" name="columns['+i+'][required]" '+($('#import_columns_add_required').is(':checked') ? 'checked="checked"' : '')+'>' +
+            '<input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+($('#import_columns_add_required').is(':checked') ? 'checked="checked"' : '')+'>' +
         '</td>' +
         '<td>' +
             '<input type="hidden" id="import_columns_ref_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
-            '<button type="button" class="btn btn-default" onclick="import_del_row('+i+')">&times;</button>' +
+            '<button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row('+i+')">&times;</button>' +
         '</td>' +
         '</tr>';
     $('#import_columns_row_add').before(html);
@@ -3646,7 +3665,7 @@ function import_add_ref_table_row() {
 
 function show_import_ref_columns(idx) {
     var len = Number( $('#import_table_body > tr').length ), html = '', fld, found_field;
-console.log(tablesDropDown);
+
     for (var i = 0; i< len; i++) {
         found_field = false;
         fld = $('#import_columns_'+i+'_field_val').val();
@@ -3762,7 +3781,21 @@ function import_show_col_tab() {
     $('#import_csv_tab').hide();
 }
 
+var notes = {
+    scratch: 'To build a new data table from scratch by adding fields or update the fields for an existing data/table.',
+    csv: {
+        '/replaceTable': 'Import data from a CSV file with data table fields given or not. If data/table fields not given in the CSV file or not checked to use in the , user can define those in the field settings tab. Any existing data/table info will be completely deleted.',
+        '/modifyTable': 'Add the data of selected fields from the imported CSV file to the existing data/table. No change to the table fields.'
+    },
+    mysql: {
+        '/replaceTable': 'Import data of selected fields of  a MySQL data table from local or remote server OR uploading a mysql file. The same table fields and data format will be used. User to define table head names. User can add or remove field(s) for importing.',
+        '/modifyTable': 'Import data of selected fields of  a MySQL table from local or remote server OR uploading a mysql file and append the data to the existing data table.'
+    },
+    remote: 'To retrieve data from a MySQL table from a local or remote server. No data table will be created (copied) to local. Only management data will be created.',
+    ref: 'To glue the data of selected fields from multiple existing data tables, public or private, through the defined field correspondences between current data table and a selected source data table. Glue means putting the data records of one data table after another into current data table. The data records for a given source data table can be updated by deleting existing referencing and re-importing (add referencing record and then import).'
+};
 function changeImportStyle(sel) {
+
     var style = $(sel).val() || (table_meta.source ? table_meta.source : 'scratch'),
         action = $('#import_action_type').val();
     if (style == 'scratch') {
@@ -3775,6 +3808,10 @@ function changeImportStyle(sel) {
         $('.js-import_column-orders').hide();
         $('#import_form_save_btn').show();
         import_show_col_tab();
+        $('#import_notes_label').html( notes[style] );
+
+        $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('#import_columns_row_add').show();
     } else
     if (style == 'csv') {
         $('.js-import_mysql_style').hide();
@@ -3785,6 +3822,12 @@ function changeImportStyle(sel) {
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
         $('#import_form_save_btn').show();
+        $('#import_notes_label').html( notes[style][action] );
+
+        $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
+        $('button._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        (action == '/modifyTable' ? $('#import_columns_row_add').hide() : $('#import_columns_row_add').show() );
     } else
     if (style == 'mysql') {
         $('.js-import_csv_style').hide();
@@ -3795,6 +3838,12 @@ function changeImportStyle(sel) {
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').show();
         $('#import_form_save_btn').show();
+        $('#import_notes_label').html( notes[style][action] );
+
+        $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
+        $('button._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        (action == '/modifyTable' ? $('#import_columns_row_add').hide() : $('#import_columns_row_add').show() );
     } else
     if (style == 'remote') {
         $('.js-import_csv_style').hide();
@@ -3805,6 +3854,12 @@ function changeImportStyle(sel) {
         $('#import_main_columns').css('width', '100%');
         $('.js-import_column-orders').hide();
         $('#import_form_save_btn').show();
+        $('#import_notes_label').html( notes[style] );
+
+        $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('._freeze_for_remote').attr('readonly', true);
+        $('input[type="checkbox"]._freeze_for_remote').attr('checked', true);
+        $('#import_columns_row_add').hide();
     } else
     if (style == 'ref') {
         $('.js-import_csv_style').hide();
@@ -3815,7 +3870,11 @@ function changeImportStyle(sel) {
         $('#import_main_columns').css('width', '45%');
         $('.js-import_column-orders').hide();
         $('#import_form_save_btn').hide();
+        $('#import_notes_label').html( notes[style] );
         import_show_col_tab();
+
+        $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('#import_columns_row_add').show();
     }
 
     var key = getConnNoteKey(style, action);
@@ -3829,6 +3888,12 @@ function changeImportAction (sel) {
     $('.js-import_chb').each(function (i, elem) {
         $(elem).prop('disabled', status);
     });
+
+    $('._freeze_for_modify').attr('readonly', status);
+    $('button._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', status);
+    (status ? $('#import_columns_row_add').hide() : $('#import_columns_row_add').show() );
+
+    $('#import_notes_label').html( notes[type][action] );
 
     var key = getConnNoteKey(type, action);
     $('#import_method_notes').val( table_meta.conn_notes && table_meta.conn_notes[key] ? table_meta.conn_notes[key] : '' );
@@ -4524,14 +4589,22 @@ function searchInTab($tab) {
 }
 
 function changeDataTableRowHeight(sel) {
+    var rh;
     if ($(sel).val() == 'Small') {
         $('.table>tbody>tr>td .td_wrap').css('height', '30px');
+        rh = 37;
     } else
     if ($(sel).val() == 'Medium') {
         $('.table>tbody>tr>td .td_wrap').css('height', '40px');
+        rh = 47;
     } else
     if ($(sel).val() == 'Big') {
         $('.table>tbody>tr>td .td_wrap').css('height', '60px');
+        rh = 67;
+    }
+
+    if ($('#addingIsInline').is(':checked')) {
+        showDataTable(tableHeaders, tableData);
     }
 }
 
@@ -4545,6 +4618,18 @@ function getGlobalOffset() {
     }
     console.log(offset);
     return offset;
+}
+
+var stretchedtables = localStorage.getItem('stretched_tables') == '1' ? true : false;
+$('#tableStretch_btn').css('color', stretchedtables ? '#fff' : '#777');
+$('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
+$('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
+function tableStretch() {
+    stretchedtables = !stretchedtables;
+    $('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
+    $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
+    localStorage.setItem('stretched_tables', stretchedtables ? '1' : '0');
+    $('#tableStretch_btn').css('color', stretchedtables ? '#fff' : '#777');
 }
 
 //auto logout after 30min idle
