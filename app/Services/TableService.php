@@ -326,7 +326,7 @@ class TableService {
             }
             array_push($responseArray["data"],$data);
             $responseArray["error"] = TRUE;
-            $responseArray["msg"] = "No Data";
+            $responseArray["msg"] = "";
         }
 
         return $responseArray;

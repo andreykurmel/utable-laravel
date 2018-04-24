@@ -315,8 +315,6 @@ function showDataTable(headers, data) {
     var tableData = "", tbHiddenData = "", tbAddRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "", visibleColumns = "", tbHiddenHeaders = "",
         lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, star_class;
 
-    headerHasUnit = false;
-
     for(var i = 0; i < data.length; i++) {
         tableData += "<tr>";
         tableData += '<td '+(i === 0 ? 'id="first_data_td"' : '')+'>' +
@@ -327,7 +325,7 @@ function showDataTable(headers, data) {
         if (authUser) {
             if (userOwner) {
                 tableData +=
-                    '<td style="font-size: 1.5em; text-align: center;">' +
+                    '<td style="min-width: 65px;font-size: 1.5em; text-align: center;">' +
                         '<a href="javascript:void(0)" onclick="toggleFavoriteRow(' + i + ',this)">' +
                             '<i class="fa ' + (data[i].is_favorited ? 'fa-star' : 'fa-star-o') + '" style="color: #FD0;"></i>' +
                         '</a> | ' +
@@ -336,7 +334,7 @@ function showDataTable(headers, data) {
                         '</a>' +
                     '</td>';
             } else {
-                tableData += '<td style="font-size: 1.5em; text-align: center;"><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
+                tableData += '<td style="min-width: 65px;font-size: 1.5em; text-align: center;"><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
                     '<i class="fa '+(data[i].is_favorited ? 'fa-star' : 'fa-star-o')+'" style="color: #FD0;"></i>' +
                     '</a></td>';
             }
@@ -347,8 +345,8 @@ function showDataTable(headers, data) {
                     star_class = 'fa-star';
                 }
             }
-            tableData += '<td><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
-                '<i class="fa '+(star_class)+'" style="font-size: 1.5em;color: #FD0;"></i>' +
+            tableData += '<td style="min-width: 65px;font-size: 1.5em; text-align: center;"><a href="javascript:void(0)" onclick="toggleFavoriteRow('+i+',this)">' +
+                '<i class="fa '+(star_class)+'" style="color: #FD0;"></i>' +
                 '</a></td>';
         }
 
@@ -421,7 +419,9 @@ function showDataTable(headers, data) {
         //hidden data for correct columns size
         tbHiddenData += "<tr>";
         tbHiddenData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1+Number(selectedPage*lselectedEntries)) +'</b></a></td>';
-        tbHiddenData += '<td><i class="fa fa-star-o" style="font-size: 1.5em;color: #FD0;"></i>|<i class="fa fa-remove" style="font-size: 1.5em;color: #05B;"></i></td>';
+        tbHiddenData += '<td style="min-width: 65px;font-size: 1.5em; text-align: center;">' +
+                '<i class="fa fa-star-o" style="color: #FD0;"></i> | <i class="fa fa-remove" style="color: #05B;"></i>' +
+            '</td>';
         for(key in headers) {
             d_key = headers[key].field;
             if ($.inArray(d_key, arrAddFieldsInData) == -1) {
@@ -443,37 +443,46 @@ function showDataTable(headers, data) {
         tbHiddenData += "</tr>";
     }
 
-    //recreate headers for main data
-    tbDataHeaders += "<tr><th rowspan='2' class='sorting nowrap'><b>#</b></th>";
-    tbDataHeaders += "<th rowspan='2' class='sorting nowrap'><b>Actions</b></th>";
-    for(var $hdr in headers) {
-        tbDataHeaders += '<th ' +
-            ' ' +
-            (!headers[$hdr].unit ? 'rowspan="2" ' : '') +
-            'class="sorting nowrap" ' +
-            'data-key="' + headers[$hdr].field + '" ' +
-            'data-order="' + $hdr + '" ' +
-            'style="position: relative; ' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;' : '') +
-            (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
-            (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
-            '">' +
+    var rows_in_hdrs = 1, tmp;
+    for (var $hdr in headers) {
+        tmp = headers[$hdr].name;
+        tmp = tmp.split(',');
+        if (tmp && tmp.length > rows_in_hdrs) {
+            rows_in_hdrs = tmp.length;
+        }
+    }
+    //recreate headers for main data (with multi-headers feature)
+    for (var i = 0; i < rows_in_hdrs; i++) {
+        tbDataHeaders += "<tr>";
+        if (i == 0) {
+            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='sorting nowrap'><b>#</b></th>";
+            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='sorting nowrap' title='"+(isAdmin || (authUser && userOwner) ? 'Favorite / Remove' : 'Favorite')+"'><i class='fa fa-info-circle'></i></th>";
+        }
+        for (var $hdr in headers) {
+            tmp = headers[$hdr].name;
+            tmp = tmp.split(',');
+
+            tbDataHeaders += '<th ' +
+                (!headers[$hdr].unit && i == (rows_in_hdrs-1) ? 'rowspan="2" ' : '') +
+                'class="sorting nowrap" ' +
+                'data-key="' + headers[$hdr].field + '" ' +
+                'data-order="' + $hdr + '" ' +
+                'style="position: relative; ' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;' : '') +
+                (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
+                (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
+                '">' +
                 '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
-                    ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+                ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : (tmp[i] ? tmp[i] : '')) +
                 '</span>' +
                 '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
-            '</th>';
-
-        visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
-        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
-                            '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
-        visibleColumns += '</li>';
+                '</th>';
+        }
+        tbDataHeaders += "</tr>";
     }
-    tbDataHeaders += "</tr>";
-    //second header row
+    //unit`s header row
     tbDataHeaders += "<tr>";
-    for(var $hdr in headers) {
+    for (var $hdr in headers) {
         if (headers[$hdr].unit) {
-            headerHasUnit = true;
             tbDataHeaders += '<th ' +
                 'id="' + headers[key].field + $hdr + headers[key].input_type + '_header"' +
                 'data-key="' + headers[$hdr].field + '" ' +
@@ -490,6 +499,13 @@ function showDataTable(headers, data) {
     tbDataHeaders += "</tr>";
     tbHiddenHeaders = tbDataHeaders.replace('id=', 'data-hidden=');
 
+    for (var $hdr in headers) {
+        visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
+        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
+            '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
+        visibleColumns += '</li>';
+    }
+
     $('#tbAddRow_header').html(tbHiddenHeaders);
     $('#tbHeaders_header').html(tbDataHeaders);
     $('#tbData_header').html(tbHiddenHeaders);
@@ -500,19 +516,23 @@ function showDataTable(headers, data) {
     $('#tbHeaders_body').html(tbHiddenData);
     $('#tbData_body').html(tableData);
 
+    //span columns (first horizontal, next vertical) if they data are the same for multi-headers
+    if (rows_in_hdrs > 1) SpanColumnsWithTheSameData('tbHeaders_header');
+
     //set rows height
     var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
     $('.table>tbody>tr>td .td_wrap').css('height', (rh-7)+'px');
 
     //show 'add row' if checked
-    $('#tbAddRow').css('top', headerHasUnit ? '-64px' : '-32px');
-    $('#tbData').css('margin-top', headerHasUnit ? '-64px' : '-32px');
+    var hdr_height = document.getElementById('tbHeaders_header').clientHeight;
+    $('#tbAddRow').css('top', (-hdr_height)+'px');
+    $('#tbData').css('margin-top', (-hdr_height)+'px');
     if ($('#addingIsInline').is(':checked')) {
         $('#tbHeaders').css('top', rh+'px');
-        $('#divTbData').css('top', headerHasUnit ? (rh+64)+'px' : (rh+32)+'px');
+        $('#divTbData').css('top', (rh+hdr_height)+'px');
     } else {
         $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
+        $('#divTbData').css('top', hdr_height+'px');
     }
 
     $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset()+'px');
@@ -1678,6 +1698,7 @@ function addRowInline() {
 }
 
 function checkboxAddToggle() {
+    var hdr_height = document.getElementById('tbHeaders_header').clientHeight;
     if ($('#addingIsInline').is(':checked')) {
         var lv = $('#list_view').is(':visible'),
             ltableHeaders = (lv ? tableHeaders : settingsTableHeaders),
@@ -1692,13 +1713,13 @@ function checkboxAddToggle() {
         var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
         $('#tbAddRow').show();
         $('#tbHeaders').css('top', rh+'px');
-        $('#divTbData').css('top', headerHasUnit ? (rh+64)+'px' : (rh+32)+'px');
+        $('#divTbData').css('top', (rh+hdr_height)+'px');
 
         editSelectedData(-1);
     } else {
         $('#tbAddRow').hide();
         $('#tbHeaders').css('top', '0');
-        $('#divTbData').css('top', headerHasUnit ? '64px' : '32px');
+        $('#divTbData').css('top', hdr_height+'px');
     }
 }
 
@@ -1780,7 +1801,7 @@ function changeFavoritePage(page) {
 
 function showFavoriteDataTable(headers, data) {
     var tableData = "", tbHiddenData = "", tbCheckRow = "", tbAddRow_h = "", key, d_key, tbDataHeaders = "",
-        lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries, headerHasUnit = false;
+        lselectedEntries = selectedEntries == 'All' ? 0 : selectedEntries;
 
     for(var i = 0; i < data.length; i++) {
         if (i === 0) { //first row with checkboxes
@@ -1854,29 +1875,44 @@ function showFavoriteDataTable(headers, data) {
         tbHiddenData += "</tr>";
     }
 
-    //first header row
-    tbDataHeaders += "<tr><th class='sorting nowrap' rowspan='2'><b>#</b></th>";
-    tbDataHeaders += "<th class='sorting nowrap' rowspan='2'></th>";
-    tbDataHeaders += "<th class='sorting nowrap' rowspan='2' style='min-width: 70px;'></th>";
-    for(var $hdr in headers) {
-        tbDataHeaders += '<th class="sorting nowrap" ' +
-            (!headers[$hdr].unit ? 'rowspan="2" ' : '') +
-            'data-key="' + headers[$hdr].field + '" ' +
-            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
-            (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
-            (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
-            '">' +
-                '<span style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
-                    ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
-                '</span>' +
-            '</th>';
+    var rows_in_hdrs = 1, tmp;
+    for (var $hdr in headers) {
+        tmp = headers[$hdr].name;
+        tmp = tmp.split(',');
+        if (tmp && tmp.length > rows_in_hdrs) {
+            rows_in_hdrs = tmp.length;
+        }
     }
-    tbDataHeaders += "</tr>";
-    //second header row
+    //recreate headers for main data (with multi-headers feature)
+    for (var i = 0; i < rows_in_hdrs; i++) {
+        tbDataHeaders += "<tr>";
+        if (i == 0) {
+            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"'><b>#</b></th>";
+            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"'></th>";
+            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"' style='min-width: 70px;'></th>";
+        }
+        for (var $hdr in headers) {
+            tmp = headers[$hdr].name;
+            tmp = tmp.split(',');
+
+            tbDataHeaders += '<th class="sorting nowrap" ' +
+                (!headers[$hdr].unit && i == (rows_in_hdrs-1) ? 'rowspan="2" ' : '') +
+                'data-key="' + headers[$hdr].field + '" ' +
+                'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+                (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
+                (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
+                '">' +
+                '<span style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : (tmp[i] ? tmp[i] : '')) +
+                '</span>' +
+                '</th>';
+        }
+        tbDataHeaders += "</tr>";
+    }
+    //unit`s header row
     tbDataHeaders += "<tr>";
     for(var $hdr in headers) {
         if (headers[$hdr].unit) {
-            headerHasUnit = true;
             tbDataHeaders += '<th ' +
                 'data-key="' + headers[$hdr].field + '" ' +
                 'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">' +
@@ -1894,9 +1930,12 @@ function showFavoriteDataTable(headers, data) {
     $('#tbFavoriteData_body').html(tableData);
     $('#tbFavoriteCheckRow_body').html(tbCheckRow + tbHiddenData);
 
-    $('#tbFavoriteCheckRow').css('top', headerHasUnit ? '-64px' : '-32px');
-    $('#tbFavoriteDataDiv').css('top', headerHasUnit ? '101px' : '69px');
-    $('#tbFavoriteData').css('margin-top', headerHasUnit ? '-65px' : '-33px');
+    if (rows_in_hdrs > 1) SpanColumnsWithTheSameData('tbFavoriteHeaders_header');
+
+    var hdr_height = document.getElementById('tbFavoriteHeaders_header').clientHeight;
+    $('#tbFavoriteCheckRow').css('top', (-hdr_height)+'px');
+    $('#tbFavoriteDataDiv').css('top', (hdr_height+37)+'px');
+    $('#tbFavoriteData').css('margin-top', (-hdr_height)+'px');
 }
 
 function showFavoriteTableFooter() {
@@ -1996,29 +2035,45 @@ function favoritesCopyToClipboard() {
         $('.js-favoriteColsChecked:checked:visible').each(function (i, elem) {
             selectedColumns.push( $(elem).data('key') );
         });
+        var rows_in_hdrs = 1, tmp;
 
         var textToClip = "<table id='tableForCopy'>";
         if ($('#favourite_copy_with_headers').is(':checked')) {
-            //first headers row
-            textToClip += "<tr>";
-            for (var j = 0; j < selectedColumns.length; j++) {
-                for (var k = 0; k < favoriteTableHeaders.length; k++) {
-                    if (favoriteTableHeaders[k].field == selectedColumns[j]) {
-                        textToClip += "<td "+(favoriteTableHeaders[k].unit ? '' : 'rowspan="2"')+">" + favoriteTableHeaders[k].name + "</td>";
-                    }
+            for (var $hdr in favoriteTableHeaders) {
+                tmp = favoriteTableHeaders[$hdr].name;
+                tmp = tmp.split(',');
+                if (tmp && tmp.length > rows_in_hdrs) {
+                    rows_in_hdrs = tmp.length;
                 }
             }
-            textToClip += "</tr>";
-            //second headers row
+
+            textToClip += "<thead id='tableForCopy_head'>";
+            //recreate headers for main data (with multi-headers feature)
+            for (var i = 0; i < rows_in_hdrs; i++) {
+                textToClip += "<tr>";
+                for (var j = 0; j < selectedColumns.length; j++) {
+                    for (var k = 0; k < favoriteTableHeaders.length; k++) {
+                        if (favoriteTableHeaders[k].field == selectedColumns[j]) {
+                            tmp = favoriteTableHeaders[k].name;
+                            tmp = tmp.split(',');
+
+                            textToClip += "<th "+(!favoriteTableHeaders[k].unit && i == (rows_in_hdrs-1) ? 'rowspan="2"' : '')+">" + (tmp[i] ? tmp[i] : '') + "</th>";
+                        }
+                    }
+                }
+                textToClip += "</tr>";
+            }
+            //unit`s headers row
             textToClip += "<tr>";
             for (var j = 0; j < selectedColumns.length; j++) {
                 for (var k = 0; k < favoriteTableHeaders.length; k++) {
                     if (favoriteTableHeaders[k].field == selectedColumns[j] && favoriteTableHeaders[k].unit) {
-                        textToClip += "<td>" + favoriteTableHeaders[k].unit + "</td>";
+                        textToClip += "<th>" + favoriteTableHeaders[k].unit + "</th>";
                     }
                 }
             }
             textToClip += "</tr>";
+            textToClip += "</thead>";
         }
         $('.js-favoriteRowsChecked:checked').each(function (i, elem) {
             var idx = $(elem).data('idx');
@@ -2030,7 +2085,8 @@ function favoritesCopyToClipboard() {
         });
         textToClip += "</table>";
 
-        copyToClipboard(textToClip);
+        $(document.body).append(textToClip);
+        copyToClipboard(tableForCopy);
     } else {
         swal({
             title: "Only available to logged in user. Register and login to make full use of all functions and features.",
@@ -2039,10 +2095,9 @@ function favoritesCopyToClipboard() {
     }
 }
 
-function copyToClipboard(text) {
-    $(document.body).append(text);
-    selectElementContents(tableForCopy);
-    document.body.removeChild(tableForCopy);
+function copyToClipboard(el) {
+    selectElementContents(el);
+    //document.body.removeChild(el);
 }
 
 function selectElementContents(el) {
@@ -2237,11 +2292,14 @@ function showSettingsDataTable(headers, data) {
             'class="sorting nowrap" ' +
             'data-key="' + headers[$hdr].field + '" ' +
             'data-order="' + $hdr + '" ' +
-            'style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
+            'style="position:relative;' + (headers[$hdr].web == 'No' ? 'display: none;' : '') +
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
-            '<span draggable="true">' + ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) + '</span>'
+                '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                    ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
+                '</span>' +
+                '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
             '</th>';
     }
     tbSettingsHeaders += "</tr>";
@@ -2283,6 +2341,61 @@ function showSettingsDataTable(headers, data) {
             col.addEventListener('drop', handleDropSettings_rows, false);
             col.addEventListener('dragend', handleDragEndSettings_rows, false);
         });
+
+        //add resize listeners for table headers
+        cols = document.querySelectorAll('#tbSettingsHeaders_head th > div');
+        [].forEach.call(cols, function(col) {
+            col.addEventListener('mousedown', handleStartSettingsResize, false);
+        });
+    }
+}
+document.addEventListener('mousemove', handleElemSettingsResize, false);
+document.addEventListener('mouseup', handleEndSettingsResize, false);
+
+var startSettingsX = 0, startSettingsWidth = 0, startSettingsResizeElem = false;
+function handleStartSettingsResize(e) {
+    startSettingsX = 0;
+    startSettingsWidth = this.parentNode.clientWidth;
+    startSettingsResizeElem = this;
+    this.parentNode.style.minWidth = "0";
+    this.parentNode.style.maxWidth = "1000px";
+}
+
+function handleElemSettingsResize(e) {
+    if (startSettingsResizeElem) {
+        if (startSettingsX) {
+            var fieldKey = startSettingsResizeElem.parentNode.dataset.key;
+            startSettingsWidth += e.x - startSettingsX;
+            startSettingsX = e.x;
+            //resize header
+            $('#tbSettingsHeaders_head th[data-key="'+fieldKey+'"] span').css('width', (startSettingsWidth-27)+'px');
+            $('#tbSettingsData_head th[data-key="'+fieldKey+'"] span').css('width', (startSettingsWidth-27)+'px');
+            //resize columns
+            $('#tbSettingsHeaders_body td[data-key="'+fieldKey+'"] .td_wrap').css('width', (startSettingsWidth-14)+'px');
+            $('#tbSettingsData_body td[data-key="'+fieldKey+'"] .td_wrap').css('width', (startSettingsWidth-14)+'px');
+        } else {
+            startSettingsX = e.x;
+        }
+    }
+}
+
+function handleEndSettingsResize(e) {
+    if (startSettingsResizeElem) {
+        var field_name = startSettingsResizeElem.parentNode.dataset.key;
+        startSettingsResizeElem = false;
+
+        for (var i in settingsTableHeaders) {
+            if (settingsTableHeaders[i].field == field_name) {
+                settingsTableHeaders[i].dfot_wth = startSettingsWidth;
+                $.ajax({
+                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + settingsTableHeaders[i].id + '&dfot_wth=' + startSettingsWidth,
+                    method: 'get'
+                });
+                break;
+            }
+        }
+        startSettingsWidth = 0;
+        showDataTable(settingsTableHeaders, settingsTableData);
     }
 }
 
@@ -3444,6 +3557,10 @@ function sent_csv_to_backend(is_upload) {
         method: 'POST',
         success: function(resp) {
             $('#import_data_csv').val(resp.data_csv);
+            if (is_upload != 2) {//fill table only on click by 'import'
+                return;
+            }
+
             if ($('#import_action_type').val() != '/modifyTable') {
                 if ($('#import_action_type').val() == '/createTable') {
                     $('#import_table_name').val(resp.filename);
@@ -3451,14 +3568,14 @@ function sent_csv_to_backend(is_upload) {
                 }
 
                 var fieldlist = [];
-                fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                //fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 $.each(resp.headers, function(i, hdr) {
                     fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':hdr.type, 'auto':0, 'size':hdr.size, 'default':hdr.default, 'required':hdr.required});
                 });
-                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                /*fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});*/
 
                 var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
@@ -3493,6 +3610,7 @@ function sent_csv_to_backend(is_upload) {
                     ddl_col_numbers.push(hdr.field);
                 });
             }
+
             import_show_col_tab();
         }
     });
@@ -3519,14 +3637,14 @@ function import_test_db_connect() {
                 }
 
                 var fieldlist = [];
-                fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                //fieldlist.push({'name':'ID', 'field':'id', 'type':'Auto Number', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 $.each(resp.headers, function(i, hdr) {
                     fieldlist.push({'name':hdr.header, 'field':hdr.field, 'type':hdr.type, 'auto':0, 'size':hdr.size, 'default':hdr.default, 'required':hdr.required});
                 });
-                fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                /*fieldlist.push({'name':'Created By', 'field':'createdBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Created On', 'field':'createdOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
                 fieldlist.push({'name':'Modified By', 'field':'modifiedBy', 'type':'Integer', 'auto':1, 'size':'', 'default':'auto', 'required':1});
-                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});
+                fieldlist.push({'name':'Modified On', 'field':'modifiedOn', 'type':'Date', 'auto':1, 'size':'', 'default':'auto', 'required':1});*/
 
                 var html = '', imp_type = $('#import_type_import').val();
                 $.each(fieldlist, function(i, hdr) {
@@ -4630,6 +4748,89 @@ function tableStretch() {
     $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
     localStorage.setItem('stretched_tables', stretchedtables ? '1' : '0');
     $('#tableStretch_btn').css('color', stretchedtables ? '#fff' : '#777');
+}
+
+function SpanColumnsWithTheSameData(id) {
+    var table = $("#"+id);
+    var rows = table.find($("tr"));
+    var colsLength = $(rows[0]).find($("th:visible")).length;
+
+    //mark rows for span
+    var removeLaterR = new Array();
+    for (var i = 0; i < rows.length-1; i++) {
+        var spanIndex = 1;
+        var elem = $(rows[i]).find("th:visible")[0];
+        for (var j = 1; j < colsLength; j++) {
+            var td = $(rows[i]).find("th:visible")[j];
+            if ($(elem).text() == $(td).text()) {
+                $(td).data("colspan", 1);
+                removeLaterR.push(td);
+                spanIndex++;
+            } else {
+                if (spanIndex > 1) {
+                    $(elem).data("colspan", spanIndex);
+                    spanIndex = 1;
+                }
+                elem = td;
+            }
+        }
+    }
+
+    //mark columns for span
+    var colOffset = 0;
+    var removeLaterC = new Array();
+    for (var i = 0; i < colsLength; i++) {
+        var spanIndex = 1;
+        var elem = $(rows[0]).find("th:visible")[i];
+
+        if ($(elem).attr('rowspan')) {
+            colOffset++;
+            continue;
+        }
+
+        for (var j = 1; j < rows.length-1; j++) {
+
+            var td = $(rows[j]).find("th:visible")[i-colOffset];
+            if (!td) break;
+
+            if ($(elem).text() == $(td).text() && !$(td).data('colspan') && !$(elem).data('colspan')) {
+                if ($(td).attr('rowspan')) spanIndex++;//if elem doesn`t have unit +1 to 'rowspan'
+                removeLaterC.push(td);
+                spanIndex++;
+            } else {
+                if (spanIndex > 1) {
+                    $(elem).data("rowspan", spanIndex);
+                    spanIndex = 1;
+                }
+                elem = td;
+            }
+        }
+
+        if (spanIndex > 1) {
+            $(elem).data("rowspan", spanIndex);
+        }
+    }
+
+    //span rows and columns
+    for (var i = 0; i < rows.length-1; i++) {
+        for (var j = 0; j < colsLength; j++) {
+            var td = $(rows[i]).find("th:visible")[j];
+            if ($(td).data("colspan")) {
+                $(td).attr("colspan", $(td).data("colspan") );
+            }
+            if ($(td).data("rowspan")) {
+                $(td).attr("rowspan", $(td).data("rowspan") );
+            }
+        }
+    }
+
+    //delete spanned rows and columns
+    for (var i in removeLaterR) {
+        if (removeLaterR[i]) $(removeLaterR[i]).remove();
+    }
+    for (var i in removeLaterC) {
+        if (removeLaterR[i]) $(removeLaterC[i]).remove();
+    }
 }
 
 //auto logout after 30min idle

@@ -53,7 +53,7 @@ class TableController extends Controller
             }
         } else {
             $responseArray["error"] = TRUE;
-            $responseArray["msg"] = "No Data";
+            $responseArray["msg"] = "";
         }
 
         return $responseArray;

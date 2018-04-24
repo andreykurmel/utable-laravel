@@ -784,7 +784,7 @@
                                             <div style="width: calc(50% - 50px); display: inline-block;">
                                                 <input type="text" id="import_file_link" class="form-control" placeholder="www address of file">
                                             </div>
-                                            <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(1)">Import</button>
+                                            <button class="btn btn-primary js-import_csv_style" onclick="sent_csv_to_backend(2)">Import</button>
                                         </div>
                                         <div class="row form-group js-import_mysql_style" style="display: none;">
                                             <div class="col-xs-8 form-group">
@@ -827,28 +827,28 @@
                                         <div class="row js-import_csv_style">
                                             <div class="col-xs-5">
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>First row as headers:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c1" name="csv_first_headers" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c1" name="csv_first_headers" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>First row as headers:</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>Second row as fields:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c2" name="csv_second_fields" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c2" name="csv_second_fields" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>Second row as fields:</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>Third row as data type:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c3" name="csv_third_type" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c3" name="csv_third_type" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>Third row as data type:</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>Fourth row as max. size:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c4" name="csv_fourth_size" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c4" name="csv_fourth_size" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>Fourth row as max. size:</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>Fifth row as default value:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c5" name="csv_fifth_default" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c5" name="csv_fifth_default" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>Fifth row as default value:</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-9"><label>Sixth row as inclusion:</label></div>
-                                                    <div class="col-xs-3"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c6" name="csv_sixth_required" onchange="sent_csv_to_backend(0)"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c6" name="csv_sixth_required" style="box-shadow: none;"></div>
+                                                    <div class="col-xs-10"><label>Sixth row as inclusion:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-5"><label>Starting row:</label></div>
@@ -861,19 +861,19 @@
                                             </div>
                                             <div class="col-xs-5">
                                                 <div class="row">
-                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_replace_accents"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_replace_accents" style="box-shadow: none;"></div>
                                                     <div class="col-xs-10"><label>Replace Accents/Diacriticals</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_char"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_char" style="box-shadow: none;"></div>
                                                     <div class="col-xs-10"><label>Treat all Quoting Characted as data</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_apostrophe"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_quote_apostrophe" style="box-shadow: none;"></div>
                                                     <div class="col-xs-10"><label>Input CSV Quoting Characted is Apostrophe</label></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_backslash"></div>
+                                                    <div class="col-xs-2"><input type="checkbox" class="form-control" name="csv_backslash" style="box-shadow: none;"></div>
                                                     <div class="col-xs-10"><label>CSV contains backslash escaping like \n, \t and \.</label></div>
                                                 </div>
                                             </div>
