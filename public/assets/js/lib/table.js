@@ -517,7 +517,11 @@ function showDataTable(headers, data) {
     $('#tbData_body').html(tableData);
 
     //span columns (first horizontal, next vertical) if they data are the same for multi-headers
-    if (rows_in_hdrs > 1) SpanColumnsWithTheSameData('tbHeaders_header');
+    if (rows_in_hdrs > 1) {
+        SpanColumnsWithTheSameData('tbAddRow_header');
+        SpanColumnsWithTheSameData('tbHeaders_header');
+        SpanColumnsWithTheSameData('tbData_header');
+    }
 
     //set rows height
     var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
@@ -1930,7 +1934,11 @@ function showFavoriteDataTable(headers, data) {
     $('#tbFavoriteData_body').html(tableData);
     $('#tbFavoriteCheckRow_body').html(tbCheckRow + tbHiddenData);
 
-    if (rows_in_hdrs > 1) SpanColumnsWithTheSameData('tbFavoriteHeaders_header');
+    if (rows_in_hdrs > 1) {
+        SpanColumnsWithTheSameData('tbFavoriteHeaders_header');
+        SpanColumnsWithTheSameData('tbFavoriteData_header');
+        SpanColumnsWithTheSameData('tbFavoriteCheckRow_header');
+    }
 
     var hdr_height = document.getElementById('tbFavoriteHeaders_header').clientHeight;
     $('#tbFavoriteCheckRow').css('top', (-hdr_height)+'px');
