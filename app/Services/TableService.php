@@ -468,15 +468,6 @@ class TableService {
 
     public function getImportHeaders($tableName, $target_tb_id = 0) {
         if ($target_tb_id == 0) {
-            $importHeadersMeta = $tableName
-                ?
-                DB::connection('mysql_schema')
-                    ->table('COLUMNS')
-                    ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
-                    ->where('TABLE_NAME', '=', $tableName)
-                    ->get()
-                :
-                [];
             $importHeaders = $tableName ? $this->getHeaders($tableName) : $this->emptyTBHeaders();
 
             foreach ($importHeaders as &$imp) {
@@ -487,25 +478,11 @@ class TableService {
                     $imp->required = 1;
                     $imp->maxlen = '';
                 } else {
-                    $curval = [];
-                    foreach ($importHeadersMeta as $imeta) {
-                        if ($imeta->COLUMN_NAME == $imp->field) {
-                            $curval = $imeta;
-                            break;
-                        }
-                    }
                     $imp->auto = 0;
-                    $imp->type = ($curval ? $curval->DATA_TYPE : 'String');
-                    switch ($imp->type) {
-                        case 'int': $imp->type = 'Integer'; break;
-                        case 'decimal': $imp->type = 'Decimal'; break;
-                        case 'datetime': $imp->type = 'Date Time'; break;
-                        case 'date': $imp->type = 'Date'; break;
-                        default: $imp->type = 'String'; break;
-                    }
-                    $imp->default = ($curval && $curval->COLUMN_DEFAULT ? $curval->COLUMN_DEFAULT : '');
-                    $imp->required = ($curval && $curval->IS_NULLABLE != 'YES' ? 1 : 0);
-                    $imp->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : ($curval && $curval->NUMERIC_PRECISION ? $curval->NUMERIC_PRECISION : ''));
+                    $imp->type = ($imp->f_type ? $imp->f_type : 'String');
+                    $imp->default = ($imp->f_default ? $imp->f_default : '');
+                    $imp->required = ($imp->f_required ? $imp->f_required : 0);
+                    $imp->maxlen = ($imp->f_size ? $imp->f_size : '');
                 }
             }
         } else {

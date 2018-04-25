@@ -809,6 +809,12 @@ class TableController extends Controller
         //delete record from the folders and favorites ('menutree_2_tb')
         DB::connection('mysql_sys')->table('menutree_2_tb')->where('tb_id', '=', $tableMeta->id)->delete();
 
+        //delete record from the references ('tb_rfcn')
+        DB::connection('mysql_sys')->table('tb_rfcn')->where('tb_id', '=', $tableMeta->id)->delete();
+
+        //delete record from the referenced ddls ('cdtns')
+        DB::connection('mysql_sys')->table('cdtns')->where('tb_id', '=', $tableMeta->id)->delete();
+
         //delete record from the 'permissions'
         DB::connection('mysql_sys')->table('permissions')->where('table_id', '=', $tableMeta->id)->delete();
 
@@ -968,7 +974,7 @@ class TableController extends Controller
                             $presentCols[] = $col['field'];
 
                             //add column
-                            if ($col['type'] == 'String') {
+                            if ($col['type'] == 'String' || $col['type'] == 'Attachment') {
                                 $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
                             } elseif ($col['type'] == 'Date') {
                                 $t = $table->date($col['field']);
@@ -977,7 +983,7 @@ class TableController extends Controller
                             } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
                                 $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
                             } else {
-                                $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                                $t = $table->integer($col['field']);
                             }
 
                             if (empty($col['required'])) {
@@ -1033,6 +1039,8 @@ class TableController extends Controller
                     'input_type' => 'Input',
                     'min_wth' => 0,
                     'max_wth' => 0,
+                    'f_type' => (!empty($col['type']) ? $col['type'] : 'String'),
+                    'f_size' => ($col['size'] > 0 ? $col['size'] : (!empty($col['type']) && $col['type'] == 'String' ? 255 : '')),
                     'createdBy' => Auth::user()->id,
                     'createdOn' => now(),
                     'modifiedBy' => Auth::user()->id,
@@ -1116,7 +1124,7 @@ class TableController extends Controller
                                 } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
                                     $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
                                 } else {
-                                    $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                                    $t = $table->integer($col['field']);
                                 }
 
                                 if (empty($col['required'])) {
@@ -1133,7 +1141,7 @@ class TableController extends Controller
                         //for adding columns
                         if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                             //add column
-                            if ($col['type'] == 'String') {
+                            if ($col['type'] == 'String' || $col['type'] == 'Attachment') {
                                 $t = $table->string($col['field'], $col['size'] > 0 ? $col['size'] : 255);
                             } elseif ($col['type'] == 'Date') {
                                 $t = $table->date($col['field']);
@@ -1142,7 +1150,7 @@ class TableController extends Controller
                             } elseif (in_array($col['type'], ['Decimal','Currency','Percentage'])) {
                                 $t = $table->decimal($col['field'], $col_size[0], $col_size[1]);
                             } else {
-                                $t = $table->integer($col['field'], $col['type'] == 'Auto Number' ? true : false);
+                                $t = $table->integer($col['field']);
                             }
 
                             if (empty($col['required'])) {
@@ -1156,7 +1164,10 @@ class TableController extends Controller
                     }
                 });
             } catch (\Exception $e) {
-                $error = "Seems that your table schema is incorrect!<br>".$e->getMessage();
+                return [
+                    'error' => true,
+                    'msg' => "Seems that your table schema is incorrect!<br>".$e->getMessage()
+                ];
             }
         }
 
@@ -1205,6 +1216,8 @@ class TableController extends Controller
                         'input_type' => 'Input',
                         'min_wth' => 0,
                         'max_wth' => 0,
+                        'f_type' => (!empty($col['type']) ? $col['type'] : 'String'),
+                        'f_size' => ($col['size'] > 0 ? $col['size'] : (!empty($col['type']) && $col['type'] == 'String' ? 255 : '')),
                         'createdBy' => Auth::user()->id,
                         'createdOn' => now(),
                         'modifiedBy' => Auth::user()->id,
@@ -1258,7 +1271,7 @@ class TableController extends Controller
     }
 
     public function menutree_deletefolder(Request $request) {
-        $id = DB::connection('mysql_sys')->table('menutree')->where('id', '=', $request->folder_id)->delete();
+        $id = $this->delete_folder_with_children($request->folder_id);
 
         if ($id) {
             $responseArray['error'] = FALSE;
@@ -1268,6 +1281,32 @@ class TableController extends Controller
             $responseArray['msg'] =  "Server Error";
         }
         return $responseArray;
+    }
+
+    private function delete_folder_with_children($folder_id) {
+        $folder = DB::connection('mysql_sys')
+            ->table('menutree')
+            ->where('id', '=', $folder_id)
+            ->first();
+        $folders_to_remove = DB::connection('mysql_sys')
+            ->table('menutree')
+            ->where('parent_id', '=', $folder->id)
+            ->get();
+        $tables_to_remove = DB::connection('mysql_sys')
+            ->table('menutree_2_tb as m2t')
+            ->join('tb', 'tb.id', '=', 'm2t.tb_id')
+            ->where('type', '=', 'table')
+            ->where('menutree_id', '=', $folder->id)
+            ->get();
+
+        DB::connection('mysql_sys')->table('menutree')->where('id', '=', $folder_id)->delete();
+        foreach ($tables_to_remove as $tb) {
+            $this->deleteAllTable($tb->db_tb);
+        }
+        foreach ($folders_to_remove as $fld) {
+            $this->delete_folder_with_children($fld->id);
+        }
+        return 'success';
     }
 
     public function menutree_movenode(Request $request) {

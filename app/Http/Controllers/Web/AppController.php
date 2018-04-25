@@ -118,11 +118,6 @@ class AppController extends Controller
             foreach ($tablesDropDown as &$tb) {
                 $refTbName = DB::connection('mysql_sys')->table('tb')->where('id', '=', $tb->id)->first();
                 $refTbName = DB::connection('mysql_sys')->table('tb')->where('id', '=', $tb->id)->first();
-                $tb_meta = DB::connection('mysql_schema')
-                    ->table('COLUMNS')
-                    ->where('TABLE_SCHEMA', '=', env('DB_DATABASE_DATA', 'utable'))
-                    ->where('TABLE_NAME', '=', $refTbName->db_tb)
-                    ->get();
 
                 $tb->conn_notes = '';
                 $tb->items = DB::connection('mysql_sys')
@@ -130,19 +125,6 @@ class AppController extends Controller
                     ->where('tb_id', '=', $tb->id)
                     ->where('user_id', '=', $tb->owner)
                     ->get();
-
-                for ($i = 0; $i < count($tb->items); $i++) {
-                    $curval = $tb_meta->where('COLUMN_NAME', '=', $tb->items[$i]->field)->first();
-                    $tb->items[$i]->type = ($curval ? $curval->DATA_TYPE : 'String');
-                    switch ($tb->items[$i]->type) {
-                        case 'int': $tb->items[$i]->type = 'Integer'; break;
-                        case 'decimal': $tb->items[$i]->type = 'Decimal'; break;
-                        case 'datetime': $tb->items[$i]->type = 'Date Time'; break;
-                        case 'date': $tb->items[$i]->type = 'Date'; break;
-                        default: $tb->items[$i]->type = 'String'; break;
-                    }
-                    $tb->items[$i]->maxlen = ($curval && $curval->CHARACTER_MAXIMUM_LENGTH ? $curval->CHARACTER_MAXIMUM_LENGTH : ($curval && $curval->NUMERIC_PRECISION ? $curval->NUMERIC_PRECISION : ''));
-                }
             }
         } else {
             $tablesDropDown = [];

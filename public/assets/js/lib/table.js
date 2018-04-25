@@ -65,7 +65,7 @@ $(document).ready(function () {
                 $('.navbar').show();
                 $('.div-screen').css('top', '50px');
             }
-            $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
+            $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('offsetTop','')+'px');
         }
         if (e.keyCode == 39) {
             if (e.ctrlKey) {//ctrl+right arrow (show/hide filters)
@@ -361,13 +361,18 @@ function showDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' : '') +
+                    (d_key != 'id' && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                        'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' :
+                        '') +
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (headers[key].f_type == 'Attachment') {
+                    tableData += '<i class="fa fa-paperclip"></i>';
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -391,12 +396,17 @@ function showDataTable(headers, data) {
                         'data-key="' + headers[key].field + '"' +
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
-                        (d_key != 'id' && headers[key].can_edit ? 'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' : '') +
+                        (d_key != 'id' && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                            'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' :
+                            '') +
                         'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                         (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                         (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
                         '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
-                        '</div></td>';
+                    if (headers[key].f_type == 'Attachment') {
+                        tableData += '<i class="fa fa-paperclip"></i>';
+                    }
+                    tbAddRow += '</div></td>';
                     /*if (d_key == 'id') {
                      tbAddRow += '<button class="btn btn-success" onclick="addRowInline()">Save</button></td>';
                      } else {
@@ -434,6 +444,9 @@ function showDataTable(headers, data) {
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (headers[key].f_type == 'Attachment') {
+                    tableData += '<i class="fa fa-paperclip"></i>';
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -539,7 +552,7 @@ function showDataTable(headers, data) {
         $('#divTbData').css('top', hdr_height+'px');
     }
 
-    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset()+'px');
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('offsetTop','')+'px');
 
     if (selectedTableName == 'st') {
         for (var k = 0; k < data.length;k++) {
@@ -812,8 +825,7 @@ function showAddressSearch() {
 }
 
 function showHideColumnsList() {
-    var btn = document.getElementById('showHideColumnsList_btn'),
-        left_bound = btn.offsetLeft + btn.parentNode.offsetLeft;
+    var left_bound = getGlobalOffset('offsetLeft', 'showHideColumnsList_btn');
     $('#showHideColumnsList').css('left', left_bound+'px');
 
     if ($('#showHideColumnsList').is(':visible')) {
@@ -1008,7 +1020,7 @@ function showList() {
     $("#favorite_btns").hide();
     $('.showhidemenu').show();
     selectedForChangeOrder = -1;
-    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('offsetTop','')+'px');
 }
 
 function showFavorite() {
@@ -1026,7 +1038,7 @@ function showFavorite() {
     $("#favorite_btns").show();
     $('.showhidemenu').show();
     changeFavoritePage(1);
-    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('offsetTop','')+'px');
 }
 
 function showImport() {
@@ -1063,7 +1075,7 @@ function showSettings() {
     $("#favorite_btns").hide();
     $('#showHideColumnsList').hide();
     selectedForChangeOrder = -1;
-    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('divTbData')+'px');
+    $('.table_body_viewport > .mCSB_scrollTools').css('top', getGlobalOffset('offsetTop','')+'px');
     showSettingsDataTable(settingsTableHeaders, settingsTableData);
 }
 
@@ -1397,7 +1409,9 @@ function deleteRow(params, idx) {
         url: baseHttpUrl + '/deleteTableRow?tableName=' + lselectedTableName + '&id=' + params.id,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -1431,7 +1445,9 @@ function addRow(params) {
         success: function (response) {
             $('.loadingFromServer').hide();
             tableData[ tableData.length-1 ].id = response.last_id;
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -1463,7 +1479,9 @@ function updateRow(params, to_change) {
         url: baseHttpUrl + '/updateTableRow?tableName=' + lselectedTableName + '&' + strParams,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3090,7 +3108,9 @@ function updateSettingsDDL(id) {
         url: baseHttpUrl + '/updateTableRow?tableName=' + tableName + '&' + strParams,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3138,7 +3158,9 @@ function deleteSettingsDDL(tableName, rowId, idx) {
         url: baseHttpUrl + '/deleteTableRow?tableName=' + tableName + '&id=' + rowId,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3195,7 +3217,9 @@ function saveSettingsDDLRow(tableName) {
             }
 
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3393,7 +3417,9 @@ function updateSettingsRightsItem(key, idx, id) {
         url: baseHttpUrl + '/updateRightsDatas?id=' + idx + '&fieldname=' + key + '&val=' + val,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3418,7 +3444,9 @@ function deleteSettingsRights(tableName, rowId, idx) {
         url: baseHttpUrl + '/deleteRightsDatas?tableName=' + tableName + '&id=' + rowId,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
         },
         error: function () {
             $('.loadingFromServer').hide();
@@ -3434,7 +3462,9 @@ function addSettingsRights() {
         url: baseHttpUrl + '/addRightsDatas?tableName=permissions&table_id=' + settingsRights_TableMeta.id + '&user_id=' + $('#selectUserSearch').val(),
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
 
             getRightsDatas(selectedTableName);
         },
@@ -3453,7 +3483,9 @@ function toggleAllrights(idx, type, status) {
         url: baseHttpUrl + '/toggleAllrights?permissions_id=' + settingsRights[idx].id + '&r_status=' + (status ? 1 : 0)+ '&type=' + type,
         success: function (response) {
             $('.loadingFromServer').hide();
-            alert(response.msg);
+            if (response.msg) {
+                alert(response.msg);
+            }
 
             getRightsDatas(selectedTableName);
         },
@@ -3821,8 +3853,8 @@ function show_import_ref_columns(idx) {
             }
         }
         html += '</select></td>' +
-            '<td><input id="import_columns_ref_type_'+i+'" disabled class="form-control" type="text" value="'+(found_field ? found_field.type : '')+'"></td>' +
-            '<td><input id="import_columns_ref_maxlen_'+i+'" disabled class="form-control" type="text" value="'+(found_field ? found_field.maxlen : '')+'"></td>' +
+            '<td><input id="import_columns_ref_type_'+i+'" disabled class="form-control" type="text" value="'+(found_field ? found_field.f_type : '')+'"></td>' +
+            '<td><input id="import_columns_ref_maxlen_'+i+'" disabled class="form-control" type="text" value="'+(found_field ? found_field.f_size : '')+'"></td>' +
             '</tr>';
     }
     $('#import_table_ref_col_body').html(html);
@@ -3843,8 +3875,8 @@ function save_import_references_field (elem, idx, fld) {
             }
         }
     }
-    $('#import_columns_ref_type_'+data_idx).val( found_field ? found_field.type : ''  );
-    $('#import_columns_ref_maxlen_'+data_idx).val( found_field ? found_field.maxlen : '' );
+    $('#import_columns_ref_type_'+data_idx).val( found_field ? found_field.f_type : ''  );
+    $('#import_columns_ref_maxlen_'+data_idx).val( found_field ? found_field.f_size : '' );
 }
 
 function import_del_row(idx) {
@@ -4389,30 +4421,29 @@ function jsTreeBuild($tab) {
                                     var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
                                     var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
                                     var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                    if ( $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ) {
-                                        swal('Error', 'You cannot remove folder with children', 'error');
-                                    } else {
-                                        swal({
-                                                title: "Delete folder",
-                                                text: "Are you sure?",
-                                                type: "warning",
-                                                confirmButtonClass: "btn-danger",
-                                                confirmButtonText: "Yes, delete it!",
-                                                showCancelButton: true,
-                                                closeOnConfirm: true,
-                                                animation: "slide-from-top"
-                                            },
-                                            function () {
-                                                $.ajax({
-                                                    url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
-                                                    method: 'GET',
-                                                    success: function (resp) {
-                                                        $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
-                                                    }
-                                                });
-                                            }
-                                        );
-                                    }
+                                    var txt = $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ?
+                                        "All folder and table/data nodes under this folder would be completely removed! Are you sure?" :
+                                        "Are you sure?";
+                                    swal({
+                                            title: "Delete folder",
+                                            text: txt,
+                                            type: "warning",
+                                            confirmButtonClass: "btn-danger",
+                                            confirmButtonText: "Yes, delete it!",
+                                            showCancelButton: true,
+                                            closeOnConfirm: true,
+                                            animation: "slide-from-top"
+                                        },
+                                        function () {
+                                            $.ajax({
+                                                url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
+                                                method: 'GET',
+                                                success: function (resp) {
+                                                    $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+                                                }
+                                            });
+                                        }
+                                    );
                                 }
                             };
                         }
@@ -4760,7 +4791,9 @@ function popup_sidebar_table() {
                 $('#'+elem_id).data('tb_nbr', tb_nbr);
                 $('#'+elem_id).data('tb_notes', tb_notes);
 
-                alert(response.msg);
+                if (response.msg) {
+                    alert(response.msg);
+                }
             },
             error: function () {
                 alert("Server error");
@@ -4793,15 +4826,15 @@ function changeDataTableRowHeight(sel) {
     }
 }
 
-function getGlobalOffset() {
-    var id = $('#li_list_view').hasClass('active') ? 'divTbData' : ($('#li_favorite_view').hasClass('active') ? 'tbFavoriteDataDiv' : 'div_settings_display_body');
+function getGlobalOffset(direction, elem_id) {
+    var std_id = $('#li_list_view').hasClass('active') ? 'divTbData' : ($('#li_favorite_view').hasClass('active') ? 'tbFavoriteDataDiv' : 'div_settings_display_body');
+    var id = elem_id ? elem_id : std_id;
 
     var elem = document.getElementById(id), offset = 0;
     while (elem) {
-        offset += elem.offsetTop ? elem.offsetTop : 0;
+        offset += elem[direction] ? elem[direction] : 0;
         elem = elem.parentNode;
     }
-    console.log(offset);
     return offset;
 }
 
