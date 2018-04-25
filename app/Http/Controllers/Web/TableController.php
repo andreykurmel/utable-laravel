@@ -87,7 +87,7 @@ class TableController extends Controller
         if ($id) {
             $responseArray['error'] = FALSE;
             $responseArray['last_id'] = DB::connection($mysql_conn)->getPdo()->lastInsertId();
-            $responseArray['msg'] = "Data Inserted Successfully";
+            $responseArray['msg'] = "";//Data Inserted Successfully
 
         } else {
             $responseArray['error'] = TRUE;
@@ -118,7 +118,7 @@ class TableController extends Controller
 
         if ($res) {
             $responseArray['error'] = FALSE;
-            $responseArray['msg'] = "Data Updated Successfully";
+            $responseArray['msg'] = "";//Data Updated Successfully
 
         } else {
             $responseArray['error'] = TRUE;
@@ -140,7 +140,7 @@ class TableController extends Controller
 
         if ($res) {
             $responseArray['error'] = FALSE;
-            $responseArray['msg'] = 'Deleted Successfully';
+            $responseArray['msg'] = '';//Deleted Successfully
 
         } else {
             $responseArray['error'] = TRUE;
@@ -349,7 +349,7 @@ class TableController extends Controller
 
             if ($res) {
                 $responseArray['error'] = FALSE;
-                $responseArray['msg'] = "Data Updated Successfully";
+                $responseArray['msg'] = "";//Data Updated Successfully
 
             } else {
                 $responseArray['error'] = TRUE;
@@ -377,7 +377,7 @@ class TableController extends Controller
             if ($res['status'] != 'present') {
                 $responseArray['error'] = FALSE;
                 $responseArray['last_id'] = $res['id'];
-                $responseArray['msg'] = "Data Inserted Successfully";
+                $responseArray['msg'] = "";//Data Inserted Successfully
 
             } else {
                 $responseArray['error'] = TRUE;
@@ -404,7 +404,7 @@ class TableController extends Controller
 
             if ($res) {
                 $responseArray['error'] = FALSE;
-                $responseArray['msg'] = 'Deleted Successfully';
+                $responseArray['msg'] = '';//Deleted Successfully
 
             } else {
                 $responseArray['error'] = TRUE;
@@ -430,7 +430,7 @@ class TableController extends Controller
 
             if ($res) {
                 $responseArray['error'] = FALSE;
-                $responseArray['msg'] = 'Updated Successfully';
+                $responseArray['msg'] = '';//Updated Successfully
 
             } else {
                 $responseArray['error'] = TRUE;
@@ -671,6 +671,13 @@ class TableController extends Controller
     }
 
     public function replaceTable(Request $request) {
+        $tbinfo = DB::connection('mysql_sys')
+            ->table('tb')
+            ->join('menutree_2_tb as m2t', 'm2t.tb_id', '=', 'tb.id')
+            ->where('tb.db_tb', '=', $request->table_db_tb)
+            ->where('m2t.type', '=', 'table')
+            ->first();
+        $request->menutree_id = $tbinfo->menutree_id;
         if ($request->table_db_tb) {
             $this->deleteAllTable($request->table_db_tb);
         }
@@ -809,7 +816,7 @@ class TableController extends Controller
     }
 
     private function importDataToTable($request, $filename, $columns) {
-        if ($request->data_csv) {
+        if ($request->data_csv && $request->data_csv != 1) {
             //CSV IMPORT
             $fileHandle = fopen(storage_path("app/csv/".$request->data_csv), 'r');
             $start = $end = $cur = 0;
@@ -840,7 +847,7 @@ class TableController extends Controller
                 $insert['modifiedOn'] = now();
                 DB::connection('mysql_data')->table($filename)->insert($insert);
             }
-        } elseif ($request->import_host) {
+        } elseif ($request->import_host && $request->data_csv == 1) {
             //MYSQL IMPORT
             Config::set('database.connections.mysql_import2.host', $request->import_host);
             Config::set('database.connections.mysql_import2.username', $request->import_lgn);
@@ -1225,7 +1232,7 @@ class TableController extends Controller
         if ($id) {
             $responseArray['error'] = FALSE;
             $responseArray['last_id'] = DB::connection('mysql_sys')->getPdo()->lastInsertId();
-            $responseArray['msg'] = "Data Inserted Successfully";
+            $responseArray['msg'] = "";//Data Inserted Successfully
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";
@@ -1242,7 +1249,7 @@ class TableController extends Controller
 
         if ($id) {
             $responseArray['error'] = FALSE;
-            $responseArray['msg'] = "Data Updated Successfully";
+            $responseArray['msg'] = "";//Data Updated Successfully
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";
@@ -1255,7 +1262,7 @@ class TableController extends Controller
 
         if ($id) {
             $responseArray['error'] = FALSE;
-            $responseArray['msg'] = "Data Deleted Successfully";
+            $responseArray['msg'] = "";//Data Deleted Successfully
         } else {
             $responseArray['error'] = TRUE;
             $responseArray['msg'] =  "Server Error";

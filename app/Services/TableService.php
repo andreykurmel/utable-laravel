@@ -324,7 +324,7 @@ class TableService {
             foreach ($headers as $hdr) {
                 $data[$hdr->field] = '';
             }
-            array_push($responseArray["data"],$data);
+            //array_push($responseArray["data"],$data);
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "";
         }

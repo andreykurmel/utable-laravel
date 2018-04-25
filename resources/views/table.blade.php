@@ -732,7 +732,7 @@
                     @if($owner && $tableName)
                     <div id="import_view" class="with-padding" style="display:none; position: absolute; bottom: 10px; top: 10px; left: 10px; right: 10px;">
                         <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0;overflow: hidden;">
-                            <form id="import_form" method="post" action="" onsubmit="import_form_submit()">
+                            <form id="import_form" method="post" action="" onsubmit="import_form_submit(this)">
                                 <div class="fluid-container" style="position: relative;">
                                     <input id="import_form_save_btn" type="submit" class="btn btn-success" value="Save" style="position: absolute;right: 0;z-index: 1;">
                                 </div>
@@ -746,8 +746,8 @@
                                 <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 0;bottom: 0;padding-top: 10px;">
                                     <div class="standard-tabs fluid-container">
                                         <ul class="tabs">
-                                            <li id="import_li_csv_tab" onclick="import_show_csv_tab()">
-                                                <a href="javascript:void(0)" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
+                                            <li id="import_li_csv_tab">
+                                                <a href="javascript:void(0)" id="import_li_method_a" onclick="import_show_csv_tab()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">
                                                     Method
                                                 </a>
                                             </li>

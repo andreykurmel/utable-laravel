@@ -3557,7 +3557,7 @@ function sent_csv_to_backend(is_upload) {
         method: 'POST',
         success: function(resp) {
             $('#import_data_csv').val(resp.data_csv);
-            if (is_upload != 2) {//fill table only on click by 'import'
+            if (is_upload != 2) {//fill table only on clicking 'import'
                 return;
             }
 
@@ -3681,11 +3681,14 @@ function import_test_db_connect() {
             }
 
             if (!resp.error) {
+                $('#import_data_csv').val(1);
                 ddl_col_numbers = [];
                 $.each(resp.headers, function(i, hdr) {
                     ddl_col_numbers.push(hdr.field);
                 });
                 import_show_col_tab();
+            } else {
+                $('#import_data_csv').val('');
             }
         },
         error: function (e) {
@@ -3927,8 +3930,11 @@ function changeImportStyle(sel) {
         $('#import_form_save_btn').show();
         import_show_col_tab();
         $('#import_notes_label').html( notes[style] );
+        $('#import_li_method_a').html('Method (Scratch)');
 
         $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', false);
+
         $('#import_columns_row_add').show();
     } else
     if (style == 'csv') {
@@ -3941,10 +3947,16 @@ function changeImportStyle(sel) {
         $('.js-import_column-orders').show();
         $('#import_form_save_btn').show();
         $('#import_notes_label').html( notes[style][action] );
+        $('#import_li_method_a').html('Method (CSV Import)');
 
         $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
-        $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
-        $('button._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        if ($('#import_data_csv').val() && $('#import_data_csv').val() != 1) {
+            $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', false );
+            $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
+            $('button._freeze_for_modify, select._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        } else {
+            $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', true );
+        }
         (action == '/modifyTable' ? $('#import_columns_row_add').hide() : $('#import_columns_row_add').show() );
     } else
     if (style == 'mysql') {
@@ -3957,10 +3969,16 @@ function changeImportStyle(sel) {
         $('.js-import_column-orders').show();
         $('#import_form_save_btn').show();
         $('#import_notes_label').html( notes[style][action] );
+        $('#import_li_method_a').html('Method (MySQL Import)');
 
         $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
-        $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
-        $('button._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        if ($('#import_data_csv').val() == 1) {
+            $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', false );
+            $('._freeze_for_modify').attr('readonly', action == '/modifyTable');
+            $('button._freeze_for_modify, select._freeze_for_modify, input[type="checkbox"]._freeze_for_modify').attr('disabled', action == '/modifyTable');
+        } else {
+            $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', true );
+        }
         (action == '/modifyTable' ? $('#import_columns_row_add').hide() : $('#import_columns_row_add').show() );
     } else
     if (style == 'remote') {
@@ -3973,8 +3991,11 @@ function changeImportStyle(sel) {
         $('.js-import_column-orders').hide();
         $('#import_form_save_btn').show();
         $('#import_notes_label').html( notes[style] );
+        $('#import_li_method_a').html('Method (Remote MySQL)');
 
         $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', ($('#import_data_csv').val() == 1 ? false : true) );
+
         $('._freeze_for_remote').attr('readonly', true);
         $('input[type="checkbox"]._freeze_for_remote').attr('checked', true);
         $('#import_columns_row_add').hide();
@@ -3990,8 +4011,11 @@ function changeImportStyle(sel) {
         $('#import_form_save_btn').hide();
         $('#import_notes_label').html( notes[style] );
         import_show_col_tab();
+        $('#import_li_method_a').html('Method (Referencing)');
 
         $('._freeze_for_modify, ._freeze_for_remote').attr('readonly', false).attr('disabled', false);
+        $('#import_main_columns input, #import_main_columns select, #import_main_columns button').attr('disabled', false);
+
         $('#import_columns_row_add').show();
     }
 
@@ -4062,18 +4086,53 @@ function select_import_connection () {
     }
 }
 
-function import_form_submit () {
+var canSubmit = false;
+function import_form_submit (form) {
+    if (canSubmit) {
+        return true;
+    } else {
+        event.preventDefault();
+        var action = $('#import_action_type').val(),
+            type = $('#import_type_import').val();
+        if (tableData.length && action == '/replaceTable' && (type == 'csv' || type == 'mysql')) {
+            swal({
+                    title: "Import Data",
+                    text: "Are you sure to remove all existing data and import new?",
+                    type: "warning",
+                    confirmButtonClass: "btn-danger",
+                    confirmButtonText: "Yes",
+                    showCancelButton: true,
+                    closeOnConfirm: true,
+                    animation: "slide-from-top"
+                },
+                function (confirmed) {
+                    if (confirmed) {
+                        set_submit_action();
+                        canSubmit = true;
+                        $(form).submit();
+                    } else {
+                        canSubmit = false;
+                        return false;
+                    }
+                }
+            );
+        } else {
+            set_submit_action();
+            canSubmit = true;
+            $(form).submit();
+        }
+    }
+}
+
+function set_submit_action() {
     var action, type = $('#import_type_import').val();
     if (type == 'scratch') {
         action = baseHttpUrl + '/modifyTable';
-    } else
-    if (type == 'csv' || type == 'mysql') {
+    } else if (type == 'csv' || type == 'mysql') {
         action = baseHttpUrl + $('#import_action_type').val();
-    } else
-    if (type == 'remote') {
+    } else if (type == 'remote') {
         action = baseHttpUrl + '/remoteTable';
-    } else
-    if (type == 'ref') {
+    } else if (type == 'ref') {
         action = baseHttpUrl + '/refTable';
     }
     $('#import_form').prop('action', action);
@@ -4769,10 +4828,16 @@ function SpanColumnsWithTheSameData(id) {
             } else {
                 if (spanIndex > 1) {
                     $(elem).data("colspan", spanIndex);
+                    $(elem).find("span").css('width', 'calc(100% - 27px)');
                     spanIndex = 1;
                 }
                 elem = td;
             }
+        }
+
+        if (spanIndex > 1) {
+            $(elem).data("colspan", spanIndex);
+            $(elem).find("span").css('width', 'calc(100% - 27px)');
         }
     }
 
@@ -4793,7 +4858,15 @@ function SpanColumnsWithTheSameData(id) {
             var td = $(rows[j]).find("th:visible")[i-colOffset];
             if (!td) break;
 
-            if ($(elem).text() == $(td).text() && !$(td).data('colspan') && !$(elem).data('colspan')) {
+            if (
+                $(elem).text() == $(td).text()
+                &&
+                (
+                    (!$(td).data('colspan') && !$(elem).data('colspan'))
+                    ||
+                    ($(td).data('colspan') == $(elem).data('colspan'))
+                )
+            ) {
                 if ($(td).attr('rowspan')) spanIndex++;//if elem doesn`t have unit +1 to 'rowspan'
                 removeLaterC.push(td);
                 spanIndex++;
