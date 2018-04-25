@@ -514,7 +514,7 @@ function showDataTable(headers, data) {
 
     for (var $hdr in headers) {
         visibleColumns += '<li style="' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
-        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
+        visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\', '+$hdr+')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
             '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
         visibleColumns += '</li>';
     }
@@ -835,7 +835,7 @@ function showHideColumnsList() {
     }
 }
 
-function showHideColumn(fieldKey) {
+function showHideColumn(fieldKey, idx) {
     var status;
     if (!$('#'+fieldKey+'_visibility').is(':checked')) {
         $('#tbAddRow th[data-key="'+fieldKey+'"], #tbAddRow td[data-key="'+fieldKey+'"]').hide();
@@ -860,8 +860,12 @@ function showHideColumn(fieldKey) {
     }
     $.ajax({
         method: 'GET',
-        url: baseHttpUrl + '/showHideColumnToggle?tableName=' + selectedTableName + '&col_key=' + fieldKey + '&status=' + status
-    })
+        url: baseHttpUrl + '/showHideColumnToggle?tableName=' + selectedTableName + '&col_key=' + fieldKey + '&status=' + status,
+        success: function() {
+            tableHeaders[idx].is_showed = (status == 'Show');
+            ($('#li_list_view').hasClass('active') ? showDataTable(tableHeaders, tableData) : showFavoriteDataTable(favoriteTableHeaders, favoriteTableData));
+        }
+    });
 }
 
 function toggleFavoriteTable(elem) {
@@ -1589,7 +1593,7 @@ function editSelectedData(idx) {
         if ($.inArray(d_key, not_editable) == -1) {
             html += "<tr>";
             html +=
-                '<td><label>' + ltableHeaders[key].name + '</label></td>' +
+                '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(',')  + '</label></td>' +
                 '<td>';
             if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
@@ -3933,6 +3937,7 @@ function import_show_csv_tab() {
     $('#import_li_col_tab').removeClass('active');
     $('#import_csv_tab').show();
     $('#import_col_tab').hide();
+    $('#import_form_save_btn').attr('disabled', true);
 }
 
 function import_show_col_tab() {
@@ -3940,6 +3945,19 @@ function import_show_col_tab() {
     $('#import_li_csv_tab').removeClass('active');
     $('#import_col_tab').show();
     $('#import_csv_tab').hide();
+    var type = $('#import_type_import').val() || (table_meta.source ? table_meta.source : 'scratch'),
+        stat = false;
+    if(type == 'mysql' || type == 'remote') {
+        if ($('#import_data_csv').val() != 1) {
+            stat = true;
+        }
+    }
+    if(type == 'csv') {
+        if (!$('#import_data_csv').val() || $('#import_data_csv').val() == 1) {
+            stat = true;
+        }
+    }
+    $('#import_form_save_btn').attr('disabled', stat);
 }
 
 var notes = {
@@ -4854,7 +4872,7 @@ function SpanColumnsWithTheSameData(id) {
     var table = $("#"+id);
     var rows = table.find($("tr"));
     var colsLength = $(rows[0]).find($("th:visible")).length;
-
+console.log('!');
     //mark rows for span
     var removeLaterR = new Array();
     for (var i = 0; i < rows.length-1; i++) {
@@ -4943,7 +4961,7 @@ function SpanColumnsWithTheSameData(id) {
         if (removeLaterR[i]) $(removeLaterR[i]).remove();
     }
     for (var i in removeLaterC) {
-        if (removeLaterR[i]) $(removeLaterC[i]).remove();
+        if (removeLaterC[i]) $(removeLaterC[i]).remove();
     }
 }
 
