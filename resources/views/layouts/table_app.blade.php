@@ -215,6 +215,28 @@
             bottom: 0;
             right: 0;
         }
+
+        .dropdown_btn {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 7px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+        }
+        .dropdown_active, .dropdown_btn:hover {
+            background-color: #ccc;
+        }
+        .dropdown_body {
+            border: solid 1px #ccc;
+            padding: 10px;
+            background-color: white;
+            display: none;
+            overflow: hidden;
+        }
     </style>
 
     @stack('styles')

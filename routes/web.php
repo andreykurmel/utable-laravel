@@ -377,6 +377,7 @@ Route::get('install/error', [
 /**
  * Utable routes
  */
+Route::get('/api/getFilesForField', 'TableController@getFilesForField')->name('getFilesForField');
 Route::get('/api/getUTable', 'TableController@getUTable')->name('getUTable');
 Route::post('/api/getSelectedTable', 'TableController@getSelectedTable')->name('getSelectedTable');
 Route::get('/api/loadFilter', 'TableController@loadFilter')->name('loadFilter');

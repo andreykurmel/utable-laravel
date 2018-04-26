@@ -1439,4 +1439,8 @@ class TableController extends Controller
         }
         return $data_return;
     }
+
+    public function getFilesForField(Request $request) {
+        return "there will be list of attached files.";
+    }
 }

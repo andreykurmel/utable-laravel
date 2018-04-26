@@ -1589,6 +1589,12 @@ function editSelectedData(idx) {
             html +=
                 '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
                 '<td>';
+            if (ltableHeaders[key].f_type == 'Attachment') {
+                html += '<div style="margin-bottom: 5px;">' +
+                    '<button class="dropdown_btn">Files (5)</button>' +
+                    '<div class="dropdown_body">about files</div>' +
+                    '</div>';
+            } else
             if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
             } else
@@ -1647,6 +1653,8 @@ function editSelectedData(idx) {
     }
     $('#modals_rows').html(html);
 
+    bind_dropdown();
+
     //set current values for editing
     if (idx > -1) {
         for(var key in ltableHeaders) {
@@ -1658,6 +1666,28 @@ function editSelectedData(idx) {
     $('.js-editmodal').data('idx', idx);
     if (!$('#addingIsInline').is(':checked') || idx > -1 || !lv) {
         $('.js-editmodal').show();
+    }
+}
+
+function bind_dropdown() {
+    var acc = document.getElementsByClassName("dropdown_btn");
+    for (var i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function() {
+            this.classList.toggle("dropdown_active");
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                $.ajax({
+                    url: baseHttpUrl + '/getFilesForField',
+                    method: 'get',
+                    success: function (resp) {
+                        panel.innerHTML = resp;
+                        panel.style.display = "block";
+                    }
+                });
+            }
+        });
     }
 }
 
