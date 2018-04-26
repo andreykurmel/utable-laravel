@@ -1,7 +1,7 @@
 @extends('layouts.table_app')
 
 @section('content')
-    <div class="div-screen" style="position:absolute; top: 50px; bottom: 0; right: 0; left: 0;z-index: 1;">
+    <div class="div-screen" style="position:absolute; top: 50px; bottom: 3px; right: 0; left: 0;z-index: 1;">
         <input type="hidden" id="inpServerName" value="{{ $server }}">
         <input type="hidden" id="inpSelectedTable" value="{{ isset($tableName) ? $tableName : "" }}">
         <input type="hidden" id="inpSelectedEntries" value="{{ $selectedEntries ? $selectedEntries : 10 }}">
@@ -29,7 +29,7 @@
 
                     <div id="tablebar_public_wrapper" style="{{ Auth::guest() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
                         <div id="tablebar_public_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
-                            {!! $treeTables['public'] !!}
+                            {!! $treeTables['public']['html'] !!}
                         </div>
                         <div style="position: absolute;bottom: 0; left: 0; right: 0;">
                             <input id="searchValInTab_public" type="text" class="form-control" style="display: inline-block; width: 77%;">
@@ -39,11 +39,11 @@
                     <div id="tablebar_private_wrapper" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
                         @if(Auth::user())
                             <div id="tablebar_private_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
-                                {!! $treeTables['private'] !!}
+                                {!! $treeTables['private']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 77%;">
-                                <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
+                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 78%;">
+                                <button class="btn btn-default" style="border: none;width: 20%;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
                             <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
@@ -52,7 +52,7 @@
                     <div id="tablebar_favorite_wrapper" class="tab-content" style="{{ Auth::user() ? '' : 'display:none;' }} position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
                         @if(Auth::user())
                             <div id="tablebar_favorite_div" class="tab-content" style="position: absolute; top: 0; left: 0; right: 0; bottom: 35px; padding: 15px 0; overflow: auto;">
-                                {!! $treeTables['favorite'] !!}
+                                {!! $treeTables['favorite']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
                                 <input id="searchValInTab_favorite" type="text" class="form-control" style="display: inline-block; width: 77%;">
@@ -106,12 +106,11 @@
                         </div>
                     @endif
                     <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
-                        <button class="btn btn-default" style="border: none;" onclick="$('#searchKeywordDiv').toggle();">
+                        <button class="btn btn-default" style="border: none;" onclick="if ($('#searchKeywordDiv').is(':visible')) { $('#searchKeywordDiv').hide() } else { $('#searchKeywordDiv').show();$('#searchKeywordInp').focus(); }">
                             <i class="fa fa-search" style="font-size: 1.5em;"></i>
                         </button>
-                        <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 3px;width: 220px;border: 1px solid #ccc;background-color: #fff;display: none;">
-                            <input id="searchKeywordInp" onchange="searchKeywordChanged()" type="search" class="" placeholder="Find in view">
-                            <a class="btn" onclick="$('#searchKeywordInp').val('');searchKeywordChanged();">&times;</a>
+                        <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 0;display: none;">
+                            <input id="searchKeywordInp" onchange="searchKeywordChanged()" onblur="$('#searchKeywordDiv').hide()" type="search" class="" placeholder="Find in view">
                         </div>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display: inline-block;width: 65px;position: relative;top: 2px;'>
@@ -133,7 +132,7 @@
                         <a href="javascript:void(0)" class="button blue-gradient glossy thin" id="tableStretch_btn" onclick="tableStretch()" title="Table full width"><i class="fa fa-arrows-h"></i></a>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block' id="showHideColumnsList_btn">
-                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 3px 0 0 0;"><img src="/img/eye.png" height="25"></a>
+                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 2px 7px 0 7px;"><img src="/img/show-icon.png" height="25"></a>
                     </div>
                     @if(Auth::user())
                         <div style="padding: 5px;display: inline-block;">
@@ -171,7 +170,7 @@
 
 
             <!-- Wrapper, set tabs style class here -->
-            <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 20px; left: 270px; right: 0; bottom: 0;">
+            <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 20px; left: 265px; right: 0; bottom: 0;">
 
                 <!-- Tabs -->
                 <ul class="tabs" style="width: fit-content;">
@@ -299,38 +298,20 @@
                             <div id="div_for_horizontal_scroll" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbAddRow" style="margin-bottom: 0;position: absolute;top:-64px;z-index: 25;display: none;">
                                     <thead id="tbAddRow_header">
-                                    <tr>
-                                        @foreach($headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                        @endforeach
-                                    </tr>
                                     </thead>
-
                                     <tbody id="tbAddRow_body">
                                     </tbody>
                                 </table>
                                 <table class="table dataTable" id="tbHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:0;">
                                     <thead id="tbHeaders_header">
-                                    <tr>
-                                        @foreach($headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                        @endforeach
-                                    </tr>
                                     </thead>
-
                                     <tbody style="" id="tbHeaders_body">
                                     </tbody>
                                 </table>
                                 <div id="divTbData" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:64px;" class="table_body_viewport">
                                     <table class="table responsive-table responsive-table-on dataTable" id="tbData" style="margin-bottom: 0; margin-top: -64px;">
                                         <thead id="tbData_header">
-                                        <tr>
-                                            @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                            @endforeach
-                                        </tr>
                                         </thead>
-
                                         <tbody id="tbData_body">
                                         </tbody>
                                     </table>
@@ -347,7 +328,7 @@
                                     <a class="paginate_button first" onclick="changePage(1)">First
                                     </a><a class="paginate_button previous" onclick="changePage(selectedPage>1 ? selectedPage : 1)">Previous
                                     </a><span id="paginate_btns_span">
-                                    </span><a class="paginate_button next" onclick="changePage((selectedPage+1)<(rowsCount/selectedEntries) ? selectedPage+2 : (rowsCount/selectedEntries))">Next
+                                    </span><a class="paginate_button next" onclick="changePage((selectedPage+1)<(rowsCount/selectedEntries) ? selectedPage+2 : Math.ceil(rowsCount/selectedEntries))">Next
                                     </a><a class="paginate_button last" onclick="changePage(Math.ceil(rowsCount/selectedEntries))">Last</a>
                                 </div>
                             </div>
@@ -361,40 +342,20 @@
                             <div class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 0; bottom: 0; right: 0; left: 0;">
                                 <table class="table dataTable" id="tbFavoriteCheckRow" style="margin-bottom: 0;position: absolute;top:-32px;z-index: 25;">
                                     <thead id="tbFavoriteCheckRow_header">
-                                    <tr>
-                                        @foreach($headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                        @endforeach
-                                    </tr>
                                     </thead>
-
                                     <tbody id="tbFavoriteCheckRow_body">
                                     </tbody>
                                 </table>
                                 <table class="table dataTable" id="tbFavoriteHeaders" style="margin-bottom: 0;position: absolute;z-index: 50;top:36px;">
                                     <thead id="tbFavoriteHeaders_header">
-                                    <tr>
-                                        <th class="sorting nowrap">#</th>
-                                        @foreach($headers as $hdr)
-                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                        @endforeach
-                                    </tr>
                                     </thead>
-
                                     <tbody style="visibility: hidden;" id="tbFavoriteHeaders_body">
                                     </tbody>
                                 </table>
                                 <div id="tbFavoriteDataDiv" style="position: absolute; z-index: 100; bottom: 0; overflow: auto; min-width:100%;top:68px;" class="table_body_viewport">
                                     <table class="table responsive-table responsive-table-on dataTable" id="tbFavoriteData" style="margin-bottom: 0; margin-top: -32px;">
                                         <thead id="tbFavoriteData_header">
-                                        <tr>
-                                            <th class="sorting nowrap">#</th>
-                                            @foreach($headers as $hdr)
-                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
-                                            @endforeach
-                                        </tr>
                                         </thead>
-
                                         <tbody id="tbFavoriteData_body">
                                         </tbody>
                                     </table>
@@ -828,27 +789,27 @@
                                             <div class="col-xs-5">
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c1" name="csv_first_headers" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>First row as headers:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c1">First row as headers:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c2" name="csv_second_fields" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>Second row as fields:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c2">Second row as fields:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c3" name="csv_third_type" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>Third row as data type:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c3">Third row as data type:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c4" name="csv_fourth_size" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>Fourth row as max. size:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c4">Fourth row as max. size:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c5" name="csv_fifth_default" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>Fifth row as default value:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c5">Fifth row as default value:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c6" name="csv_sixth_required" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label>Sixth row as inclusion:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c6">Sixth row as inclusion:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-5"><label>Starting row:</label></div>
@@ -1117,9 +1078,11 @@
                         </div>
                     </div>
                     <div style="position:absolute; bottom: 10px; right: 20px; left: 20px;">
-                        <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
-                        <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
-                        <button id="modal_btn_update" class="btn btn-info" onclick="updateRowModal()" style="float: left; margin-left: 40px;">Update</button>
+                        @if($owner)
+                            <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
+                            <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
+                            <button id="modal_btn_update" class="btn btn-info" onclick="updateRowModal()" style="float: left; margin-left: 40px;">Update</button>
+                        @endif
                         <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;">Close</button>
                     </div>
                 </div>
@@ -1142,11 +1105,11 @@
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
         <div style="position: absolute;top: 44px;bottom: 10px;z-index: 1500;right: 420px;display: none;" id="showHideColumnsList">
-            <div class="message tooltip  tracking" style="opacity: 1; max-height: 100%; overflow: auto;" id="accesstestscroll">
+            <div class="message tooltip  tracking" style="opacity: 1; max-height: 100%; overflow: auto; padding: 0;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
                         @foreach($headers as $hdr)
-                            <li style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
+                            <li style="padding: 4px 8px;{{ $hdr->web == 'No' ? 'display: none;' : '' }}">
                                 <input id="{{ $hdr->field }}_visibility" onclick="showHideColumn('{{ $hdr->field }}')" class="checkcols" type="checkbox" checked > <label class="labels" for="{{ $hdr->field }}_visibility"> {{ $hdr->name }} </label>
                             </li>
                         @endforeach

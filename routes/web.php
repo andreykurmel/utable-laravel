@@ -427,4 +427,5 @@ Route::group(['middleware' => 'test.subdomain'], function () {
 //    Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('group.table');
     Route::get('/data', 'AppController@homepage')->name('homepage');
     Route::get('/data/{table}', 'AppController@homepageTable')->name('homepageTable')->where(['table' => '.+']);
+    //Route::get('/file/{filepath}', 'AppController@getFile')->name('getFile')->where(['filepath' => '.+']);
 });

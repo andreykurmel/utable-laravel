@@ -51,6 +51,22 @@ class AppController extends Controller
         }
     }
 
+    public function getFile($filepath) {
+        $pathArr = explode('/', $filepath);
+        if (count($pathArr) != 4) {
+            return "Not found!";
+        }
+        $folderName = $pathArr[0];
+        $row = $pathArr[1];
+        $field = $pathArr[2];
+        $fileName = $pathArr[3];//return();
+        if (file_exists( storage_path('app/file/'.$folderName.'/'.$row.'/'.$field.'/'.$fileName) )) {
+            return Storage::get(storage_path('app/file/'.$folderName.'/'.$row.'/'.$field.'/'.$fileName));
+        } else {
+            return "Not found!";
+        }
+    }
+
     public function homepage() {
         return view('table', $this->getVariables());
     }
@@ -285,10 +301,14 @@ class AppController extends Controller
 
     private function buildHTMLTree($res_arr, $url, $tab) {
         if ($res_arr->id) {
-            $html = "<li data-type='folder' data-jstree='{\"opened\":".($res_arr->state ? 1 : 0).", \"icon\":\"fa fa-folder".($res_arr->state ? '-open' : '')."\"}' data-menu_id='" . $res_arr->id . "'>" . $res_arr->title;
+            $html = "<li data-type='folder' ".
+                "data-jstree='{\"opened\":".($res_arr->state ? 1 : 0).", \"icon\":\"fa fa-folder".($res_arr->state ? '-open' : '')."\"}' ".
+                "data-menu_id='" . $res_arr->id . "'>" . $res_arr->title . "({~folders".$res_arr->id."}/{~tables".$res_arr->id."})";
         } else {
             $html = "";
         }
+        $folders_cnt = ($res_arr->children ? count($res_arr->children) : 0);
+        $tables_cnt = ($res_arr->tables ? count($res_arr->tables) : 0);
 
         if ($res_arr->tables || $res_arr->children) {
             $html .= '<ul>';
@@ -327,7 +347,10 @@ class AppController extends Controller
             }
             if ($res_arr->children) {
                 foreach ($res_arr->children as $child) {
-                    $html .= $this->buildHTMLTree($child, $url.$child->title.'/', $tab);
+                    $res = $this->buildHTMLTree($child, $url.$child->title.'/', $tab);
+                    $html .= $res['html'];
+                    $folders_cnt += $res['folders'];
+                    $tables_cnt += $res['tables'];
                 }
             }
             $html .= '</ul>';
@@ -337,7 +360,14 @@ class AppController extends Controller
             $html .= '</li>';
         }
 
-        return $html;
+        $html = str_replace('{~folders'.$res_arr->id.'}', $folders_cnt, $html);
+        $html = str_replace('{~tables'.$res_arr->id.'}', $tables_cnt, $html);
+
+        return [
+            'html' => $html,
+            'folders' => $folders_cnt,
+            'tables' => $tables_cnt
+        ];
     }
 
     private function buildTree($elements, $parentId = 0) {
@@ -469,7 +499,7 @@ class AppController extends Controller
                 foreach ($data as $key => $val) {
                     $headers[$key] = [
                         'header' => $request->check_1 ? $val : '',
-                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', ($request->check_2 ? $val : 'col_'.$key) )),
+                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', ($request->check_2 ? $val : 'col#'.$key) )),
                     ];
                 }
             }

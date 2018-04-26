@@ -25,6 +25,10 @@
     {!! HTML::style('assets/plugins/jstree/themes/default/style.min.css') !!}
 
     <style>
+        html, body {
+            overflow: hidden;
+        }
+
         .open-menu {
             padding: 10px;
             width: 40px;

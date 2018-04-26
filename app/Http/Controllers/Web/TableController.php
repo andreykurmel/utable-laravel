@@ -1013,7 +1013,7 @@ class TableController extends Controller
         DB::connection('mysql_sys')->table('tb')->insert([
             'name' => $request->type_import != 'remote' ? $request->table_name : $table_db,
             'owner' => Auth::user()->id,
-            'nbr_entry_listing' => $request->nbr_entry_listing ? $request->nbr_entry_listing : 0,
+            'nbr_entry_listing' => $request->nbr_entry_listing ? $request->nbr_entry_listing : 100,
             'notes' => $request->notes,
             'source' => $request->type_import ? $request->type_import : 'scratch',
             'conn_id' => isset($conn_id) ? $conn_id : 0,
@@ -1041,6 +1041,8 @@ class TableController extends Controller
                     'max_wth' => 0,
                     'f_type' => (!empty($col['type']) ? $col['type'] : 'String'),
                     'f_size' => ($col['size'] > 0 ? $col['size'] : (!empty($col['type']) && $col['type'] == 'String' ? 255 : '')),
+                    'f_default' => (!empty($col['default']) ? $col['default'] : ''),
+                    'f_required' => (!empty($col['required']) ? 1 : 0),
                     'createdBy' => Auth::user()->id,
                     'createdOn' => now(),
                     'modifiedBy' => Auth::user()->id,
@@ -1197,6 +1199,10 @@ class TableController extends Controller
                     ->update([
                     'field' => $col['field'],
                     'name' => $col['header'],
+                    'f_type' => (!empty($col['type']) ? $col['type'] : 'String'),
+                    'f_size' => ($col['size'] > 0 ? $col['size'] : (!empty($col['type']) && $col['type'] == 'String' ? 255 : '')),
+                    'f_default' => (!empty($col['default']) ? $col['default'] : ''),
+                    'f_required' => (!empty($col['required']) ? 1 : 0),
                     'modifiedBy' => Auth::user()->id,
                     'modifiedOn' => now()
                 ]);
@@ -1218,6 +1224,8 @@ class TableController extends Controller
                         'max_wth' => 0,
                         'f_type' => (!empty($col['type']) ? $col['type'] : 'String'),
                         'f_size' => ($col['size'] > 0 ? $col['size'] : (!empty($col['type']) && $col['type'] == 'String' ? 255 : '')),
+                        'f_default' => (!empty($col['default']) ? $col['default'] : ''),
+                        'f_required' => (!empty($col['required']) ? 1 : 0),
                         'createdBy' => Auth::user()->id,
                         'createdOn' => now(),
                         'modifiedBy' => Auth::user()->id,
