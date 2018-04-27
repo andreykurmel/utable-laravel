@@ -21,10 +21,10 @@ class TableService {
         $responseArray = array();
         $page = isset($post->p) ? (int)$post->p : 0;
         $count = isset($post->c) ? (int)$post->c : 0;
-        $query = isset($post->q) && !empty((array)json_decode($post->q)) ? (array)json_decode($post->q) : ['opt' => ''];
-        $fields = isset($post->fields) ? (array)json_decode($post->fields) : [];
-        $filterData = isset($post->filterData) ? (array)json_decode($post->filterData) : [];
-        $changedFilter = isset($post->changedFilter) && $post->changedFilter ? json_decode($post->changedFilter) : false;
+        $query = isset($post->q) && !empty((array)json_decode(base64_decode($post->q))) ? (array)json_decode(base64_decode($post->q)) : ['opt' => ''];
+        $fields = isset($post->fields) ? (array)json_decode(base64_decode($post->fields)) : [];
+        $filterData = isset($post->filterData) ? (array)json_decode(base64_decode($post->filterData)) : [];
+        $changedFilter = isset($post->changedFilter) && $post->changedFilter ? json_decode(base64_decode($post->changedFilter)) : false;
         if (!isset($query['opt'])) {
             $query['opt'] = "";
         }
@@ -33,6 +33,24 @@ class TableService {
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "TableName Not Found!";
             return $responseArray;
+        }
+
+        $fields_for_settings_select = [];
+        if ($post->tableSelected && Auth::user()) {
+            $table_sel = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $post->tableSelected)->first();
+            if (
+                $table_sel->owner != Auth::user()->id
+            ) {
+                $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_sel->id);
+                if (!$tmp_fields_set) {
+                    $tmp_fields_set = $this->getPermissionsFields(0, $table_sel->id);
+                }
+                foreach ($tmp_fields_set as $fld) {
+                    if ($fld->view) {
+                        $fields_for_settings_select[] = $fld->field;
+                    }
+                }
+            }
         }
 
         $table_meta = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
@@ -45,8 +63,8 @@ class TableService {
         if (Auth::user()) {
             if (
                 //not admin
-                Auth::user()->role_id != 1
-                &&
+                //Auth::user()->role_id != 1
+                //&&
                 //not owner
                 $table_meta->owner != Auth::user()->id
             ) {
@@ -91,6 +109,9 @@ class TableService {
         } elseif ($query['opt'] == 'settings' && $query['tb_id']) {
             $sql->where($tableName.'.'.'tb_id', '=', $query['tb_id']);
             $sql->where($tableName.'.'.'user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner);
+            if (count($fields_for_settings_select) > 0) {
+                $sql->whereIn($tableName.'.'.'field', $fields_for_settings_select);
+            }
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
@@ -173,7 +194,11 @@ class TableService {
         if ($tableName == 'tb_settings_display' && !$fromMainData) {
             $sql->orderBy($tableName.'.order');
         }
-        $sql->orderBy($tableName.'.id');
+        if (!empty($query['sortCol'])) {
+            $sql->orderBy($tableName.'.'.$query['sortCol'], !empty($query['sortASC']) ? 'asc' : 'desc');
+        } else {
+            $sql->orderBy($tableName.'.id');
+        }
         $result = $sql->get();
 
 
@@ -332,6 +357,49 @@ class TableService {
         return $responseArray;
     }
 
+    public function addSharedTable($user_id, $table_id) {
+        $present = DB::connection('mysql_sys')->table('menutree_2_tb')
+            ->where('user_id', '=', $user_id)
+            ->where('tb_id', '=', $table_id)
+            ->where('type', '=', 'share-alt')
+            ->first();
+
+        if (!$present) {
+            $menutree_id = DB::connection('mysql_sys')->table('menutree')
+                ->where('user_id', '=', $user_id)
+                ->where('title', '=', 'SHARED')
+                ->first();
+
+            if (!$menutree_id) {
+                DB::connection('mysql_sys')->table('menutree')->insert([
+                    'user_id' => $user_id,
+                    'parent_id' => 0,
+                    'title' => 'SHARED',
+                    'structure' => 'private',
+                    'createdBy' => Auth::user()->id,
+                    'createdOn' => now(),
+                    'modifiedBy' => Auth::user()->id,
+                    'modifiedOn' => now()
+                ]);
+                $menutree_id = DB::connection('mysql_sys')->getPdo()->lastInsertId();
+            } else {
+                $menutree_id = $menutree_id->id;
+            }
+
+            DB::connection('mysql_sys')->table('menutree_2_tb')->insert([
+                'user_id' => $user_id,
+                'tb_id' => $table_id,
+                'menutree_id' => $menutree_id,
+                'type' => 'share-alt',
+                'structure' => 'private',
+                'createdBy' => Auth::user()->id,
+                'createdOn' => now(),
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
+        }
+    }
+
     public function addRight($tableName, $fields) {
         $result = 'undefined';
 
@@ -380,6 +448,9 @@ class TableService {
                         'modifiedOn' => now()
                     ]);
                 }
+
+                $this->addSharedTable($fields['user_id'], $fields['table_id']);
+
                 $result = [
                     'status' => 'inserted',
                     'id' => $id

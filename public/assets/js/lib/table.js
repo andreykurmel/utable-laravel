@@ -134,7 +134,8 @@ var baseHttpUrl = "/api",
     MenutreeHide = false,
     MenutreeTab = localStorage.getItem('menutree_tab'),
     markerBounds = {top:0, left:0, right:0, bottom:0},
-    tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'};
+    tower_types = {'Monopole': 'mp.png', 'Self Support': 'sst.png', 'Guyed': 'gt.png'},
+    system_fields = ['id','refer_tb_id','createdBy','createdOn','modifiedBy','modifiedOn'];
 
 var curFilter = "",
     arrAddFieldsInData = ['is_favorited'],
@@ -277,6 +278,9 @@ function changePage(page) {
     query.changedKeyword = changedSearchKeyword;
     changedSearchKeyword = false;
 
+    query.sortCol = sortCol;
+    query.sortASC = sortASC;
+
     $.ajax({
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable',
@@ -286,10 +290,10 @@ function changePage(page) {
             getfilters: true,
             p: selectedPage,
             c: selectedEntries,
-            q: JSON.stringify(query),
-            fields: JSON.stringify(tableHeaders),
-            filterData: JSON.stringify(filtersData),
-            changedFilter: JSON.stringify(changedFilter)
+            q: btoa(JSON.stringify(query)),
+            fields: btoa(JSON.stringify(tableHeaders)),
+            filterData: btoa(JSON.stringify(filtersData)),
+            changedFilter: btoa(JSON.stringify(changedFilter))
         },
         success: function (response) {
             changedFilter = false;
@@ -367,7 +371,7 @@ function showDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    (d_key != 'id' && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                    ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
                         'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' :
                         '') +
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
@@ -379,6 +383,12 @@ function showDataTable(headers, data) {
                 } else
                 if (headers[key].f_type == 'Attachment') {
                     tableData += '<i class="fa fa-paperclip"></i>';
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -402,7 +412,7 @@ function showDataTable(headers, data) {
                         'data-key="' + headers[key].field + '"' +
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
-                        (d_key != 'id' && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                        ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
                             'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' :
                             '') +
                         'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
@@ -451,8 +461,14 @@ function showDataTable(headers, data) {
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                } else
                 if (headers[key].f_type == 'Attachment') {
-                    tableData += '<i class="fa fa-paperclip"></i>';
+                    tbHiddenData += '<i class="fa fa-paperclip"></i>';
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -474,8 +490,8 @@ function showDataTable(headers, data) {
     for (var i = 0; i < rows_in_hdrs; i++) {
         tbDataHeaders += "<tr>";
         if (i == 0) {
-            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='nowrap'><b>#</b></th>";
-            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='nowrap' title='"+(isAdmin || (authUser && userOwner) ? 'Favorite / Remove' : 'Favorite')+"'><i class='fa fa-info-circle'></i></th>";
+            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='nowrap' style='text-align: center;'><b>#</b></th>";
+            tbDataHeaders += "<th rowspan='"+(rows_in_hdrs+1)+"' class='nowrap' title='"+(isAdmin || (authUser && userOwner) ? 'Favorite / Remove' : 'Favorite')+"' style='text-align: center;'><i class='fa fa-info-circle'></i></th>";
         }
         for (var $hdr in headers) {
             tmp = headers[$hdr].name;
@@ -1203,6 +1219,9 @@ function openPrintDialog() {
         }
     }
 
+    query.sortCol = sortCol;
+    query.sortASC = sortASC;
+
     $.ajax({
         method: 'POST',
         url: baseHttpUrl + '/getSelectedTable',
@@ -1211,10 +1230,10 @@ function openPrintDialog() {
             getfilters: true,
             p: 0,
             c: 0,
-            q: JSON.stringify(query),
-            fields: JSON.stringify(tableHeaders),
-            filterData: JSON.stringify(filtersData),
-            changedFilter: JSON.stringify(changedFilter)
+            q: btoa(JSON.stringify(query)),
+            fields: btoa(JSON.stringify(tableHeaders)),
+            filterData: btoa(JSON.stringify(filtersData)),
+            changedFilter: btoa(JSON.stringify(changedFilter))
         },
         success: function (response) {
             if (response.msg) {
@@ -1362,7 +1381,7 @@ function showInlineEdit(id, instant) {
         }  else
         if (ltableDDls[key] && ltableDDls[key].req_obj) {//if reference ddl which needs request to the server
             var resp = $.ajax({
-                url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(ltableDDls[key].req_obj) + '&row=' + JSON.stringify(tableData[idx]),
+                url: baseHttpUrl + '/getRefDDL?req=' + btoa(JSON.stringify(ltableDDls[key].req_obj)) + '&row=' + btoa(JSON.stringify(tableData[idx])),
                 method: 'get',
                 async: false
             }).responseText;
@@ -1433,7 +1452,7 @@ function addRow(params) {
     var strParams = "";
     for (var key in params) {
         if ($.inArray(key, arrAddFieldsInData) == -1) {
-            strParams += key + '=' + params[key] + '&';
+            strParams += key + '=' + btoa(params[key]) + '&';
         }
     }
 
@@ -1468,7 +1487,7 @@ function updateRow(params, idx, to_change) {
     var strParams = "";
     for (var key in params) {
         if ($.inArray(key, arrAddFieldsInData) == -1) {
-            strParams += key + '=' + params[key] + '&';
+            strParams += key + '=' + btoa(params[key]) + '&';
         }
     }
 
@@ -1531,7 +1550,7 @@ function updateRowModal() {
     var idx = $('.js-editmodal').data('idx'), d_key;
     for(var key in ltableHeaders) {
         d_key = ltableHeaders[key].field;
-        if (d_key != 'id') {
+        if ($.inArray(d_key, system_fields) == -1) {
             ltableData[idx][d_key] = $('#modals_inp_'+d_key).val();
         }
     }
@@ -1589,10 +1608,13 @@ function editSelectedData(idx) {
             html +=
                 '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
                 '<td>';
+            if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
+            } else
             if (ltableHeaders[key].f_type == 'Attachment') {
                 html += '<div style="margin-bottom: 5px;">' +
-                    '<button class="dropdown_btn">Files (5)</button>' +
-                    '<div class="dropdown_body">about files</div>' +
+                    '<button class="dropdown_btn">Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')</button>' +
+                    '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
                     '</div>';
             } else
             if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
@@ -1624,7 +1646,7 @@ function editSelectedData(idx) {
                 if (tmp_ddl && tmp_ddl.req_obj) {//if reference ddl which needs request to the server
                     if(idx > -1) {
                         var resp = $.ajax({
-                            url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(tmp_ddl.req_obj) + '&row=' + JSON.stringify(tableData[idx]),
+                            url: baseHttpUrl + '/getRefDDL?req=' + btoa(JSON.stringify(tmp_ddl.req_obj)) + '&row=' + btoa(JSON.stringify(tableData[idx])),
                             method: 'get',
                             async: false
                         }).responseText;
@@ -1657,9 +1679,16 @@ function editSelectedData(idx) {
 
     //set current values for editing
     if (idx > -1) {
-        for(var key in ltableHeaders) {
+        for (var key in ltableHeaders) {
             d_key = ltableHeaders[key].field;
-            $('#modals_inp_'+d_key).val( ltableData[idx][d_key] );
+            if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                var usr = allUsers.find(function (el) {
+                    return el.id === ltableData[idx][d_key];
+                });
+                $('#modals_inp_'+d_key).val( (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '') );
+            } else {
+                $('#modals_inp_'+d_key).val( ltableData[idx][d_key] );
+            }
         }
     }
 
@@ -1679,7 +1708,7 @@ function bind_dropdown() {
                 panel.style.display = "none";
             } else {
                 $.ajax({
-                    url: baseHttpUrl + '/getFilesForField',
+                    url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field,
                     method: 'get',
                     success: function (resp) {
                         panel.innerHTML = resp;
@@ -1699,14 +1728,14 @@ function getRefDDL(sel) {
     var d_key, row = {};
     for(var i in tableHeaders) {
         d_key = tableHeaders[i].field;
-        if (d_key != 'id') {
+        if ($.inArray(d_key, system_fields) == -1) {
             row[d_key] = $('#modals_inp_'+d_key).val();
         }
     }
 
     var html = '';
     var resp = $.ajax({
-        url: baseHttpUrl + '/getRefDDL?req=' + JSON.stringify(tableDDLs[key].req_obj) + '&row=' + JSON.stringify(row),
+        url: baseHttpUrl + '/getRefDDL?req=' + btoa(JSON.stringify(tableDDLs[key].req_obj)) + '&row=' + btoa(JSON.stringify(row)),
         method: 'get',
         async: false
     }).responseText;
@@ -1791,7 +1820,7 @@ function deleteCurrentTable() {
                 table_name: selectedTableName
             },
             success: function (response) {
-                window.location = '/data/all';
+                window.location = '/data/';
             },
             error: function () {
                 alert("Server error");
@@ -1808,9 +1837,7 @@ function sortByColumn(col) {
         sortCol = key;
         sortASC = true;
     }
-    tableData = _.sortBy(tableData, key);
-    if (!sortASC) tableData = _.reverse(tableData);
-    showDataTable(tableHeaders, tableData);
+    changePage(1);
 }
 
 
@@ -1915,9 +1942,22 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">' +
-                        (data[i][d_key] !== null ? data[i][d_key] : '') +
-                    '</div></td>';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
+                    tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (headers[key].f_type == 'Attachment') {
+                    tableData += '<i class="fa fa-paperclip"></i>';
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                } else {
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                }
+                tableData += '</div></td>';
             }
         }
         tableData += "</tr>";
@@ -1934,9 +1974,22 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">' +
-                        (data[i][d_key] !== null ? data[i][d_key] : '') +
-                    '</div></td>';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
+                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (headers[key].f_type == 'Attachment') {
+                    tbHiddenData += '<i class="fa fa-paperclip"></i>';
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                } else {
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                }
+                tbHiddenData += '</div></td>';
             }
         }
         tbHiddenData += "</tr>";
@@ -1954,8 +2007,8 @@ function showFavoriteDataTable(headers, data) {
     for (var i = 0; i < rows_in_hdrs; i++) {
         tbDataHeaders += "<tr>";
         if (i == 0) {
-            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"'><b>#</b></th>";
-            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"'><i class='fa fa-info-circle'></i></th>";
+            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"' style='text-align: center;'><b>#</b></th>";
+            tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"' style='text-align: center;'><i class='fa fa-info-circle'></i></th>";
             tbDataHeaders += "<th class='sorting nowrap' rowspan='"+(rows_in_hdrs+1)+"' style='min-width: 70px;'></th>";
         }
         for (var $hdr in headers) {
@@ -2221,7 +2274,7 @@ function selectSettingsTable() {
         data: {
             p: 0,
             c: settingsEntries,
-            q: JSON.stringify(query),
+            q: btoa(JSON.stringify(query)),
             tableSelected: selectedTableName
         },
         success: function(response) {
@@ -2269,8 +2322,8 @@ function changeSettingsPage(page) {
             tableName: settingsTableName,
             p: settingsPage,
             c: settingsEntries,
-            q: JSON.stringify(query),
-            fields: JSON.stringify(settingsTableHeaders),
+            q: btoa(JSON.stringify(query)),
+            fields: btoa(JSON.stringify(settingsTableHeaders)),
             tableSelected: selectedTableName
         },
         success: function (response) {
@@ -2314,11 +2367,17 @@ function showSettingsDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
-                    (d_key != 'id' && d_key != 'field' && d_key != 'name' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
+                    ($.inArray(d_key, system_fields) == -1 && d_key != 'field' && d_key != 'name' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else
                 if (d_key === 'dfot_odr') {
                     tableData += '<button class="btn btn-sm" style="width: 100%" data-odr="' + get_calc_odr(data[i].field) + '">'+
@@ -2348,6 +2407,12 @@ function showSettingsDataTable(headers, data) {
                 } else
                 if (d_key === 'dfot_odr') {
                     tbHiddenData += '<button class="btn btn-sm" style="width: 100%">'+ key +'</button>';
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -2712,7 +2777,7 @@ function updateSettingsRowLocal(idx, key, id) {
         if (val == "Yes") {
             $.ajax({
                 method: 'GET',
-                url: baseHttpUrl + '/loadFilter?tableName=' + selectedTableName + '&field='+ header_key +'&name='+ settingsTableData[idx]['name'],
+                url: baseHttpUrl + '/loadFilter?tableName=' + selectedTableName + '&field='+ header_key +'&name='+ btoa(settingsTableData[idx]['name']),
                 success: function (response) {
                     filtersData.push(response);
                     showFiltersList(filtersData);
@@ -2861,8 +2926,15 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && d_key === 'tb_id') {
                     tableData += settingsDDL_TableMeta.name;
-                } else if (idx != -1 && d_key === 'list_id') {
+                } else
+                if (idx != -1 && d_key === 'list_id') {
                     tableData += settingsDDLs[idx].name;
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -2882,6 +2954,12 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     tbHiddenData += settingsDDL_TableMeta.name;
                 } else if (idx != -1 && d_key === 'list_id') {
                     tbHiddenData += settingsDDLs[idx].name;
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -3144,7 +3222,7 @@ function updateSettingsDDL(id) {
     var strParams = "";
     for (var key in params) {
         if (key != 'items' && key != 'referencing' && params[key] !== null) {
-            strParams += key + '=' + params[key] + '&';
+            strParams += key + '=' + btoa(params[key]) + '&';
         }
     }
 
@@ -3234,7 +3312,7 @@ function saveSettingsDDLRow(tableName) {
     var strParams = "";
     for (var key in params) {
         if (key != 'items' && key != 'referencing' && params[key] !== null) {
-            strParams += key + '=' + params[key] + '&';
+            strParams += key + '=' + btoa(params[key]) + '&';
         }
     }
 
@@ -3396,6 +3474,12 @@ function showSettingsRightsDataTable(headers, data, idx) {
                         (d_key === 'edit' && !settingsRights[idx].user_id ? ' disabled ' : '') +
                         'onclick="updateSettingsRightsItem(\'' + d_key + '\', ' + i + ', \'inp_' + d_key + i + '_settings_rights_field\')" ' +
                         (data[i][d_key] ? 'checked>' : '>');
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -3419,6 +3503,12 @@ function showSettingsRightsDataTable(headers, data, idx) {
                 } else
                 if (idx == -1 && d_key === 'user_id') {
                     tbHiddenData += (settingsUsersNames[data[i][d_key]] ? settingsUsersNames[data[i][d_key]] : 'Visitor');
+                } else
+                if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                    var usr = allUsers.find(function (el) {
+                        return el.id === data[i][d_key];
+                    });
+                    if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -3695,7 +3785,7 @@ function sent_csv_to_backend(is_upload) {
             if (!resp.error) {
                 ddl_col_numbers = [];
                 $.each(resp.headers, function(i, hdr) {
-                    ddl_col_numbers.push(hdr.field);
+                    ddl_col_numbers.push(hdr.header ? hdr.header : 'col#'+i);
                 });
             }
 
@@ -3773,7 +3863,7 @@ function import_test_db_connect() {
                 $('#import_data_csv').val(1);
                 ddl_col_numbers = [];
                 $.each(resp.headers, function(i, hdr) {
-                    ddl_col_numbers.push(hdr.field);
+                    ddl_col_numbers.push(hdr.header ? hdr.header : 'col#'+i);
                 });
                 import_show_col_tab();
                 changeImportStyle( $('#import_type_import') );
@@ -4373,6 +4463,7 @@ function jsTreeBuild($tab) {
                 "contextmenu": {
                     "items": function ($node) {
                         var type = $node.data ? $node.data.type : $node.li_attr['data-type'];
+                        var title = $node.data ? $node.data.title : $node.li_attr['data-title'];
                         var menu = {};
                         if (type == 'folder') {
                             if ($tab == 'private') {
@@ -4422,7 +4513,7 @@ function jsTreeBuild($tab) {
                                             }
 
                                             $.ajax({
-                                                url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&from_tab='+$tab+'&text='+inputValu,
+                                                url: baseHttpUrl+'/menutree_addfolder?parent_id='+par_id+'&from_tab='+$tab+'&text='+btoa(inputValu),
                                                 method: 'GET',
                                                 success: function (resp) {
                                                     var parent = $('#tablebar_'+$tab+'_div').jstree('get_selected');
@@ -4442,76 +4533,79 @@ function jsTreeBuild($tab) {
                                     );
                                 }
                             };
-                            menu.edit = {
-                                "separator_before": false,
-                                "separator_after": false,
-                                "label": "Edit",
-                                "action": function (obj) {
-                                    var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                    var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
-                                    var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                    var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
-                                    swal({
-                                            title: "Change name",
-                                            text: "Write folder name:",
-                                            type: "input",
-                                            showCancelButton: true,
-                                            closeOnConfirm: true,
-                                            animation: "slide-from-top",
-                                            inputPlaceholder: "Folder name",
-                                            inputValue: input_text
-                                        },
-                                        function (inputValu) {
-                                            if (inputValu === false) return false;
+                            if (title != 'SHARED') {
+                                menu.edit = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Edit",
+                                    "action": function (obj) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                        var input_text = $('#tablebar_'+$tab+'_div').jstree('get_selected', true)[0].text;
+                                        input_text = input_text.substr( 0, input_text.lastIndexOf(' (') );
+                                        swal({
+                                                title: "Change name",
+                                                text: "Write folder name:",
+                                                type: "input",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top",
+                                                inputPlaceholder: "Folder name",
+                                                inputValue: input_text
+                                            },
+                                            function (inputValu) {
+                                                if (inputValu === false) return false;
 
-                                            if (inputValu === "") {
-                                                swal.showInputError("You need to write something!");
-                                                return false
+                                                if (inputValu === "") {
+                                                    swal.showInputError("You need to write something!");
+                                                    return false
+                                                }
+
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+btoa(inputValu),
+                                                    method: 'GET',
+                                                    success: function (resp) {
+                                                        $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, inputValu);
+                                                    }
+                                                });
                                             }
-
-                                            $.ajax({
-                                                url: baseHttpUrl+'/menutree_renamefolder?folder_id='+par_id+'&text='+inputValu,
-                                                method: 'GET',
-                                                success: function (resp) {
-                                                    $('#tablebar_'+$tab+'_div').jstree('rename_node', elem_id, inputValu);
-                                                }
-                                            });
-                                        }
-                                    );
-                                }
-                            };
-                            menu.remove = {
-                                "separator_before": false,
-                                "separator_after": false,
-                                "label": "Remove",
-                                "action": function (obj) {
-                                    var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
-                                    var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
-                                    var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
-                                    var txt = $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ?
-                                        "All folder and table/data nodes under this folder would be completely removed! Are you sure?" :
-                                        "Are you sure?";
-                                    swal({
-                                            title: "Delete folder",
-                                            text: txt,
-                                            confirmButtonClass: "btn-danger",
-                                            confirmButtonText: "Yes, delete it!",
-                                            showCancelButton: true,
-                                            closeOnConfirm: true,
-                                            animation: "slide-from-top"
-                                        },
-                                        function () {
-                                            $.ajax({
-                                                url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
-                                                method: 'GET',
-                                                success: function (resp) {
-                                                    $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
-                                                }
-                                            });
-                                        }
-                                    );
-                                }
-                            };
+                                        );
+                                    }
+                                };
+                                menu.remove = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Remove",
+                                    "action": function (obj) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        var par_id = elem.data ? elem.data.menu_id : elem.li_attr['data-menu_id'];
+                                        var txt = $('#tablebar_'+$tab+'_div').jstree('is_parent', elem_id) ?
+                                            "All folder and table/data nodes under this folder would be completely removed! Are you sure?" :
+                                            "Are you sure?";
+                                        swal({
+                                                title: "Delete folder",
+                                                text: txt,
+                                                confirmButtonClass: "btn-danger",
+                                                confirmButtonText: "Yes, delete it!",
+                                                showCancelButton: true,
+                                                closeOnConfirm: true,
+                                                animation: "slide-from-top"
+                                            },
+                                            function () {
+                                                $.ajax({
+                                                    url: baseHttpUrl+'/menutree_deletefolder?folder_id='+par_id,
+                                                    method: 'GET',
+                                                    success: function (resp) {
+                                                        $('#tablebar_'+$tab+'_div').jstree().delete_node(elem_id);
+                                                    }
+                                                });
+                                            }
+                                        );
+                                    }
+                                };
+                            }
                         }
                         if (type == 'table' && $tab == 'private') {
                             menu = {
@@ -4770,7 +4864,7 @@ function jsTreeBuild($tab) {
                         }
 
                         $.ajax({
-                            url: baseHttpUrl+'/menutree_addfolder?parent_id=0&from_tab='+$tab+'&text='+inputValu,
+                            url: baseHttpUrl+'/menutree_addfolder?parent_id=0&from_tab='+$tab+'&text='+btoa(inputValu),
                             method: 'GET',
                             success: function (resp) {
                                 var newNode = {
@@ -4819,7 +4913,7 @@ function popup_sidebar_table() {
         tb_notes = $('#sidebar_table_notes').val(),
         menutree_id = $('#sidebar_menutree_id').val(),
         action = $('#sidebar_table_action').val(),
-        strParamsEdit = "tableName=tb&id="+tb_id+"&name="+tb_name+"&nbr_entry_listing="+tb_nbr+"&notes="+tb_notes;
+        strParamsEdit = "tableName=tb&id="+btoa(tb_id)+"&name="+btoa(tb_name)+"&nbr_entry_listing="+btoa(tb_nbr)+"&notes="+btoa(tb_notes);
 
     if (action == 'add') {
         $.ajax({
@@ -4903,7 +4997,7 @@ function getGlobalOffset(direction, elem_id) {
 }
 
 var stretchedtables = localStorage.getItem('stretched_tables') == '1' ? true : false;
-$('#tableStretch_btn').css('color', stretchedtables ? '#fff' : '#777');
+$('#tableStretch_btn').css('color', stretchedtables ? '#ccc' : '#444').css('font-size', stretchedtables ? '1.5em' : '1em');
 $('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
 $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
 function tableStretch() {
@@ -4911,7 +5005,7 @@ function tableStretch() {
     $('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
     $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
     localStorage.setItem('stretched_tables', stretchedtables ? '1' : '0');
-    $('#tableStretch_btn').css('color', stretchedtables ? '#fff' : '#777');
+    $('#tableStretch_btn').css('color', stretchedtables ? '#ccc' : '#444').css('font-size', stretchedtables ? '1.5em' : '1em');
 }
 
 function SpanColumnsWithTheSameData(id) {

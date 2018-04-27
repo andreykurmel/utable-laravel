@@ -68,7 +68,9 @@ class TableController extends Controller
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
-            if (strpos($key,'/') !== false) {
+            $params[$key] = base64_decode($par);
+            if ($params[$key] == 'null' || $params[$key] == 'undefined') $params[$key] = NULL;
+            if (strpos($key, '/') !== false) {
                 unset($params[$key]);
             }
         }
@@ -97,12 +99,14 @@ class TableController extends Controller
     }
 
     public function updateTableRow(Request $request) {
-        $id = $request->id;
+        $id = base64_decode($request->id);
         $tableName= $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
-            if (strpos($key, '/') !== false || $par == 'null') {
+            $params[$key] = base64_decode($par);
+            if ($params[$key] == 'null' || $params[$key] == 'undefined') $params[$key] = NULL;
+            if (strpos($key, '/') !== false) {
                 unset($params[$key]);
             }
         }
@@ -162,7 +166,7 @@ class TableController extends Controller
 
         return [
             'key' => $request->field,
-            'name' => $request->name,
+            'name' => base64_decode($request->name),
             'val' => $filter_vals ? $filter_vals : [],
             'checkAll' => true
         ];
@@ -470,8 +474,8 @@ class TableController extends Controller
             if (Auth::user()) {
                 if (
                     //not admin
-                    Auth::user()->role_id != 1
-                    &&
+                    //Auth::user()->role_id != 1
+                    //&&
                     //not owner
                     $table_meta->owner != Auth::user()->id
                 ) {
@@ -677,7 +681,7 @@ class TableController extends Controller
             ->where('tb.db_tb', '=', $request->table_db_tb)
             ->where('m2t.type', '=', 'table')
             ->first();
-        $request->menutree_id = $tbinfo->menutree_id;
+        $request->menutree_id = ($tbinfo ? $tbinfo->menutree_id : 0);
         if ($request->table_db_tb) {
             $this->deleteAllTable($request->table_db_tb);
         }
@@ -1088,7 +1092,7 @@ class TableController extends Controller
 
         return [
             'error' => false,
-            'msg' => config('app.url')."/data/".$table_db
+            'msg' => config('app.url')."/data/".($request->type_import != 'remote' ? $request->table_name : $table_db)
         ];
     }
 
@@ -1241,7 +1245,7 @@ class TableController extends Controller
     public function menutree_addfolder(Request $request) {
         $id = DB::connection('mysql_sys')->table('menutree')->insert([
             'parent_id' => $request->parent_id,
-            'title' => $request->text,
+            'title' => base64_decode($request->text),
             'structure' => $request->from_tab,
             'user_id' => Auth::user()->id,
             'createdBy' => Auth::user()->id,
@@ -1263,7 +1267,7 @@ class TableController extends Controller
 
     public function menutree_renamefolder(Request $request) {
         $id = DB::connection('mysql_sys')->table('menutree')->where('id', '=', $request->folder_id)->update([
-            'title' => $request->text,
+            'title' => base64_decode($request->text),
             'modifiedBy' => Auth::user()->id,
             'modifiedOn' => now()
         ]);
@@ -1402,8 +1406,8 @@ class TableController extends Controller
     }
 
     public function getRefDDL(Request $request) {
-        $row = (array)json_decode($request->row);
-        $req = json_decode($request->req);
+        $row = (array)json_decode(base64_decode($request->row));
+        $req = json_decode(base64_decode($request->req));
 
         $refTb = $req[0]->ref_tb;
         $refField = $req[0]->ref_tb_field;

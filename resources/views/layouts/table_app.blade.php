@@ -237,6 +237,10 @@
             display: none;
             overflow: hidden;
         }
+
+        .no-focus.btn-default:focus {
+            background-color: transparent;
+        }
     </style>
 
     @stack('styles')

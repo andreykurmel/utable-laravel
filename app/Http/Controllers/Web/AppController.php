@@ -81,17 +81,20 @@ class AppController extends Controller
 
     private function getVariables($tablePath = "") {
         $pathElems = explode('/', $tablePath);
-        $tableName = end($pathElems);
+        $tableFullName = end($pathElems);
         $pathCount = count($pathElems) - 1;
+
+        $tableMeta = $tableFullName
+            ?
+            DB::connection('mysql_sys')->table('tb')->where('name', '=', $tableFullName)->first()
+            :
+            [];
+
+        $tableName = $tableMeta ? $tableMeta->db_tb : '';
 
         $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
         $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
 
-        $tableMeta = $tableName
-            ?
-            DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first()
-            :
-            [];
         if ($tableMeta) {
             $tableMeta->conn_notes = json_decode($tableMeta->conn_notes);
         }
@@ -104,7 +107,7 @@ class AppController extends Controller
             $owner = (
                 Auth::user()
                 &&
-                (Auth::user()->role_id == 1 || Auth::user()->id == $tableMeta->owner)
+                (/*Auth::user()->role_id == 1 || */Auth::user()->id == $tableMeta->owner)
             ) ? true : false;
         } else {
             $owner = Auth::user() ? true : false;
@@ -126,9 +129,9 @@ class AppController extends Controller
                     $q->where('m2t.type', '=', 'link');
                 })
                 ->where('is_system', '=', 0);
-            if (Auth::user()->role_id != 1) {
+            //if (Auth::user()->role_id != 1) {
                 $tablesDropDown->where('tb.owner', '=', Auth::user()->id)->orWhereNotNull('m2t.id');
-            }
+            //}
             $tablesDropDown = $tablesDropDown->groupBy('tb.id')->select('tb.*')->get();
             //get fields for each tables
             foreach ($tablesDropDown as &$tb) {
@@ -168,14 +171,15 @@ class AppController extends Controller
             'owner' => $owner,
             'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->orderBy('id')->get(),
             'importConnections' => $connections,
-            'tablesDropDown' => $tablesDropDown
+            'tablesDropDown' => $tablesDropDown,
+            'allUsers' => DB::connection('mysql')->table('users')->get()
         ];
     }
 
     private function getCanEditSetings($tableName) {
         $canEdit = false;
         if (Auth::user()) {
-            if (Auth::user()->role_id != 1) {
+            //if (Auth::user()->role_id != 1) {
                 $tb = DB::connection('mysql_sys')->table('tb');
                 $tb->where('tb.db_tb', '=', $tableName);
                 $tb->where('tb.owner', '=', Auth::user()->id);
@@ -183,10 +187,10 @@ class AppController extends Controller
                 if ($tb->count() > 0) {
                     $canEdit = true;
                 }
-            } else {
+            /*} else {
                 //if admin
                 $canEdit = true;
-            }
+            }*/
         }
         return $canEdit;
     }
@@ -246,7 +250,7 @@ class AppController extends Controller
                 ->where('is_system', '=', 0)
                 ->selectRaw("tb.*, IF(m2t.id IS NULL, 0, m2t.id) as m2t_id, IF(m2t.menutree_id IS NULL, 0, m2t.menutree_id) as menutree_id, 'table' as link_type");
 
-            if (Auth::user()->role_id != 1) {
+            //if (Auth::user()->role_id != 1) { now admin cannot access to all tables on the server
                 $tables->leftJoin('permissions', function ($q) {
                     $q->where('permissions.table_id', '=', 'tb.id');
                     $q->where('permissions.user_id', '=', Auth::user()->id);
@@ -255,7 +259,7 @@ class AppController extends Controller
                     $qt->where('tb.owner', '=', Auth::user()->id);
                     $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
                 });
-            }
+            //}
             $tables = $tables->get();
         } else {
             $tables = [];
@@ -266,7 +270,7 @@ class AppController extends Controller
             ->join('menutree_2_tb as m2t', function ($q) use ($tab) {
                 $q->whereRaw('m2t.tb_id = tb.id');
                 $q->where('m2t.structure', '=', $tab);
-                $q->where('m2t.type', '=', 'link');
+                $q->whereIn('m2t.type', ['link','share-alt']);
                 //folders structure and links are shared only for 'public' tab. Other tabs with structure different for each user.
                 if ($tab != 'public') {
                     $q->where('m2t.user_id', '=', Auth::user()->id);
@@ -301,9 +305,9 @@ class AppController extends Controller
 
     private function buildHTMLTree($res_arr, $url, $tab) {
         if ($res_arr->id) {
-            $html = "<li data-type='folder' ".
+            $html = "<li data-type='folder' data-title='" . $res_arr->title . "' ".
                 "data-jstree='{\"opened\":".($res_arr->state ? 1 : 0).", \"icon\":\"fa fa-folder".($res_arr->state ? '-open' : '')."\"}' ".
-                "data-menu_id='" . $res_arr->id . "'>" . $res_arr->title . "({~folders".$res_arr->id."}/{~tables".$res_arr->id."})";
+                "data-menu_id='" . $res_arr->id . "'>" . $res_arr->title . " ({~folders".$res_arr->id."}/{~tables".$res_arr->id."})";
         } else {
             $html = "";
         }
@@ -322,7 +326,7 @@ class AppController extends Controller
                             .preg_replace('/'.$pub_subdomain.'\//i','', $url)
                             .$table->db_tb;
                     } else {
-                        $link = config('app.url').$url.$table->db_tb;
+                        $link = config('app.url').$url.$table->name;
                     }
 
                     $html .= '<li 
@@ -408,7 +412,7 @@ class AppController extends Controller
                     $q->where('m2t.structure', '=', 'public');
                     $q->where('m2t.type', '=', 'link');
                 })
-                ->where('tb.db_tb', '=', $tableName)
+                ->where('tb.name', '=', $tableName)
                 ->whereNotNull('m2t.id')
                 ->count();
 
@@ -417,14 +421,14 @@ class AppController extends Controller
             if (Auth::user()) {
                 $table = DB::connection('mysql_sys')->table('tb')
                     ->leftJoin('permissions', 'permissions.table_id', '=', 'tb.id')
-                    ->where('tb.db_tb', '=', $tableName);
-                if (Auth::user()->role_id != 1) {
+                    ->where('tb.name', '=', $tableName);
+                //if (Auth::user()->role_id != 1) {
                     //user - get user`s data, favourites and public data in the current folder
                     $table->where(function ($qt) {
                         $qt->orWhere('tb.owner', '=', Auth::user()->id);
                         $qt->orWhere('permissions.user_id', '=', Auth::user()->id);
                     });
-                }
+                //}
                 //admin - get all data
                 $exist = $table->count();
             }
@@ -499,7 +503,7 @@ class AppController extends Controller
                 foreach ($data as $key => $val) {
                     $headers[$key] = [
                         'header' => $request->check_1 ? $val : '',
-                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', ($request->check_2 ? $val : 'col#'.$key) )),
+                        'field' => strtolower(preg_replace('/[^\w\d]/i', '_', ($request->check_2 ? $val : 'col_'.$key) )),
                     ];
                 }
             }

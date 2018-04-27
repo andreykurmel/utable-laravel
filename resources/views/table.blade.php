@@ -32,8 +32,8 @@
                             {!! $treeTables['public']['html'] !!}
                         </div>
                         <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                            <input id="searchValInTab_public" type="text" class="form-control" style="display: inline-block; width: 77%;">
-                            <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('public')"><i class="fa fa-search"></i></button>
+                            <input id="searchValInTab_public" type="text" class="form-control" style="display: inline-block; width: 88%;">
+                            <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('public')"><i class="fa fa-search"></i></button>
                         </div>
                     </div>
                     <div id="tablebar_private_wrapper" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
@@ -42,8 +42,8 @@
                                 {!! $treeTables['private']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 78%;">
-                                <button class="btn btn-default" style="border: none;width: 20%;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
+                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 88%;">
+                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
                             <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
@@ -55,8 +55,8 @@
                                 {!! $treeTables['favorite']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                                <input id="searchValInTab_favorite" type="text" class="form-control" style="display: inline-block; width: 77%;">
-                                <button class="btn btn-default" style="width: 20%;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
+                                <input id="searchValInTab_favorite" type="text" class="form-control" style="display: inline-block; width: 88%;">
+                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
                             <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
@@ -129,10 +129,10 @@
                     </span>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block'>
-                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" id="tableStretch_btn" onclick="tableStretch()" title="Table full width"><i class="fa fa-arrows-h"></i></a>
+                        <a href="javascript:void(0)" class="btn btn-default no-focus" id="tableStretch_btn" onclick="tableStretch()" title="Table full width" style="border:none;padding: 0 10px;"><i class="fa fa-arrows-h"></i></a>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block' id="showHideColumnsList_btn">
-                        <a href="javascript:void(0)" class="button blue-gradient glossy thin" onclick="showHideColumnsList()" title="Show/Hide Columns" style="padding: 2px 7px 0 7px;"><img src="/img/show-icon.png" height="25"></a>
+                        <a href="javascript:void(0)" class="btn btn-default no-focus" onclick="showHideColumnsList()" title="Show/Hide Columns" style="border:none;padding: 5px 7px 0 7px;"><img src="/img/show-icon.png" height="25"></a>
                     </div>
                     @if(Auth::user())
                         <div style="padding: 5px;display: inline-block;">
@@ -1189,5 +1189,6 @@
         table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
         $importReferences = JSON.parse('{!! json_encode($importReferences) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
+        allUsers = JSON.parse('{!! json_encode($allUsers) !!}');
     </script>
 @endpush
