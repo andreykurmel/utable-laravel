@@ -539,22 +539,19 @@ function showDataTable(headers, data) {
         visibleColumns += '</li>';
     }
 
-    $('#tbAddRow_header').html(tbDataHeaders);
     $('#tbHeaders_header').html(tbDataHeaders);
-    $('#tbData_header').html(tbDataHeaders);
+    //span columns (first horizontal, next vertical) if they data are the same for multi-headers
+    if (rows_in_hdrs > 1) {
+        SpanColumnsWithTheSameData('tbHeaders_header');
+    }
+    $('#tbAddRow_header').html( $('#tbHeaders_header').html() );
+    $('#tbData_header').html( $('#tbHeaders_header').html() );
 
     $('#ul-cols-list').html(visibleColumns);
 
     $('#tbAddRow_body').html(tbAddRow + tbHiddenData);
     $('#tbHeaders_body').html(tbHiddenData);
     $('#tbData_body').html(tableData);
-
-    //span columns (first horizontal, next vertical) if they data are the same for multi-headers
-    if (rows_in_hdrs > 1) {
-        SpanColumnsWithTheSameData('tbAddRow_header');
-        SpanColumnsWithTheSameData('tbHeaders_header');
-        SpanColumnsWithTheSameData('tbData_header');
-    }
 
     //set rows height
     var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
