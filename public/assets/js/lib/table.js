@@ -520,11 +520,9 @@ function showDataTable(headers, data) {
     for (var $hdr in headers) {
         if (headers[$hdr].unit) {
             tbDataHeaders += '<th ' +
-                'id="' + headers[key].field + $hdr + headers[key].input_type + '_header"' +
                 'data-key="' + headers[$hdr].field + '" ' +
                 'data-idx="' + (headers[$hdr].rows_ord-1) + '"' +
                 'style="text-align: center;position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
-                (headers[$hdr].unit_ddl ? 'onclick="showInlineEdit(\'' + headers[key].field + $hdr + headers[key].input_type + '_header\', \'settings\')"' : '') +
                 '>' +
                 '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                     headers[$hdr].unit +
@@ -533,7 +531,6 @@ function showDataTable(headers, data) {
         }
     }
     tbDataHeaders += "</tr>";
-    tbHiddenHeaders = tbDataHeaders.replace('id=', 'data-hidden=');
 
     for (var $hdr in headers) {
         visibleColumns += '<li style="padding: 4px 8px;' + (headers[$hdr].is_showed ? '' : 'background-color: #ccc;') + '' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
@@ -542,9 +539,9 @@ function showDataTable(headers, data) {
         visibleColumns += '</li>';
     }
 
-    $('#tbAddRow_header').html(tbHiddenHeaders);
+    $('#tbAddRow_header').html(tbDataHeaders);
     $('#tbHeaders_header').html(tbDataHeaders);
-    $('#tbData_header').html(tbHiddenHeaders);
+    $('#tbData_header').html(tbDataHeaders);
 
     $('#ul-cols-list').html(visibleColumns);
 
@@ -1608,12 +1605,12 @@ function editSelectedData(idx) {
             html +=
                 '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
                 '<td>';
-            if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+            if ($.inArray(d_key, system_fields) != -1) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
             } else
             if (ltableHeaders[key].f_type == 'Attachment') {
                 html += '<div style="margin-bottom: 5px;">' +
-                    '<button class="dropdown_btn">Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')</button>' +
+                    '<button class="dropdown_btn">Files (' + (ltableData[idx] && ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')</button>' +
                     '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
                     '</div>';
             } else
@@ -1711,12 +1708,58 @@ function bind_dropdown() {
                     url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field,
                     method: 'get',
                     success: function (resp) {
-                        panel.innerHTML = resp;
+                        var html = '<table class="table">' +
+                            '<thead><tr>' +
+                                '<th>File</th>' +
+                                '<th>Notes</th>' +
+                                '<th>Actions</th>' +
+                            '</tr></thead>';
+                        for (var i in resp) {
+                            html += '<tr>' +
+                                '<td><a href="/storage/'+resp[i].filepath+resp[i].filename+'">'+resp[i].filename+'</a></td>' +
+                                '<td><input class="form-control" type="text" value="'+resp[i].notes+'"></td>' +
+                                '<td style="text-align: center;"><button class="btn btn-danger">&times;</button></td>' +
+                                '</tr>';
+                        }
+                        html += '</table>' +
+                            '<div style="width: 100%;height:34px;">' +
+                                '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+panel.dataset.field+'\')">' +
+                                    '<option value="file">Browse</option>' +
+                                    '<option value="link">Link</option>' +
+                                    '<option value="drag">Drag & Drop</option>' +
+                                '</select>' +
+                                '<button class="btn btn-primary" style="float: right;">Upload</button>' +
+                            '</div>' +
+                            '<div style="width: 100%;margin-top: 5px;">' +
+                                '<input id="dd_file_for_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
+                                '<input id="dd_link_for_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
+                                '<div id="dd_drag_for_'+panel.dataset.field+'" style="height: 75px;display: none;border:2px dashed #ccc;">' +
+                                    '<div style="height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
+                                '</div>' +
+                            '</div>';
+                        panel.innerHTML = html;
                         panel.style.display = "block";
                     }
                 });
             }
         });
+    }
+}
+
+function change_dd_type(elem, id) {
+    if ($(elem).val() == 'file') {
+        $('#dd_file_for_'+id).show();
+        $('#dd_link_for_'+id).hide();
+        $('#dd_drag_for_'+id).hide();
+    } else
+    if ($(elem).val() == 'link') {
+        $('#dd_file_for_'+id).hide();
+        $('#dd_link_for_'+id).show();
+        $('#dd_drag_for_'+id).hide();
+    } else {
+        $('#dd_file_for_'+id).hide();
+        $('#dd_link_for_'+id).hide();
+        $('#dd_drag_for_'+id).show();
     }
 }
 

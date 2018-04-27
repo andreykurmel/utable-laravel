@@ -1445,6 +1445,11 @@ class TableController extends Controller
     }
 
     public function getFilesForField(Request $request) {
-        return "there will be list of attached files.";
+        return DB::connection('mysql_sys')
+            ->table('files')
+            ->where('tb_id', '=', $request->table_id)
+            ->where('row_id', '=', $request->row_id)
+            ->where('field', '=', $request->field)
+            ->get();
     }
 }

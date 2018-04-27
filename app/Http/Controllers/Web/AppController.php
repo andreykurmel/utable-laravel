@@ -324,7 +324,7 @@ class AppController extends Controller
                         $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
                         $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
                             .preg_replace('/'.$pub_subdomain.'\//i','', $url)
-                            .$table->db_tb;
+                            .$table->name;
                     } else {
                         $link = config('app.url').$url.$table->name;
                     }
