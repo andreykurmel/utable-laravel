@@ -1605,7 +1605,7 @@ function editSelectedData(idx) {
             if ($.inArray(d_key, system_fields) != -1) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
             } else
-            if (ltableHeaders[key].f_type == 'Attachment' && idx) {
+            if (ltableHeaders[key].f_type == 'Attachment' && idx > -1) {
                 html += '<div style="margin-bottom: 5px;">' +
                     '<button class="dropdown_btn">Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')</button>' +
                     '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
