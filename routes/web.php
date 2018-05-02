@@ -404,6 +404,9 @@ Route::post('/api/replaceTable', 'TableController@replaceTable')->name('replaceT
 Route::post('/api/modifyTable', 'TableController@modifyTable')->name('modifyTable');
 Route::post('/api/remoteTable', 'TableController@remoteTable')->name('remoteTable');
 Route::post('/api/refTable', 'TableController@refTable')->name('refTable');
+Route::post('/api/UploadDDFile', 'TableController@UploadDDFile')->name('UploadDDFile');
+Route::post('/api/ChangeDDFile', 'TableController@ChangeDDFile')->name('ChangeDDFile');
+Route::post('/api/DeleteDDFile', 'TableController@DeleteDDFile')->name('DeleteDDFile');
 Route::group(['middleware' => 'database.change'], function () {
     Route::get('/api/menutree_addfolder', 'TableController@menutree_addfolder')->name('menutree_addfolder');
     Route::get('/api/menutree_renamefolder', 'TableController@menutree_renamefolder')->name('menutree_renamefolder');

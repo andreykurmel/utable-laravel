@@ -6,6 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Vanguard\Http\Controllers\Controller;
 use Vanguard\Services\TableService;
 use Illuminate\Http\Request;
@@ -1451,5 +1452,75 @@ class TableController extends Controller
             ->where('row_id', '=', $request->row_id)
             ->where('field', '=', $request->field)
             ->get();
+    }
+
+    public function UploadDDFile(Request $request) {
+        $res = false;
+        if (Auth::user() && $request->table && $request->row && $request->field) {
+            $filePath = $request->table."/".$request->row."/".$request->field."/";
+
+            if ($request->file_link) {
+                $fileName = explode('/', $request->file_link);
+                $fileName = last($fileName);
+                Storage::put("public/".$filePath."/".$fileName, file_get_contents($request->file_link));
+            } else {
+                $fileName = $request->file('up_file')->getClientOriginalName();
+                $request->file('up_file')->storeAs("public/".$filePath, $fileName);
+            }
+
+            $filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
+            $filesCnt = $filesCnt->{$request->field};
+            DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->update([
+                (string)$request->field => ($filesCnt ? $filesCnt+1 : 1)
+            ]);
+
+            $res = DB::connection('mysql_sys')->table('files')->insert([
+                'tb_id' => $request->table_id,
+                'row_id' => $request->row,
+                'field' => $request->field,
+                'filepath' => $filePath,
+                'filename' => $fileName
+            ]);
+        }
+        return ['error' => !$res, 'key' => $request->field];
+    }
+
+    public function ChangeDDFile(Request $request) {
+        $res = false;
+        if (Auth::user() && $request->table && $request->row && $request->field) {
+            $res = DB::connection('mysql_sys')
+                ->table('files')
+                ->where('tb_id', '=', $request->table_id)
+                ->where('row_id', '=', $request->row)
+                ->where('field', '=', $request->field)
+                ->where('filename', '=', $request->filename)
+                ->update([
+                    'notes' => $request->notes
+                ]);
+        }
+        return ['error' => !$res, 'key' => $request->field];
+    }
+
+    public function DeleteDDFile(Request $request) {
+        $res = false;
+        if (Auth::user() && $request->table && $request->row && $request->field) {
+            $filePath = $request->table."/".$request->row."/".$request->field."/";
+            Storage::delete("public/".$filePath."/".$request->filename);
+
+            $filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
+            $filesCnt = $filesCnt->{$request->field};
+            DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->update([
+                $request->field => $filesCnt-1
+            ]);
+
+            $res = DB::connection('mysql_sys')
+                ->table('files')
+                ->where('tb_id', '=', $request->table_id)
+                ->where('row_id', '=', $request->row)
+                ->where('field', '=', $request->field)
+                ->where('filename', '=', $request->filename)
+                ->delete();
+        }
+        return ['error' => !$res, 'key' => $request->field];
     }
 }

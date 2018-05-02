@@ -503,6 +503,8 @@
 {!! HTML::script('assets/js/lib/developr.scroll.js') !!}
 {!! HTML::script('https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js') !!}
 {!! HTML::script('assets/plugins/jstree/jstree.min.js') !!}
+{!! HTML::script('assets/plugins/jstree/jstree.min.js') !!}
+{!! HTML::script('assets/plugins/dropzone/dropzone.js') !!}
 {!! HTML::script('assets/js/lib/table.js') !!}
 
 {{-- Login scripts --}}

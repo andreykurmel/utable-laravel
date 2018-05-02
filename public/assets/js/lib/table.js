@@ -1605,11 +1605,18 @@ function editSelectedData(idx) {
             if ($.inArray(d_key, system_fields) != -1) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
             } else
-            if (ltableHeaders[key].f_type == 'Attachment' && idx > -1) {
-                html += '<div style="margin-bottom: 5px;">' +
-                    '<button class="dropdown_btn">Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')</button>' +
-                    '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
-                    '</div>';
+            if (ltableHeaders[key].f_type == 'Attachment') {
+                if (idx > -1) {
+                    html += '<div style="margin-bottom: 5px;">' +
+                        '<button class="dropdown_btn" id="modals_dd_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-val="'+(ltableData[idx][d_key] ? ltableData[idx][d_key] : 0)+'">' +
+                        'Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')' +
+                        '</button>' +
+                        '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
+                        '</div>';
+                } else {
+                    html += '<div style="margin-bottom: 5px;">' +
+                        '<button class="dropdown_btn">Files (0) - will be accessible after the row adding</button>';
+                }
             } else
             if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
                 html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
@@ -1695,47 +1702,74 @@ function editSelectedData(idx) {
 function bind_dropdown() {
     var acc = document.getElementsByClassName("dropdown_btn");
     for (var i = 0; i < acc.length; i++) {
-        acc[i].addEventListener("click", function() {
-            this.classList.toggle("dropdown_active");
-            var panel = this.nextElementSibling;
-            if (panel.style.display === "block") {
-                panel.style.display = "none";
-            } else {
-                $.ajax({
-                    url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field,
-                    method: 'get',
-                    success: function (resp) {
-                        var html = '<table class="table">' +
-                            '<thead><tr>' +
-                                '<th>File</th>' +
-                                '<th>Notes</th>' +
-                                '<th>Actions</th>' +
-                            '</tr></thead>';
-                        for (var i in resp) {
-                            html += '<tr>' +
-                                '<td><a href="/storage/'+resp[i].filepath+resp[i].filename+'">'+resp[i].filename+'</a></td>' +
-                                '<td><input class="form-control" type="text" value="'+resp[i].notes+'"></td>' +
-                                '<td style="text-align: center;"><button class="btn btn-danger">&times;</button></td>' +
-                                '</tr>';
-                        }
-                        html += '</table>' +
-                            '<div style="width: 100%;height:34px;">' +
-                                '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+panel.dataset.field+'\')">' +
-                                    '<option value="file">Browse</option>' +
-                                    '<option value="link">Link</option>' +
-                                    '<option value="drag">Drag & Drop</option>' +
-                                '</select>' +
-                                '<button class="btn btn-primary" style="float: right;">Upload</button>' +
-                            '</div>' +
-                            '<div style="width: 100%;margin-top: 5px;">' +
-                                '<input id="dd_file_for_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
-                                '<input id="dd_link_for_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
-                                '<div id="dd_drag_for_'+panel.dataset.field+'" style="height: 75px;display: none;border:2px dashed #ccc;">' +
-                                    '<div style="height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
-                                '</div>' +
-                            '</div>';
-                        panel.innerHTML = html;
-                        panel.style.display = "block";
+        acc[i].addEventListener("click", function() { bind_dropdown_clicked(this); });
+    }
+}
+
+function bind_dropdown_clicked(elem) {
+    elem.classList.toggle("dropdown_active");
+    var panel = elem.nextElementSibling;
+    if (panel.style.display === "block") {
+        panel.style.display = "none";
+    } else {
+        $.ajax({
+            url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field,
+            method: 'get',
+            success: function (resp) {
+                var html = '<table class="table">' +
+                    '<thead><tr>' +
+                        '<th>File</th>' +
+                        '<th>Notes</th>' +
+                        '<th>Actions</th>' +
+                    '</tr></thead>';
+                for (var i in resp) {
+                    html += '<tr>' +
+                        '<td><a target="_blank" href="/storage/'+resp[i].filepath+resp[i].filename+'">'+resp[i].filename+'</a></td>' +
+                        '<td><input class="form-control" type="text" value="'+(resp[i].notes ? resp[i].notes : '')+'" onchange="change_dd_file(this, '+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')"></td>' +
+                        '<td style="text-align: center;"><button class="btn btn-danger" onclick="delete_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')">&times;</button></td>' +
+                        '</tr>';
+                }
+                html += '</table>' +
+                    '<div style="width: 100%;height:34px;">' +
+                        '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+panel.dataset.field+'\')">' +
+                            '<option value="file">Browse</option>' +
+                            '<option value="link">Link</option>' +
+                            '<option value="drag">Drag & Drop</option>' +
+                        '</select>' +
+                        '<button class="btn btn-primary" style="float: right;" onclick="upload_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\')">Upload</button>' +
+                    '</div>' +
+                    '<div style="width: 100%;margin-top: 5px;">' +
+                        '<input id="dd_file_for_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
+                        '<input id="dd_link_for_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
+                        '<div id="dd_drag_for_'+panel.dataset.field+'" style="position: relative;height: 75px;display: none;border:2px dashed #ccc;">' +
+                            '<div style="position: absolute;z-index: 0;width: 100%;height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
+                        '</div>' +
+                    '</div>';
+                panel.innerHTML = html;
+                panel.style.display = "block";
+                var dr = new Dropzone("#dd_drag_for_"+panel.dataset.field, {
+                    url: baseHttpUrl + "/UploadDDFile",
+                    paramName: 'up_file',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    params: {
+                        table: table_meta.db_tb,
+                        table_id: panel.dataset.table,
+                        row: panel.dataset.row,
+                        field: panel.dataset.field
+                    }
+                });
+                dr.on("success", function(file, resp) {
+                    if (!resp.error) {
+                        var btn = document.getElementById('modals_dd_'+resp.key);
+                        var panel = btn.nextElementSibling;
+
+                        btn.dataset.val++;
+                        tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                        btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                        panel.style.display = "none";
+                        bind_dropdown_clicked(btn);
                     }
                 });
             }
@@ -1758,6 +1792,103 @@ function change_dd_type(elem, id) {
         $('#dd_link_for_'+id).hide();
         $('#dd_drag_for_'+id).show();
     }
+}
+
+function upload_dd_file(table, row, field) {
+    event.preventDefault();
+
+    var data = new FormData();
+
+    if ($('#dd_link_for_'+field).val()) {
+        data.append('file_link', $('#dd_link_for_'+field).val());
+    } else {
+        jQuery.each(jQuery('#dd_file_for_'+field)[0].files, function(i, file) {
+            data.append('up_file', file);
+        });
+    }
+    data.append('table', table_meta.db_tb);
+    data.append('table_id', table);
+    data.append('row', row);
+    data.append('field', field);
+
+    jQuery.ajax({
+        url: baseHttpUrl+'/UploadDDFile',
+        data: data,
+        cache: false,
+        contentType: false,
+        processData: false,
+        method: 'POST',
+        success: function(resp) {
+            if (!resp.error) {
+                var btn = document.getElementById('modals_dd_'+field);
+                var panel = btn.nextElementSibling;
+
+                btn.dataset.val++;
+                tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                panel.style.display = "none";
+                bind_dropdown_clicked(btn);
+            }
+        }
+    });
+}
+
+function delete_dd_file(table, row, field, filename) {
+    swal({
+        title: 'Delete file',
+        text: 'Are you sure?',
+        showCancelButton: true,
+        closeOnConfirm: true
+    }, function($confirm) {
+        if ($confirm) {
+            var data = new FormData();
+            data.append('table', table_meta.db_tb);
+            data.append('table_id', table);
+            data.append('row', row);
+            data.append('field', field);
+            data.append('filename', filename);
+
+            jQuery.ajax({
+                url: baseHttpUrl+'/DeleteDDFile',
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                method: 'POST',
+                success: function(resp) {
+                    if (!resp.error) {
+                        var btn = document.getElementById('modals_dd_'+field);
+                        var panel = btn.nextElementSibling;
+
+                        btn.dataset.val--;
+                        tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                        btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                        panel.style.display = "none";
+                        bind_dropdown_clicked(btn);
+                    }
+                }
+            });
+        }
+    });
+}
+
+function change_dd_file(elem, table, row, field, filename) {
+    var data = new FormData();
+    data.append('table', table_meta.db_tb);
+    data.append('table_id', table);
+    data.append('row', row);
+    data.append('field', field);
+    data.append('filename', filename);
+    data.append('notes', $(elem).val());
+
+    jQuery.ajax({
+        url: baseHttpUrl+'/ChangeDDFile',
+        data: data,
+        cache: false,
+        contentType: false,
+        processData: false,
+        method: 'POST'
+    });
 }
 
 function getRefDDL(sel) {
