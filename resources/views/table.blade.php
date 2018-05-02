@@ -75,12 +75,13 @@
             <!-- Main title -->
             <div class="colvisopts with-small-padding" style="position: absolute; top: 4px; font-size:14px;z-index:1000;right: 10px;display: none;">
                 <div style="display: flex;align-items: center;">
+                    <img id="rowHeightSize" src="/img/row_height.png" height="35" onclick="$('#rowHeightSize_Menu').toggle();" style="cursor: pointer;">
+                    <div id="rowHeightSize_Menu" style="position: absolute;top: 40px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;">
+                        <img id="rh_small" src="/img/row_height_active.png" height="20" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Small')">
+                        <img id="rh_med" src="/img/row_height_fade.png" height="30" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Medium')">
+                        <img id="rh_big" src="/img/row_height_fade.png" height="40" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Big')">
+                    </div>
                     <div id="tables_btns" style="display: inline-block;margin-left: 15px;">
-                        <select id="rowHeightSize" class="listview_btns form-control" style="width: 58px;display: inline-block;padding: 4px;" onchange="changeDataTableRowHeight(this)">
-                            <option>Small</option>
-                            <option selected>Medium</option>
-                            <option>Big</option>
-                        </select>
                         @if(Auth::user())
                             <div class="listview_btns" style="display: inline-block">
                                 <a href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
@@ -1081,6 +1082,8 @@
                         @if($owner)
                             <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
                             <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
+                        @endif
+                        @if(Auth::user())
                             <button id="modal_btn_update" class="btn btn-info" onclick="updateRowModal()" style="float: left; margin-left: 40px;">Update</button>
                         @endif
                         <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;">Close</button>

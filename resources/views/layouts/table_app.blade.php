@@ -254,15 +254,15 @@
         <div id="navbar" class="navbar-collapse">
             <ul class="nav navbar-nav navbar-left" style="float: left;">
                 <li style="display: inline-block">
-                    <a href="{{ $server }}" style="padding: 10px 0;height: 30px;">
+                    <a href="{{ Route::currentRouteName() != 'landing' ? $server : route("homepage") }}" style="padding: 10px 0;height: 30px;">
                         <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                     </a>
                 </li>
-                <li style="display: inline-block">
+                <!--<li style="display: inline-block">
                     <a href="{{ route("homepage") }}" class="btn btn-default" style="margin: 10px;padding: 4px 7px;font-size: 1.5em;">
                         <i class="fa fa-home"></i>
                     </a>
-                </li>
+                </li>-->
             </ul>
             <ul class="nav navbar-nav navbar-right" style="float: right;">
                 @if(Auth::user())

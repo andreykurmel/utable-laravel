@@ -113,6 +113,8 @@ $(document).ready(function () {
     }
 
     changeImportStyle();
+
+    changeDataTableRowHeight( localStorage.getItem('row_height') );
 });
 
 /* --------------------- Variables ---------------------- */
@@ -554,7 +556,7 @@ function showDataTable(headers, data) {
     $('#tbData_body').html(tableData);
 
     //set rows height
-    var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
+    var rh = ( localStorage.getItem('row_height') == 'Small' ? 37 : ( localStorage.getItem('row_height') == 'Medium' ? 47 : 67 ) );
     $('.table>tbody>tr>td .td_wrap').css('height', (rh-7)+'px');
 
     //show 'add row' if checked
@@ -1961,7 +1963,7 @@ function checkboxAddToggle() {
             emptyDataObject[d_key] = "";
         }
 
-        var rh = ( $('#rowHeightSize').val() == 'Small' ? 37 : ( $('#rowHeightSize').val() == 'Medium' ? 47 : 67 ) );
+        var rh = ( localStorage.getItem('row_height') == 'Small' ? 37 : ( localStorage.getItem('row_height') ? 47 : 67 ) );
         $('#tbAddRow').show();
         $('#tbHeaders').css('top', rh+'px');
         $('#divTbData').css('top', (rh+hdr_height)+'px');
@@ -5136,23 +5138,32 @@ function searchInTab($tab) {
 }
 
 function changeDataTableRowHeight(sel) {
+    if (!sel) sel = 'Medium';
     var rh;
-    if ($(sel).val() == 'Small') {
+    $('#rh_small, #rh_med, #rh_big').attr('src', '/img/row_height_fade.png');
+    if (sel == 'Small') {
         $('.table>tbody>tr>td .td_wrap').css('height', '30px');
         rh = 37;
+        $('#rh_small').attr('src', '/img/row_height_active.png');
+        localStorage.setItem('row_height', 'Small');
     } else
-    if ($(sel).val() == 'Medium') {
+    if (sel == 'Medium') {
         $('.table>tbody>tr>td .td_wrap').css('height', '40px');
         rh = 47;
+        $('#rh_med').attr('src', '/img/row_height_active.png');
+        localStorage.setItem('row_height', 'Medium');
     } else
-    if ($(sel).val() == 'Big') {
+    if (sel == 'Big') {
         $('.table>tbody>tr>td .td_wrap').css('height', '60px');
         rh = 67;
+        $('#rh_big').attr('src', '/img/row_height_active.png');
+        localStorage.setItem('row_height', 'Big');
     }
 
     if ($('#addingIsInline').is(':checked')) {
         showDataTable(tableHeaders, tableData);
     }
+    $('#rowHeightSize_Menu').hide();
 }
 
 function getGlobalOffset(direction, elem_id) {

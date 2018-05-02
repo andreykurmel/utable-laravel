@@ -37,9 +37,6 @@
                 <a class="navbar-brand" href="{{ route('landing') }}" style="padding: 7px 0 0 0;">
                     <img src="{{ url('assets/img/tdp-logo.png') }}" height="40" alt="{{ settings('app_name') }}">
                 </a>
-                <a href="{{ route("homepage") }}" class="btn btn-default" style="padding: 4px 7px;font-size: 1.5em;position: absolute;top: 5px;left: 100px;">
-                    <i class="fa fa-home"></i>
-                </a>
             </div>
             <div id="navbar" class="navbar-collapse">
                 <a href="#" id="sidebar-toggle" class="btn">
