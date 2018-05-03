@@ -10,7 +10,7 @@
         <!--[if lt IE 7]><p class="message red-gradient simpler">Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
         <a id="showTableLibBtn" class="open-menu" onclick="showHideTableLib()" style="left: 0;"><span></span></a>
-        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:absolute;top: 13px;bottom: 0;left: -1px;width: 260px;z-index: 500;">
+        <section id="showTableLibBody" class="menu left-menu" role="complementary" style="overflow: hidden; position:absolute;top: 6px;bottom: 0;left: -1px;width: 260px;z-index: 500;">
             <!-- This wrapper is used by several responsive layouts -->
             <div class="menu-content">
                 <div id="ctxMenu_tablebar" style="position: fixed;top:0;z-index: 1000;"></div>
@@ -19,7 +19,7 @@
                     Table Library
                 </header>
 
-                <div class="standard-tabs" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0; background: #f1f3f4; padding-top: 20px">
+                <div class="standard-tabs white-bg" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0;padding-top: 20px">
                     <ul class="tabs" style="position:relative; left: 10px;">
                         <li {{ Auth::guest() ? 'class=active' : '' }} id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
                         <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
@@ -73,10 +73,10 @@
             <noscript class="message black-gradient simpler">Your browser does not support JavaScript! Some features won't work as expected...</noscript>
 
             <!-- Main title -->
-            <div class="colvisopts with-small-padding" style="position: absolute; top: 4px; font-size:14px;z-index:1000;right: 10px;display: none;">
+            <div class="colvisopts with-small-padding" style="position: absolute; top: 0; font-size:14px;z-index:1000;right: 10px;display: none;">
                 <div style="display: flex;align-items: center;">
                     <img id="rowHeightSize" src="/img/row_height.png" height="35" onclick="$('#rowHeightSize_Menu').toggle();" style="cursor: pointer;">
-                    <div id="rowHeightSize_Menu" style="position: absolute;top: 40px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;">
+                    <div id="rowHeightSize_Menu" style="position: absolute;top: 37px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 80px; right:99%;">
                         <img id="rh_small" src="/img/row_height_active.png" height="20" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Small')">
                         <img id="rh_med" src="/img/row_height_fade.png" height="30" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Medium')">
                         <img id="rh_big" src="/img/row_height_fade.png" height="40" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Big')">
@@ -133,9 +133,11 @@
                         <a href="javascript:void(0)" class="btn btn-default no-focus" id="tableStretch_btn" onclick="tableStretch()" title="Table full width" style="border:none;padding: 0 10px;"><i class="fa fa-arrows-h"></i></a>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block' id="showHideColumnsList_btn">
-                        <a href="javascript:void(0)" class="btn btn-default no-focus" onclick="showHideColumnsList()" title="Show/Hide Columns" style="border:none;padding: 5px 7px 0 7px;"><img src="/img/show-icon.png" height="25"></a>
+                        <a href="javascript:void(0)" class="btn btn-default no-focus" onclick="showHideColumnsList()" title="Show/Hide Columns" style="border:none;padding: 5px 7px 0 7px;">
+                            <img id="showHideColumnsList_img" src="/img/show-icon.png" height="25">
+                        </a>
                     </div>
-                    @if(Auth::user())
+                    @if(false)
                         <div style="padding: 5px;display: inline-block;">
                             <select id="tableChanger" class="selectcustom" onchange="window.location = $('#tableChanger').val();" style="width: 100%;font-family: 'FontAwesome'">
                                 <option value="{{ '/data/all' }}"></option>
@@ -171,7 +173,7 @@
 
 
             <!-- Wrapper, set tabs style class here -->
-            <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 20px; left: 265px; right: 0; bottom: 0;">
+            <div class="standard-tabs js-table_lib_hide" style="position: absolute ;top: 14px; left: 265px; right: 0; bottom: 0;">
 
                 <!-- Tabs -->
                 <ul class="tabs" style="width: fit-content;">
@@ -1032,7 +1034,7 @@
 
         <!-- Filters -->
         <a class="open-menu menu-hidden" id="showHideMenuBtn" onclick="showHideMenu()" style="right: 0;"><span></span></a>
-        <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 13px;bottom: 0;right: 0;width: 0;z-index: 500;overflow: hidden;">
+        <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 6px;bottom: 0;right: 0;width: 0;z-index: 500;overflow: hidden;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
                     Filter Results
@@ -1056,9 +1058,10 @@
                         <div class="standard-tabs tabs-active" style="position: absolute;top: 0;left: 0;right: 0;bottom: 0;">
                             <!-- Tabs -->
                             <ul class="tabs same-height" style="margin-top: 10px">
-                                <li class="active" id="details_li_list_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowList()"> Details</a></li>
+                                <li class="active" id="details_li_list_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowList()">Details</a></li>
+                                <li id="details_li_attach"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowAttach()">Attachments</a></li>
                                 @if($tableName == 'st')
-                                    <li id="details_li_map_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowMap()"> Google Map</a></li>
+                                    <li id="details_li_map_view"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowMap()">Google Map</a></li>
                                 @endif
                             </ul>
                             <!-- Content -->
@@ -1074,6 +1077,36 @@
                                 </div>
                                 <div id="details_gmap" class="with-small-padding" style="position: relative; width: 100%; height: 100%; display: none;">
                                     <div id="map-details" style="height: 100%; width: 100%;"></div>
+                                </div>
+                                <div id="details_attach" class="tab-active" style="position: relative; width: 100%; height: 100%; overflow: hidden; display: none;">
+                                    <div class="with-padding">
+                                        <div class="standard-tabs tabs-active" style="position: absolute;top: 0;left: 0;right: 0;bottom: 0;">
+                                            <!-- Tabs -->
+                                            <ul class="tabs same-height" style="margin-top: 10px">
+                                                <li class="active" id="details_li_pictures"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowPictures()">Pictures</a></li>
+                                                <li id="details_li_files"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowFiles()">Files</a></li>
+                                            </ul>
+                                            <!-- Content -->
+                                            <div class="tabs-content" style="position: absolute;top: 33px;left: 0;right: 0;bottom: 0;overflow: auto;">
+                                                <div id="details_pictures" class="tab-active">
+                                                    <div class="with-padding">
+                                                        <table align="center" border="1" cellspacing="0" style="background:white;color:black;width:100%;">
+                                                            <tbody id="modals_pictures">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div id="details_files" class="tab-active" style="position: relative; width: 100%; height: 100%; display: none;">
+                                                    <div class="with-padding">
+                                                        <table align="center" border="1" cellspacing="0" style="background:white;color:black;width:100%;">
+                                                            <tbody id="modals_files">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1103,11 +1136,11 @@
         <!-- Pop Up Modal -->
 
         <div class="loadingFromServer" style="position: fixed; top: 10px; left: 10px;z-index: 1500; padding: 10px; background: #fff; border-radius: 10px;display: none;">
-            <span class="loader working"></span> <span id="modal-status" style="color: #333;">Contacting server.. :)</span>
+            <span class="loader working"></span> <span id="modal-status" style="color: #333;">Contacting server... :)</span>
         </div>
         <div class="loadingFromServer" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;"></div>
 
-        <div style="position: absolute;top: 44px;bottom: 10px;z-index: 1500;right: 420px;display: none;" id="showHideColumnsList">
+        <div style="position: absolute;top: 44px;bottom: 10px;z-index: 1500;display: none;" id="showHideColumnsList">
             <div class="message tooltip  tracking" style="opacity: 1; max-height: 100%; overflow: auto; padding: 0;" id="accesstestscroll">
                 <div id='block-cols-list'>
                     <ul class='list' id='ul-cols-list'>
@@ -1177,6 +1210,8 @@
             </div>
         </div>
         <div class="editSidebarTableForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.editSidebarTableForm').hide()"></div>
+
+        <div id='_i_preview' style="position:fixed; z-index: 999999; border: 3px solid #ccc; border-radius: 5px;background-color: #fff;display: none;"></div>
     </div>
 
     <div class="div-print" id="div-print"></div>
@@ -1193,5 +1228,6 @@
         $importReferences = JSON.parse('{!! json_encode($importReferences) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
         allUsers = JSON.parse('{!! json_encode($allUsers) !!}');
+        public_tables = JSON.parse('{!! json_encode($public_tables) !!}');
     </script>
 @endpush

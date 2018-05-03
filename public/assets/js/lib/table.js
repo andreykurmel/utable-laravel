@@ -115,6 +115,8 @@ $(document).ready(function () {
     changeImportStyle();
 
     changeDataTableRowHeight( localStorage.getItem('row_height') );
+
+    activateStarsTo('stars_appears');
 });
 
 /* --------------------- Variables ---------------------- */
@@ -155,7 +157,8 @@ var settingsTableName = 'tb_settings_display',
     settingsSearchKeyword = "",
     ddl_names_for_settings = [],
     changePageWhenList = false,
-    sortCol = '', sortASC = false;
+    sortCol = '', sortASC = false,
+    currentTheme = '';
 
 /* -------------------- Functions ---------------------- */
 
@@ -379,12 +382,12 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tableData += '<i class="fa fa-paperclip"></i>';
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -420,9 +423,9 @@ function showDataTable(headers, data) {
                         'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                         (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                         (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
-                        '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                        '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                     if (headers[key].f_type == 'Attachment') {
-                        tableData += '<i class="fa fa-paperclip"></i>';
+                        tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                     }
                     tbAddRow += '</div></td>';
                     /*if (d_key == 'id') {
@@ -459,7 +462,7 @@ function showDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
                     (headers[key].min_wth > 0 ? 'min-width: '+headers[key].min_wth+'px;' : '') +
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -470,7 +473,7 @@ function showDataTable(headers, data) {
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tbHiddenData += '<i class="fa fa-paperclip"></i>';
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -509,7 +512,7 @@ function showDataTable(headers, data) {
                 (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
                 (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
                 '">' +
-                '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                 ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : (tmp[i] ? tmp[i] : '')) +
                 '</span>' +
                 '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
@@ -526,7 +529,7 @@ function showDataTable(headers, data) {
                 'data-idx="' + (headers[$hdr].rows_ord-1) + '"' +
                 'style="text-align: center;position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
                 '>' +
-                '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                     headers[$hdr].unit +
                 '</span>' +
                 '</th>';
@@ -537,7 +540,7 @@ function showDataTable(headers, data) {
     for (var $hdr in headers) {
         visibleColumns += '<li style="padding: 4px 8px;' + (headers[$hdr].is_showed ? '' : 'background-color: #ccc;') + '' + (headers[$hdr].web == 'No' ? 'display: none;' : '') + '">';
         visibleColumns +=   '<input id="' + headers[$hdr].field + '_visibility" onclick="showHideColumn(\'' + headers[$hdr].field + '\', '+$hdr+')" class="checkcols" type="checkbox" '+(headers[$hdr].is_showed ? 'checked' : '')+' > ' +
-            '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + headers[$hdr].name + ' </label>';
+            '<label class="labels" for="' + headers[$hdr].field + '_visibility"> ' + _.uniq( headers[$hdr].name.split(',') ).join(' ') + ' </label>';
         visibleColumns += '</li>';
     }
 
@@ -612,6 +615,8 @@ function showDataTable(headers, data) {
             col.addEventListener('mousedown', handleStartResize, false);
         });
     }
+
+    changeTheme(currentTheme);
 }
 document.addEventListener('mousemove', handleElemResize, false);
 document.addEventListener('mouseup', handleEndResize, false);
@@ -654,7 +659,7 @@ function handleEndResize(e) {
             if (tableHeaders[i].field == field_name) {
                 tableHeaders[i].dfot_wth = startWidth;
                 $.ajax({
-                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + tableHeaders[i].id + '&dfot_wth=' + startWidth,
+                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + btoa(tableHeaders[i].id) + '&dfot_wth=' + btoa(startWidth),
                     method: 'get'
                 });
                 break;
@@ -844,13 +849,12 @@ function showAddressSearch() {
 }
 
 function showHideColumnsList() {
-    var left_bound = getGlobalOffset('offsetLeft', 'showHideColumnsList_btn');
-    $('#showHideColumnsList').css('left', left_bound+'px');
-
     if ($('#showHideColumnsList').is(':visible')) {
         $('#showHideColumnsList').hide();
     } else {
         $('#showHideColumnsList').show();
+        var left_bound = getGlobalOffset('offsetLeft', 'showHideColumnsList_btn');
+        $('#showHideColumnsList').css('left', (left_bound-$('#accesstestscroll').width())+'px');
     }
 }
 
@@ -1092,18 +1096,45 @@ function showSettings() {
 function detailsShowMap() {
     $("#details_li_list_view").removeClass("active");
     $("#details_li_map_view").addClass("active");
+    $("#details_li_attach").removeClass("active");
     $("#details_lview").hide();
     $("#details_gmap").show();
+    $("#details_attach").hide();
     initDetailsMap();
 }
 
 function detailsShowList() {
     $("#details_li_list_view").addClass("active");
     $("#details_li_map_view").removeClass("active");
+    $("#details_li_attach").removeClass("active");
     $("#details_lview").show();
     $("#details_gmap").hide();
+    $("#details_attach").hide();
 }
 
+function detailsShowAttach() {
+    $("#details_li_attach").addClass("active");
+    $("#details_li_list_view").removeClass("active");
+    $("#details_li_map_view").removeClass("active");
+    $("#details_attach").show();
+    $("#details_lview").hide();
+    $("#details_gmap").hide();
+}
+//---------------------------------- in the Attach tab
+function detailsShowPictures() {
+    $("#details_li_pictures").addClass("active");
+    $("#details_li_files").removeClass("active");
+    $("#details_pictures").show();
+    $("#details_files").hide();
+}
+
+function detailsShowFiles() {
+    $("#details_li_files").addClass("active");
+    $("#details_li_pictures").removeClass("active");
+    $("#details_files").show();
+    $("#details_pictures").hide();
+}
+//---------------------------
 function initMap() {
     var avg_lat = (Number(markerBounds.top) + Number(markerBounds.bottom)) / 2;
     var avg_lng = (Number(markerBounds.left) + Number(markerBounds.right)) / 2;
@@ -1592,7 +1623,7 @@ function editSelectedData(idx) {
         $('#modal_btn_add').show();
     }
 
-    var html = "", d_key;
+    var html = "", htmlAttach = "", d_key;
     for (var key in ltableHeaders) {
         if (ltableHeaders[key].web == 'No' || !ltableHeaders[key].is_showed) {
             continue;//show fields only showed in the 'list view'
@@ -1600,83 +1631,89 @@ function editSelectedData(idx) {
 
         d_key = ltableHeaders[key].field;
         if ($.inArray(d_key, not_editable) == -1) {
-            html += "<tr>";
-            html +=
-                '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
-                '<td>';
-            if ($.inArray(d_key, system_fields) != -1) {
-                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
-            } else
             if (ltableHeaders[key].f_type == 'Attachment') {
+                htmlAttach += '<tr><td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
+                    '<td>';
                 if (idx > -1) {
-                    html += '<div style="margin-bottom: 5px;">' +
-                        '<button class="dropdown_btn" id="modals_dd_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-val="'+(ltableData[idx][d_key] ? ltableData[idx][d_key] : 0)+'">' +
+                    htmlAttach += '<div style="margin-bottom: 5px;">' +
+                        '<button class="dropdown_btn" id="modals_dd_[is_img]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-is_img="[is_img]" data-val="'+(ltableData[idx][d_key] ? ltableData[idx][d_key] : 0)+'" style="display: none;">' +
                         'Files (' + (ltableData[idx][d_key] ? ltableData[idx][d_key] : 0) + ')' +
                         '</button>' +
                         '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
                         '</div>';
                 } else {
-                    html += '<div style="margin-bottom: 5px;">' +
+                    htmlAttach += '<div style="margin-bottom: 5px;">' +
                         '<button class="dropdown_btn">Files (0) - will be accessible after the row adding</button>';
                 }
-            } else
-            if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
-                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
-            } else
-            if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
-                if (ltableDDLs[d_key]) {
-                    var tmp_ddl = ltableDDLs[d_key];
-                }
-                html += '<select class="form-control" id="modals_inp_'+d_key+'" ' +
-                    ' data-idx="'+idx+'" ' +
-                    ' data-key="'+d_key+'" ' +
-                    (tmp_ddl && tmp_ddl.req_obj ? 'onfocus="getRefDDL(this)"' : '') +
-                    ' class="form-control" style="margin-bottom: 5px">';
-                if (d_key == 'ddl_id' || d_key == 'unit_ddl') {
-                    for(var i in tmp_ddl_id) {
-                        html += '<option value="'+i+'">'+tmp_ddl_id[i]+'</option>';
-                    }
+                htmlAttach += '</td></tr>';
+            } else {
+                html += "<tr>";
+                html +=
+                    '<td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
+                    '<td>';
+                if ($.inArray(d_key, system_fields) != -1) {
+                    html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
                 } else
-                if (d_key == 'unit') {
-                    for (var i in settingsDDLs) {
-                        if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
-                            for (var j in settingsDDLs[i].items) {
-                                html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+                if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
+                    html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
+                } else
+                if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
+                    if (ltableDDLs[d_key]) {
+                        var tmp_ddl = ltableDDLs[d_key];
+                    }
+                    html += '<select class="form-control" id="modals_inp_'+d_key+'" ' +
+                        ' data-idx="'+idx+'" ' +
+                        ' data-key="'+d_key+'" ' +
+                        (tmp_ddl && tmp_ddl.req_obj ? 'onfocus="getRefDDL(this)"' : '') +
+                        ' class="form-control" style="margin-bottom: 5px">';
+                    if (d_key == 'ddl_id' || d_key == 'unit_ddl') {
+                        for(var i in tmp_ddl_id) {
+                            html += '<option value="'+i+'">'+tmp_ddl_id[i]+'</option>';
+                        }
+                    } else
+                    if (d_key == 'unit') {
+                        for (var i in settingsDDLs) {
+                            if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
+                                for (var j in settingsDDLs[i].items) {
+                                    html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+                                }
                             }
                         }
-                    }
-                }  else
-                if (tmp_ddl && tmp_ddl.req_obj) {//if reference ddl which needs request to the server
-                    if(idx > -1) {
-                        var resp = $.ajax({
-                            url: baseHttpUrl + '/getRefDDL?req=' + btoa(JSON.stringify(tmp_ddl.req_obj)) + '&row=' + btoa(JSON.stringify(tableData[idx])),
-                            method: 'get',
-                            async: false
-                        }).responseText;
-                        resp = JSON.parse(resp);
-                        for (var i in resp) {
-                            html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+                    }  else
+                    if (tmp_ddl && tmp_ddl.req_obj) {//if reference ddl which needs request to the server
+                        if(idx > -1) {
+                            var resp = $.ajax({
+                                url: baseHttpUrl + '/getRefDDL?req=' + btoa(JSON.stringify(tmp_ddl.req_obj)) + '&row=' + btoa(JSON.stringify(tableData[idx])),
+                                method: 'get',
+                                async: false
+                            }).responseText;
+                            resp = JSON.parse(resp);
+                            for (var i in resp) {
+                                html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+                            }
+                        } else {
+                            html += '<option></option>';
                         }
-                    } else {
-                        html += '<option></option>';
+                    } else
+                    if (tmp_ddl) {
+                        for (var i in tmp_ddl) {
+                            html += '<option value="'+tmp_ddl[i]+'">'+tmp_ddl[i]+'</option>';
+                        }
                     }
-                } else
-                if (tmp_ddl) {
-                    for (var i in tmp_ddl) {
-                        html += '<option value="'+tmp_ddl[i]+'">'+tmp_ddl[i]+'</option>';
-                    }
+                    html += '</select>';
                 }
-                html += '</select>';
+                else {
+                    html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
+                }
+                html += '</td>';
+                html += '<td><label style="padding: 0 15px;">' + (ltableHeaders[key].unit ? ltableHeaders[key].unit : '')  + '</label></td>';
+                html += "</tr>";
             }
-            else {
-                html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
-            }
-            html += '</td>';
-            html += '<td><label style="padding: 0 15px;">' + (ltableHeaders[key].unit ? ltableHeaders[key].unit : '')  + '</label></td>';
-            html += "</tr>";
         }
     }
     $('#modals_rows').html(html);
+    $('#modals_pictures').html( htmlAttach.replace(/\[is_img\]/gi, '1') );
+    $('#modals_files').html( htmlAttach.replace(/\[is_img\]/gi, '0') );
 
     bind_dropdown();
 
@@ -1705,17 +1742,20 @@ function bind_dropdown() {
     var acc = document.getElementsByClassName("dropdown_btn");
     for (var i = 0; i < acc.length; i++) {
         acc[i].addEventListener("click", function() { bind_dropdown_clicked(this); });
+        bind_dropdown_clicked(acc[i]);
     }
 }
 
 function bind_dropdown_clicked(elem) {
     elem.classList.toggle("dropdown_active");
     var panel = elem.nextElementSibling;
+    var is_img = elem.dataset.is_img;
+
     if (panel.style.display === "block") {
         panel.style.display = "none";
     } else {
         $.ajax({
-            url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field,
+            url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field+'&img='+is_img,
             method: 'get',
             success: function (resp) {
                 var html = '<table class="table">' +
@@ -1726,30 +1766,36 @@ function bind_dropdown_clicked(elem) {
                     '</tr></thead>';
                 for (var i in resp) {
                     html += '<tr>' +
-                        '<td><a target="_blank" href="/storage/'+resp[i].filepath+resp[i].filename+'">'+resp[i].filename+'</a></td>' +
+                        '<td><a target="_blank" href="/storage/'+resp[i].filepath+resp[i].filename+'">';
+                    if (is_img == '1') {
+                        html += '<img class="_img_preview" src="/storage/'+resp[i].filepath+resp[i].filename+'" alt="'+resp[i].filename+'" style="max-width: 250px; max-height: 150px;">';
+                    } else {
+                        html += resp[i].filename;
+                    }
+                    html += '</a></td>' +
                         '<td><input class="form-control" type="text" value="'+(resp[i].notes ? resp[i].notes : '')+'" onchange="change_dd_file(this, '+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')"></td>' +
-                        '<td style="text-align: center;"><button class="btn btn-danger" onclick="delete_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')">&times;</button></td>' +
+                        '<td style="text-align: center;"><button class="btn btn-danger" onclick="delete_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\', '+is_img+')">&times;</button></td>' +
                         '</tr>';
                 }
                 html += '</table>' +
                     '<div style="width: 100%;height:34px;">' +
-                        '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+panel.dataset.field+'\')">' +
+                        '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+is_img+'_'+panel.dataset.field+'\')">' +
                             '<option value="file">Browse</option>' +
                             '<option value="link">Link</option>' +
                             '<option value="drag">Drag & Drop</option>' +
                         '</select>' +
-                        '<button class="btn btn-primary" style="float: right;" onclick="upload_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\')">Upload</button>' +
+                        '<button class="btn btn-primary" style="float: right;" onclick="upload_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', '+is_img+')">Upload</button>' +
                     '</div>' +
                     '<div style="width: 100%;margin-top: 5px;">' +
-                        '<input id="dd_file_for_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
-                        '<input id="dd_link_for_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
-                        '<div id="dd_drag_for_'+panel.dataset.field+'" style="position: relative;height: 75px;display: none;border:2px dashed #ccc;">' +
+                        '<input id="dd_file_for_'+is_img+'_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
+                        '<input id="dd_link_for_'+is_img+'_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
+                        '<div id="dd_drag_for_'+is_img+'_'+panel.dataset.field+'" style="position: relative;height: 75px;display: none;border:2px dashed #ccc;">' +
                             '<div style="position: absolute;z-index: 0;width: 100%;height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
                         '</div>' +
                     '</div>';
                 panel.innerHTML = html;
                 panel.style.display = "block";
-                var dr = new Dropzone("#dd_drag_for_"+panel.dataset.field, {
+                var dr = new Dropzone("#dd_drag_for_"+is_img+'_'+panel.dataset.field, {
                     url: baseHttpUrl + "/UploadDDFile",
                     paramName: 'up_file',
                     headers: {
@@ -1764,7 +1810,7 @@ function bind_dropdown_clicked(elem) {
                 });
                 dr.on("success", function(file, resp) {
                     if (!resp.error) {
-                        var btn = document.getElementById('modals_dd_'+resp.key);
+                        var btn = document.getElementById('modals_dd_'+is_img+'_'+resp.key);
                         var panel = btn.nextElementSibling;
 
                         btn.dataset.val++;
@@ -1774,6 +1820,7 @@ function bind_dropdown_clicked(elem) {
                         bind_dropdown_clicked(btn);
                     }
                 });
+                img_preview_activate();
             }
         });
     }
@@ -1796,15 +1843,15 @@ function change_dd_type(elem, id) {
     }
 }
 
-function upload_dd_file(table, row, field) {
+function upload_dd_file(table, row, field, is_img) {
     event.preventDefault();
 
     var data = new FormData();
 
-    if ($('#dd_link_for_'+field).val()) {
-        data.append('file_link', $('#dd_link_for_'+field).val());
+    if ($('#dd_link_for_'+is_img+'_'+field).val()) {
+        data.append('file_link', $('#dd_link_for_'+is_img+'_'+field).val());
     } else {
-        jQuery.each(jQuery('#dd_file_for_'+field)[0].files, function(i, file) {
+        jQuery.each(jQuery('#dd_file_for_'+is_img+'_'+field)[0].files, function(i, file) {
             data.append('up_file', file);
         });
     }
@@ -1822,7 +1869,7 @@ function upload_dd_file(table, row, field) {
         method: 'POST',
         success: function(resp) {
             if (!resp.error) {
-                var btn = document.getElementById('modals_dd_'+field);
+                var btn = document.getElementById('modals_dd_'+is_img+'_'+field);
                 var panel = btn.nextElementSibling;
 
                 btn.dataset.val++;
@@ -1835,7 +1882,7 @@ function upload_dd_file(table, row, field) {
     });
 }
 
-function delete_dd_file(table, row, field, filename) {
+function delete_dd_file(table, row, field, filename, is_img) {
     swal({
         title: 'Delete file',
         text: 'Are you sure?',
@@ -1859,7 +1906,7 @@ function delete_dd_file(table, row, field, filename) {
                 method: 'POST',
                 success: function(resp) {
                     if (!resp.error) {
-                        var btn = document.getElementById('modals_dd_'+field);
+                        var btn = document.getElementById('modals_dd_'+is_img+'_'+field);
                         var panel = btn.nextElementSibling;
 
                         btn.dataset.val--;
@@ -2115,12 +2162,12 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tableData += '<i class="fa fa-paperclip"></i>';
+                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -2147,12 +2194,12 @@ function showFavoriteDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'style="' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') + '"' +
                     '>' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tbHiddenData += '<i class="fa fa-paperclip"></i>';
+                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -2195,7 +2242,7 @@ function showFavoriteDataTable(headers, data) {
                 (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
                 (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
                 '">' +
-                '<span style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                '<span style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                 ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : (tmp[i] ? tmp[i] : '')) +
                 '</span>' +
                 '</th>';
@@ -2233,6 +2280,8 @@ function showFavoriteDataTable(headers, data) {
     $('#tbFavoriteCheckRow').css('top', (-hdr_height)+'px');
     $('#tbFavoriteDataDiv').css('top', (hdr_height+37)+'px');
     $('#tbFavoriteData').css('margin-top', (-hdr_height)+'px');
+
+    changeTheme(currentTheme);
 }
 
 function showFavoriteTableFooter() {
@@ -2542,7 +2591,7 @@ function showSettingsDataTable(headers, data) {
                     'data-settings="true"' +
                     ($.inArray(d_key, system_fields) == -1 && d_key != 'field' && d_key != 'name' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -2574,7 +2623,7 @@ function showSettingsDataTable(headers, data) {
                     '<td ' +
                     'data-key="' + headers[key].field + '"' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
-                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
+                    '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
@@ -2606,7 +2655,7 @@ function showSettingsDataTable(headers, data) {
             (headers[$hdr].min_wth > 0 ? 'min-width: '+headers[$hdr].min_wth+'px;' : '') +
             (headers[$hdr].max_wth > 0 ? 'max-width: '+headers[$hdr].max_wth+'px;' : '') +
             '">' +
-                '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
+                '<span draggable="true" style="white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                     ( headers[$hdr].field == 'ddl_id' ? "DDL Name" : headers[$hdr].name) +
                 '</span>' +
                 '<div style="position: absolute; top: 0; bottom: 0; right: 0; width: 5px; cursor: col-resize;"></div>' +
@@ -2658,6 +2707,8 @@ function showSettingsDataTable(headers, data) {
             col.addEventListener('mousedown', handleStartSettingsResize, false);
         });
     }
+
+    changeTheme(currentTheme);
 }
 document.addEventListener('mousemove', handleElemSettingsResize, false);
 document.addEventListener('mouseup', handleEndSettingsResize, false);
@@ -2698,7 +2749,7 @@ function handleEndSettingsResize(e) {
             if (settingsTableHeaders[i].field == field_name) {
                 settingsTableHeaders[i].dfot_wth = startSettingsWidth;
                 $.ajax({
-                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + settingsTableHeaders[i].id + '&dfot_wth=' + startSettingsWidth,
+                    url: baseHttpUrl + '/updateTableRow?tableName=tb_settings_display&id=' + btoa(settingsTableHeaders[i].id) + '&dfot_wth=' + btoa(startSettingsWidth),
                     method: 'get'
                 });
                 break;
@@ -3184,6 +3235,8 @@ function showSettingsDDLDataTable(headers, data, idx) {
         $('#tbSettingsDDL_headers').html(tbHiddenData);
         $('#tbSettingsDDL_data').html(tableData+tbAddRow);
     }
+
+    changeTheme(currentTheme);
 }
 
 function showInlineEdit_REFDDL(id, isUpdate) {
@@ -3709,6 +3762,8 @@ function showSettingsRightsDataTable(headers, data, idx) {
             showSettingsRightsDataTable(settingsRights_Fields_hdr, '', settingsRights_selectedIndex);
         }
     }
+
+    changeTheme(currentTheme);
 }
 
 function updateSettingsRightsItem(key, idx, id) {
@@ -4437,7 +4492,7 @@ function import_method_notes_changed () {
     import_method_notes_typing = setTimeout(function() {
         $.ajax({
             method: 'GET',
-            url: baseHttpUrl + '/updateTableRow?tableName=tb&id=' + table_meta.id + '&conn_notes=' + JSON.stringify(table_meta.conn_notes)
+            url: baseHttpUrl + '/updateTableRow?tableName=tb&id=' + btoa(table_meta.id) + '&conn_notes=' + btoa(JSON.stringify(table_meta.conn_notes))
         });
     }, 500);
 }
@@ -4965,7 +5020,7 @@ function jsTreeBuild($tab) {
     .on('open_node.jstree', function(e, data) {
         var m2t_id = data.node.data ? data.node.data.menu_id : data.node.li_attr['data-menu_id'];
         $.ajax({
-            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+m2t_id+'&state=1',
+            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+btoa(m2t_id)+'&state='+btoa('1'),
             method: 'get'
         });
         var icon = $('#' + data.node.id).find('i.jstree-icon.jstree-themeicon').first();
@@ -4974,7 +5029,7 @@ function jsTreeBuild($tab) {
     .on('close_node.jstree', function(e, data) {
         var m2t_id = data.node.data ? data.node.data.menu_id : data.node.li_attr['data-menu_id'];
         $.ajax({
-            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+m2t_id+'&state=0',
+            url: baseHttpUrl + '/updateTableRow?tableName=menutree&id='+btoa(m2t_id)+'&state='+btoa('0'),
             method: 'get'
         });
         var icon = $('#' + data.node.id).find('i.jstree-icon.jstree-themeicon').first();
@@ -5139,23 +5194,19 @@ function searchInTab($tab) {
 
 function changeDataTableRowHeight(sel) {
     if (!sel) sel = 'Medium';
-    var rh;
     $('#rh_small, #rh_med, #rh_big').attr('src', '/img/row_height_fade.png');
     if (sel == 'Small') {
         $('.table>tbody>tr>td .td_wrap').css('height', '30px');
-        rh = 37;
         $('#rh_small').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Small');
     } else
     if (sel == 'Medium') {
         $('.table>tbody>tr>td .td_wrap').css('height', '40px');
-        rh = 47;
         $('#rh_med').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Medium');
     } else
     if (sel == 'Big') {
         $('.table>tbody>tr>td .td_wrap').css('height', '60px');
-        rh = 67;
         $('#rh_big').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Big');
     }
@@ -5300,4 +5351,90 @@ function resetTimer()
     timer1 = setTimeout(function () {
         window.location = '/logout';
     }, 60000*wait);
+}
+
+//img preview on hover activate
+function img_preview_activate() {
+    var xOffset = 10;
+    var yOffset = 20;
+    $('._img_preview').on('mouseenter', function (e) {
+        var img = $(this);
+        img.t = img.title;
+        img.title = "";
+        var c = (img.t != "") ? "<br/>" + img.t : "";
+        $("#_i_preview").html("<img src='" + img.attr('src') + "' alt='Image preview' style='max-width: 750px; max-height: 450px;'/>").show();
+        $("#_i_preview").css({
+            "top": (e.pageY + xOffset) + "px",
+            "left": (e.pageX + yOffset) + "px"
+        });
+    });
+    $('._img_preview').on('mousemove', function (e) {
+        $("#_i_preview").css({
+            "top": (e.pageY + xOffset) + "px",
+            "left": (e.pageX + yOffset) + "px"
+        });
+    });
+    $('._img_preview').on('mouseleave', function (e) {
+        $('#_i_preview').html('').hide();
+    });
+}
+
+$(document).on('click', function (e) {
+    if (e.target.id != 'theme_img') {
+        $('#theme_menu').hide();
+    }
+    if (e.target.id != 'rowHeightSize') {
+        $('#rowHeightSize_Menu').hide();
+    }
+    if (e.target.id != 'showHideColumnsList_img') {
+        $('#showHideColumnsList').hide();
+    }
+});
+
+//-------- shining stars on the landing page
+var shining = 3;
+function activateStarsTo(id) {
+    var elem = $('#'+id);
+    if (elem && public_tables) {
+        var idx = 0, max = public_tables.length, eh = $(elem).height(), ew = $(elem).width(), i = 0;
+        setInterval(function() {
+            var rleft = Math.random()*ew;
+            var rtop = Math.random()*eh;
+
+            $(elem).append('<a id="appeared_star_'+i+'" style="color: #eee;transition: all '+shining+'s;font-size: 0;position:absolute;top:'+rtop+'px;left:'+rleft+'px;" href="'+public_tables[idx].li+'">'+public_tables[idx].name+'</a>');
+            shine_star( $('#appeared_star_'+i) );
+            i++;
+
+            idx++;
+            if (idx == max) idx = 0;
+        }, 500);
+    }
+}
+
+function shine_star(elem) {
+    setTimeout(function () {
+        $(elem).css('font-size', '100%');
+        setTimeout(function () {
+            $(elem).css('font-size', '0');
+            setTimeout(function () {
+                $(elem).remove();
+            }, shining*1000);
+        }, shining*1000);
+    }, shining*1000);
+}
+
+//-------------- change app theme
+function changeTheme(name) {
+    if (name == 'light') {
+        $('.navbar, .div-screen').css('background-color', 'transparent');
+        $('.white-bg').css('background-color', '#f1f3f4');
+        $('.table>tbody>tr>td').css('background-color', 'inherit');
+        currentTheme = 'light';
+    } else
+    if (name == 'dark') {
+        $('.navbar, .div-screen').css('background-color', '#ccc');
+        $('.white-bg').css('background-color', '#a1a3a4');
+        $('.table>tbody>tr>td').css('background-color', '#ddd');
+        currentTheme = 'dark';
+    }
 }

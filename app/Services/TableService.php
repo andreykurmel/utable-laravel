@@ -343,6 +343,19 @@ class TableService {
         $responseArray["rows"] = $rowsCount;
         $responseArray["headers"] = $headers;
         if (count($result)) {
+            $files_for_table = DB::connection('mysql_sys')->table('files')->where('tb_id', '=', $table_meta->id)->get();
+            if ($files_for_table) {
+                for ($i = 0; $i < count($result); $i ++) {
+                    $for_row = $files_for_table->where('row_id', '=', $result[$i]->id);
+                    foreach ($for_row as $file) {
+                        if (is_numeric($result[$i]->{$file->field})) $result[$i]->{$file->field} = '';
+
+                        $result[$i]->{$file->field} .= '<a href="/storage/'.$file->filepath.$file->filename.'">' .
+                            ($file->is_img ? '<img src="/storage/'.$file->filepath.$file->filename.'" height="30">' : $file->filename) .
+                            '</a>';
+                    }
+                }
+            }
             $responseArray["data"] = $result;
         } else {
             $data = [];

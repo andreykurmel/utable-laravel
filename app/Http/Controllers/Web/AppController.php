@@ -15,6 +15,7 @@ class AppController extends Controller
     private $tableService;
     private $subdomain = "";
     private $links = [];
+    private $public_tables = [];
 
     public function __construct(TableService $tb) {
         $this->tableService = $tb;
@@ -43,9 +44,7 @@ class AppController extends Controller
         }*/
 
         if (Auth::guest() || ($_SERVER['HTTP_REFERER'] != config('app.url')."/")) {
-            $socialProviders = config('auth.social.providers');
-            $server = config('app.url');
-            return view('landing', compact('socialProviders', 'server'));
+            return view('landing', $this->getVariables());
         } else {
             return redirect()->to( route('homepage') );
         }
@@ -172,7 +171,8 @@ class AppController extends Controller
             'importTypesDDL' => DB::connection('mysql_sys')->table('ddl_items')->where('list_id', '=', '56')->orderBy('id')->get(),
             'importConnections' => $connections,
             'tablesDropDown' => $tablesDropDown,
-            'allUsers' => DB::connection('mysql')->table('users')->get()
+            'allUsers' => DB::connection('mysql')->table('users')->get(),
+            'public_tables' => $this->public_tables
         ];
     }
 
@@ -343,6 +343,13 @@ class AppController extends Controller
 
                     if ($tab == 'favorite') {
                         $this->links[$table->db_tb] = [
+                            'li' => $link,
+                            'name' => $table->name
+                        ];
+                    }
+
+                    if ($tab == 'public') {
+                        $this->public_tables[] = [
                             'li' => $link,
                             'name' => $table->name
                         ];

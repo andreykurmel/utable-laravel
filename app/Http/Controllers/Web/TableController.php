@@ -1446,12 +1446,17 @@ class TableController extends Controller
     }
 
     public function getFilesForField(Request $request) {
-        return DB::connection('mysql_sys')
+        $files = DB::connection('mysql_sys')
             ->table('files')
             ->where('tb_id', '=', $request->table_id)
             ->where('row_id', '=', $request->row_id)
-            ->where('field', '=', $request->field)
-            ->get();
+            ->where('field', '=', $request->field);
+        if ($request->img) {
+            $files->where('is_img', '=', 1);
+        } else {
+            $files->where('is_img', '=', 0);
+        }
+        return $files->get();
     }
 
     public function UploadDDFile(Request $request) {
@@ -1461,10 +1466,10 @@ class TableController extends Controller
 
             if ($request->file_link) {
                 $fileName = explode('/', $request->file_link);
-                $fileName = last($fileName);
+                $fileName = preg_replace('/[\s\?&]/i', '_', last($fileName));
                 Storage::put("public/".$filePath."/".$fileName, file_get_contents($request->file_link));
             } else {
-                $fileName = $request->file('up_file')->getClientOriginalName();
+                $fileName = preg_replace('/[\s\?&]/i', '_', $request->file('up_file')->getClientOriginalName());
                 $request->file('up_file')->storeAs("public/".$filePath, $fileName);
             }
 
@@ -1474,12 +1479,15 @@ class TableController extends Controller
                 (string)$request->field => ($filesCnt ? $filesCnt+1 : 1)
             ]);
 
+            $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+
             $res = DB::connection('mysql_sys')->table('files')->insert([
                 'tb_id' => $request->table_id,
                 'row_id' => $request->row,
                 'field' => $request->field,
                 'filepath' => $filePath,
-                'filename' => $fileName
+                'filename' => $fileName,
+                'is_img' => (in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
             ]);
         }
         return ['error' => !$res, 'key' => $request->field];
