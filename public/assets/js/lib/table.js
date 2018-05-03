@@ -1814,8 +1814,8 @@ function bind_dropdown_clicked(elem) {
                         var panel = btn.nextElementSibling;
 
                         btn.dataset.val++;
-                        tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                        btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                        //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                        //btn.innerHTML = 'Files ('+btn.dataset.val+')';
                         panel.style.display = "none";
                         bind_dropdown_clicked(btn);
                     }
@@ -1873,8 +1873,8 @@ function upload_dd_file(table, row, field, is_img) {
                 var panel = btn.nextElementSibling;
 
                 btn.dataset.val++;
-                tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                //btn.innerHTML = 'Files ('+btn.dataset.val+')';
                 panel.style.display = "none";
                 bind_dropdown_clicked(btn);
             }
@@ -1910,8 +1910,8 @@ function delete_dd_file(table, row, field, filename, is_img) {
                         var panel = btn.nextElementSibling;
 
                         btn.dataset.val--;
-                        tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                        btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                        //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
+                        //btn.innerHTML = 'Files ('+btn.dataset.val+')';
                         panel.style.display = "none";
                         bind_dropdown_clicked(btn);
                     }
