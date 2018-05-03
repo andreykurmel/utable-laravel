@@ -1636,7 +1636,7 @@ function editSelectedData(idx) {
                     '<td>';
                 if (idx > -1) {
                     htmlAttach += '<div style="margin-bottom: 5px;">' +
-                        '<button class="dropdown_btn" id="modals_dd_[is_img]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-is_img="[is_img]" data-val="'+(ltableData[idx][d_key] ? ltableData[idx][d_key] : 0)+'" style="display: none;">' +
+                        '<button class="dropdown_btn" id="modals_dd_[is_img]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-is_img="[is_img]" data-val="'+(/*ltableData[idx][d_key] ? ltableData[idx][d_key] :*/ 0)+'" style="display: none;">' +
                         'Files (0)' +
                         '</button>' +
                         '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
