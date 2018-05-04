@@ -15,11 +15,17 @@
             <div class="menu-content">
                 <div id="ctxMenu_tablebar" style="position: fixed;top:0;z-index: 1000;"></div>
 
-                <header style="text-align: right;">
-                    Table Library
+                <header style="text-align: right;padding: 7px 12px;">
+                    <a class="btn" id="acd-filter-menu_btn" onclick="menutree_show_filter_tab()" style="background-color: #aaa;">Filter</a>
+                    <a class="btn" id="acd-menutree_btn" onclick="menutree_show_menu_tab()" style="background-color: #f1f2f3;">Menu</a>
                 </header>
 
-                <div class="standard-tabs white-bg" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0;padding-top: 20px">
+                <!--filters tab-->
+                <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
+                </dl>
+
+                <!--menu tab-->
+                <div id="acd-menutree" class="standard-tabs white-bg" style="position: absolute; left: 0;right: 0;top: 38px;bottom: 0;padding-top: 20px">
                     <ul class="tabs" style="position:relative; left: 10px;">
                         <li {{ Auth::guest() ? 'class=active' : '' }} id="tablebar_li_public"><a href="javascript:void(0)" onclick="tablebar_show_public()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Public</a></li>
                         <li id="tablebar_li_private"><a href="javascript:void(0)" onclick="tablebar_show_private()" class="with-med-padding" style="padding-bottom:12px;padding-top:12px">Private</a></li>
@@ -73,7 +79,7 @@
             <noscript class="message black-gradient simpler">Your browser does not support JavaScript! Some features won't work as expected...</noscript>
 
             <!-- Main title -->
-            <div class="colvisopts with-small-padding" style="position: absolute; top: 0; font-size:14px;z-index:1000;right: 10px;display: none;">
+            <div id="main-toolbar" class="colvisopts with-small-padding" style="position: absolute; top: 0; font-size:14px;z-index:1000;right: 10px;display: none;">
                 <div style="display: flex;align-items: center;">
                     <img id="rowHeightSize" src="/img/row_height.png" height="35" onclick="$('#rowHeightSize_Menu').toggle();" style="cursor: pointer;">
                     <div id="rowHeightSize_Menu" style="position: absolute;top: 37px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 80px; right:99%;">
@@ -130,7 +136,11 @@
                     </span>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block'>
-                        <a href="javascript:void(0)" class="btn btn-default no-focus" id="tableStretch_btn" onclick="tableStretch()" title="Table full width" style="border:none;padding: 0 10px;"><i class="fa fa-arrows-h"></i></a>
+                        <a href="javascript:void(0)" class="btn btn-default no-focus" id="tableStretch_btn" onclick="tableStretch()" title="Table full width" style="border:none;border-left: 1px solid #222;border-right: 1px solid #222;border-radius: 0;padding: 0;height: 30px;width:35px;position: relative;font-size:22px;">
+                            <i id="tableStretch_btn_top" class="fa fa-arrows-h" style="font-size: 1.5em;position: absolute;top: -7px;left: 0;"></i>
+                            <i id="tableStretch_btn_btm" class="fa fa-arrows-h" style="position: absolute;top: 12px;left: 0;"></i>
+                            <div style="width: 23px;height: 12px;position: absolute;bottom: 1px;left: 0;border-right: 1px solid #222;"></div>
+                        </a>
                     </div>
                     <div class="showhidemenu" style='margin-right: 10px;display:inline-block' id="showHideColumnsList_btn">
                         <a href="javascript:void(0)" class="btn btn-default no-focus" onclick="showHideColumnsList()" title="Show/Hide Columns" style="border:none;padding: 5px 7px 0 7px;">
@@ -149,7 +159,7 @@
                             </select>
                         </div>
                     @endif
-                    <div style="display: inline-block;margin-left: 8px;">
+                    <div style="display: inline-block;">
                         <form action="{{ route('downloader') }}" method="post" id="downloader_form">
                             {{ csrf_field() }}
                             <input type="hidden" name="tableName" id="downloader_tableName" value="">
@@ -157,15 +167,25 @@
                             <input type="hidden" name="q" id="downloader_query" value="">
                             <input type="hidden" name="fields" id="downloader_fields" value="">
                             <input type="hidden" name="filterData" id="downloader_filters" value="">
-                            <select class="form-control" style="width: 80px; display: inline-block;" id="downloader_type">
+                            <!--<select class="form-control" style="width: 80px; display: inline-block;" id="downloader_type">
                                 <option value="PRINT">Print</option>
                                 <option value="CSV">CSV</option>
                                 <option value="PDF">PDF</option>
                                 <option value="XLS">Excel</option>
                                 <option value="JSON">JSON</option>
                                 <option value="XML">XML</option>
-                            </select>
-                            <button type="button" class="btn btn-default" onclick="downloaderGo()"><i class="fa fa-download"></i></button>
+                            </select>-->
+                            <button id="download_btn" type="button" class="btn btn-default" onclick="$('#download_menu').toggle();" style="padding: 0;">
+                                <i id="download_icon" class="fa fa-download" style="padding: 8px 12px;"></i>
+                            </button>
+                            <div id="download_menu" style="position: absolute;top: 40px;right: 5px;width:392px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;">
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('PRINT')" style="background-color: #a00;">Print</button>
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('CSV')" style="background-color: #a00;">CSV</button>
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('PDF')" style="background-color: #aa0;">PDF</button>
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('XLS')" style="background-color: #0a0;">XLSX</button>
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('JSON')" style="background-color: #0aa;">JSON</button>
+                                <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('XML')" style="background-color: #00a;">XML</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -736,8 +756,6 @@
                                                 <option value="/replaceTable">New</option>
                                                 <option value="/modifyTable">Append</option>
                                             </select>
-                                            <label style="padding: 10px;float: left;">Notes:</label>
-                                            <label id="import_notes_label" style="width:calc(69% - 65px);padding: 10px;float: left;"></label>
                                             <!--<input type="text" id="import_method_notes" class="form-control" style="width: 30%;"onchange="import_method_notes_changed()">-->
                                         </div>
                                         <div class="form-group js-import_csv_style" style="width: 75%;display: flex;align-items: center; justify-content:  space-between;">
@@ -804,7 +822,7 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c4" name="csv_fourth_size" style="box-shadow: none;"></div>
-                                                    <div class="col-xs-10"><label for="import_csv_c4">Fourth row as max. size:</label></div>
+                                                    <div class="col-xs-10"><label for="import_csv_c4">Fourth row as size:</label></div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-xs-2"><input type="checkbox" class="form-control js-import_chb" id="import_csv_c5" name="csv_fifth_default" style="box-shadow: none;"></div>
@@ -842,6 +860,10 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div style="position: absolute; left: 15px; right:15px; bottom: 0;">
+                                            <label style="padding: 10px;float: left;">Notes:</label>
+                                            <label id="import_notes_label" style="width:calc(99% - 65px);padding: 10px;float: left;"></label>
+                                        </div>
                                     </div>
 
                                     <div id="import_col_tab" class="tab-content fluid-container" style="position: absolute; top: 40px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); overflow: auto; padding: 15px;">
@@ -857,7 +879,7 @@
                                                                 <th>tb Field</th>
                                                                 <th class="js-import_column-orders">Source Field</th>
                                                                 <th>Type</th>
-                                                                <th>Max. Size</th>
+                                                                <th>Size</th>
                                                                 <th>Default Value</th>
                                                                 <th>Required</th>
                                                                 <th>Delete</th>
@@ -888,14 +910,14 @@
                                                                     <select class="form-control _freeze_for_remote" name="columns[{{ $loop->index }}][col]" onfocus="show_import_cols_numbers()" {{ $hdr->auto ? 'readonly' : ''}}></select>
                                                                 </td>
                                                                 <td>
-                                                                    <select class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][type]" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <select class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][type]" onchange="import_row_type_changed(this)" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                         @foreach($importTypesDDL as $i_ddl)
                                                                             <option {{ $hdr->type == $i_ddl->option ? 'selected="selected"' : '' }}>{{ $i_ddl->option }}</option>
                                                                         @endforeach
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto ? 'readonly' : ''}}>
+                                                                    <input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto || in_array($hdr->type, ['Date','Date Time','Auto Number','Attachment']) ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="import_not_reference_columns">
                                                                     <input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
@@ -922,7 +944,7 @@
                                                                 <select class="form-control import_columns_add" id="import_columns_add_col" onfocus="show_import_cols_numbers()"></select>
                                                             </td>
                                                             <td>
-                                                                <select class="form-control import_columns_add" id="import_columns_add_type" >
+                                                                <select class="form-control import_columns_add" id="import_columns_add_type" onchange="import_row_type_changed(this)">
                                                                     @foreach($importTypesDDL as $i_ddl)
                                                                         <option>{{ $i_ddl->option }}</option>
                                                                     @endforeach
@@ -1037,9 +1059,9 @@
         <section class="menu" id="showHideMenuBody" role="complementary" style="position:absolute;top: 6px;bottom: 0;right: 0;width: 0;z-index: 500;overflow: hidden;">
             <div class="menu-content" style="position:absolute;top: 0;bottom: 0;right: 0;left: 0;">
                 <header>
-                    Filter Results
+                    Notes
                 </header>
-                <dl class="accordion white-bg with-mid-padding" id="acd-filter-menu" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
+                <dl class="white-bg with-mid-padding" id="acd-notes" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
                 </dl>
             </div>
         </section>
@@ -1116,10 +1138,10 @@
                             <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
                             <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
                         @endif
+                        <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;margin-left: 10px;">Close</button>
                         @if(Auth::user())
-                            <button id="modal_btn_update" class="btn btn-info" onclick="updateRowModal()" style="float: left; margin-left: 40px;">Update</button>
+                            <button id="modal_btn_update" class="btn btn-info btn-sm" onclick="updateRowModal()" style="float: right;">Update</button>
                         @endif
-                        <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;">Close</button>
                     </div>
                 </div>
                 <div class="modal-resize-nw"></div>

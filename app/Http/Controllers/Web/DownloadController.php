@@ -28,6 +28,12 @@ class DownloadController extends Controller
             case 'PDF': $dwn_mode = "pdf";
                 $data = $this->downloader_pdf($request);
                 break;
+            case 'JSON': $dwn_mode = "json";
+                $data = $this->downloader_json($request);
+                break;
+            case 'XML': $dwn_mode = "xml";
+                $data = $this->downloader_xml($request);
+                break;
             default: $dwn_mode = "";
                 break;
         }
@@ -125,5 +131,46 @@ class DownloadController extends Controller
         $pdf->render();
 
         return $pdf->output();
+    }
+
+    /*
+     * Create data flow for json file
+     */
+    private function downloader_json($post) {
+        $respArray = $this->tableService->getData($post);
+
+        $headers = [];
+        foreach ($respArray['headers'] as $hdr) {
+            if ($hdr->web == 'Yes') {
+                $headers[] = (object)['field' => $hdr->field, 'title' => $hdr->name];
+            }
+        }
+
+        return json_encode( (object)[
+            'headers' => $headers,
+            'data' => $respArray['data']
+        ] );
+    }
+
+    /*
+     * Create data flow for xml file
+     */
+    private function downloader_xml($post) {
+        $respArray = $this->tableService->getData($post);
+
+        $html = "<table>";
+        foreach ($respArray['data'] as $row) {
+            $row = (array)$row;
+            $html .= "<row>";
+            foreach ($respArray['headers'] as $hdr) {
+                if ($hdr->web == 'Yes') {
+                    $html .= "<".preg_replace('/[^\w\d]/i', '', $hdr->name).">".$row[$hdr->field]."</".preg_replace('/[^\w\d]/i', '', $hdr->name).">";
+                }
+            }
+            $html .= "</row>";
+        }
+        $html .= "</table>";
+
+        return $html;
     }
 }

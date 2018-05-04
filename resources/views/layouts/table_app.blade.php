@@ -25,8 +25,14 @@
     {!! HTML::style('assets/plugins/jstree/themes/default/style.min.css') !!}
 
     <style>
+        @keyframes move-twink-back {
+            0%   {font-size: 100%;}
+            50%  {font-size: 0;}
+            100% {font-size: 100%;}
+        }
+
         html, body {
-            overflow: hidden;
+            overflow: visible;
         }
 
         .open-menu {
@@ -143,7 +149,7 @@
             white-space: nowrap;
         }
         .table>tbody>tr>td .td_wrap {
-            height: 40px;
+            min-height: 40px;
             display: grid;
             align-items: center;
             overflow: hidden;
@@ -240,6 +246,19 @@
 
         .no-focus.btn-default:focus {
             background-color: transparent;
+        }
+
+        .download_btn {
+            border-radius: 50%;
+            width: 60px;
+            height: 50px;
+            opacity: 0.4;
+            color: #fff;
+            font-weight: bold;
+        }
+        .download_btn:hover {
+            opacity: 0.9;
+            color: #fff;
         }
     </style>
 

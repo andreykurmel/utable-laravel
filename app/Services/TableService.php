@@ -348,11 +348,13 @@ class TableService {
                 for ($i = 0; $i < count($result); $i ++) {
                     $for_row = $files_for_table->where('row_id', '=', $result[$i]->id);
                     foreach ($for_row as $file) {
-                        if (is_numeric($result[$i]->{$file->field})) $result[$i]->{$file->field} = '';
+                        if (property_exists($result[$i], $file->field)) {
+                            if (is_numeric($result[$i]->{$file->field})) $result[$i]->{$file->field} = '';
 
-                        $result[$i]->{$file->field} .= '<a href="/storage/'.$file->filepath.$file->filename.'">' .
-                            ($file->is_img ? '<img src="/storage/'.$file->filepath.$file->filename.'" height="30">' : $file->filename) .
-                            '</a>';
+                            $result[$i]->{$file->field} .= '<a target="_blank" href="/storage/'.$file->filepath.$file->filename.'">' .
+                                ($file->is_img ? '<img src="/storage/'.$file->filepath.$file->filename.'" height="30">' : $file->filename) .
+                                '</a>';
+                        }
                     }
                 }
             }

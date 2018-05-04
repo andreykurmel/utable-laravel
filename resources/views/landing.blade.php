@@ -13,5 +13,28 @@
     authUser = {{ Auth::user() ? Auth::user()->id : 0 }};
     table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
     public_tables = JSON.parse('{!! json_encode($public_tables) !!}');
+
+    var col_stars = 20, speed = 3;
+    $(document).ready(function () {
+        var elem = $('#stars_appears');
+        if (elem && public_tables) {
+            var idx = 0, max = public_tables.length, eh = $(elem).height(), ew = $(elem).width();
+            for (var i = 0; i < col_stars; i++) {
+                var rleft = Math.random()*ew;
+                var rtop = Math.random()*eh;
+
+                setTimeout(add_star(elem, idx, rtop, rleft), Math.random()*speed*1000);
+
+                idx++;
+                if (idx == max) idx = 0;
+            }
+        }
+    });
+
+    function add_star(elem, idx, top, left) {
+        $(elem).append('<div style="width: '+(10*public_tables[idx].name.length)+'px;text-align: center;position:absolute;top:'+top+'px;left:'+left+'px;">' +
+            '<a style="color: #eee;animation:move-twink-back '+speed+'s linear infinite;" href="'+public_tables[idx].li+'">'+public_tables[idx].name+'</a>' +
+            '</div>');
+    }
 </script>
 @endpush

@@ -115,8 +115,6 @@ $(document).ready(function () {
     changeImportStyle();
 
     changeDataTableRowHeight( localStorage.getItem('row_height') );
-
-    activateStarsTo('stars_appears');
 });
 
 /* --------------------- Variables ---------------------- */
@@ -560,7 +558,7 @@ function showDataTable(headers, data) {
 
     //set rows height
     var rh = ( localStorage.getItem('row_height') == 'Small' ? 37 : ( localStorage.getItem('row_height') == 'Medium' ? 47 : 67 ) );
-    $('.table>tbody>tr>td .td_wrap').css('height', (rh-7)+'px');
+    $('.table>tbody>tr>td .td_wrap').css('min-height', (rh-7)+'px');
 
     //show 'add row' if checked
     var hdr_height = document.getElementById('tbHeaders_header').clientHeight;
@@ -743,6 +741,20 @@ function filterCheckAll(idx, status) {
         status: status
     };
     changePage(1);
+}
+
+function menutree_show_filter_tab() {
+    $('#acd-filter-menu_btn').css('background-color','#f1f2f3');
+    $('#acd-menutree_btn').css('background-color','#aaa');
+    $('#acd-filter-menu').show();
+    $('#acd-menutree').hide();
+}
+
+function menutree_show_menu_tab() {
+    $('#acd-menutree_btn').css('background-color','#f1f2f3');
+    $('#acd-filter-menu_btn').css('background-color','#aaa');
+    $('#acd-menutree').show();
+    $('#acd-filter-menu').hide();
 }
 
 function showHideTableLib() {
@@ -1187,8 +1199,8 @@ function initDetailsMap() {
     });
 }
 
-function downloaderGo() {
-    var query = {}, method = $('#downloader_type').val();
+function downloaderGo(method) {
+    var query = {}; //method = $('#downloader_type').val();
 
     if (method == 'PRINT') {
         openPrintDialog();
@@ -1266,34 +1278,41 @@ function openPrintDialog() {
             if (response.msg) {
                 alert(response.msg);
             }
+            //$('body, html').css('overflow', 'auto');
+            $(document).css('overflow', 'auto');
 
-            var html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
+            var html = "", col_per_page = 9;
             var tableHeaders = response.headers;
             var tableData = response.data;
-            var key, d_key;
+            var d_key, mult = Math.ceil(tableHeaders.length/col_per_page);
 
-            html += "<thead><tr>";
-            for (var m = 0; m < tableHeaders.length; m++) {
-                html += '<th style="border: solid 1px #000;padding: 3px 5px;background-color: #AAA; ' + (tableHeaders[m].web == 'No' ? 'display: none;' : '') + '">'+tableHeaders[m].name+'</th>';
-            }
-            html += "</tr></thead>";
-
-            html += "<tbody>";
-            for(var i = 0; i < tableData.length; i++) {
-                html += "<tr>";
-                for(key in tableHeaders) {
-                    d_key = tableHeaders[key].field;
-                    html += '<td style="border: solid 1px #000;padding: 3px 5px; ' + (tableHeaders[key].web == 'No' ? 'display: none;' : '') + '">' + (tableData[i][d_key] !== null ? tableData[i][d_key] : '') + '</td>';
+            for (var step = 1; step < mult; step++) {
+                html += "<table style='border-collapse: collapse;page-break-inside: auto;"+(step < (mult-1) ? 'page-break-after: always;' : '')+"' width=\"100%\">";
+                html += "<thead><tr><th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>Row #</th>";
+                for (var m = 0 + (step-1)*col_per_page; m < col_per_page + (step-1)*col_per_page; m++) {
+                    html += '<th style="border: solid 1px #000;padding: 3px 5px;background-color: #AAA; ' + (tableHeaders[m].web == 'No' ? 'display: none;' : '') + '">'+_.uniq( tableHeaders[m].name.split(',') ).join(' ')+'</th>';
                 }
-                html += "</tr>";
+                html += "</tr></thead>";
+
+                html += "<tbody>";
+                for(var i = 0; i < tableData.length; i++) {
+                    html += "<tr><td style='border: solid 1px #000;padding: 3px 5px;'>"+(i+1)+"</td>";
+                    for (var m = 0 + (step-1)*col_per_page; m < col_per_page + (step-1)*col_per_page; m++) {
+                        d_key = tableHeaders[m].field;
+                        html += '<td style="border: solid 1px #000;padding: 3px 5px; ' + (tableHeaders[m].web == 'No' ? 'display: none;' : '') + '">' + (tableData[i][d_key] !== null ? tableData[i][d_key] : '') + '</td>';
+                    }
+                    html += "</tr>";
+                }
+                html += "</tbody>";
+                html += "</table>";
             }
-            html += "</tbody>";
-            html += "</table>";
 
             $("#div-print").html(html);
 
             $('.loadingFromServer').hide();
             window.print();
+            $(document).css('overflow', 'hidden');
+            //$('body, html').css('overflow', 'hidden');
         },
         error: function () {
             alert("Server error");
@@ -1623,11 +1642,12 @@ function editSelectedData(idx) {
         $('#modal_btn_add').show();
     }
 
-    var html = "", htmlAttach = "", d_key;
+    var html = "", htmlAttach = "", d_key, hide_update = true;
     for (var key in ltableHeaders) {
         if (ltableHeaders[key].web == 'No' || !ltableHeaders[key].is_showed) {
             continue;//show fields only showed in the 'list view'
         }
+        if (ltableHeaders[key].can_edit) hide_update = false;
 
         d_key = ltableHeaders[key].field;
         if ($.inArray(d_key, not_editable) == -1) {
@@ -1712,8 +1732,15 @@ function editSelectedData(idx) {
         }
     }
     $('#modals_rows').html(html);
-    $('#modals_pictures').html( htmlAttach.replace(/\[is_img\]/gi, '1') );
-    $('#modals_files').html( htmlAttach.replace(/\[is_img\]/gi, '0') );
+    if (htmlAttach) {
+        $('#modals_pictures').html( htmlAttach.replace(/\[is_img\]/gi, '1') );
+        $('#modals_files').html( htmlAttach.replace(/\[is_img\]/gi, '0') );
+        $('#details_li_attach').show();
+    } else {
+        $('#details_li_attach').hide();
+    }
+
+    if (hide_update) $('#modal_btn_update').hide();
 
     bind_dropdown();
 
@@ -1725,7 +1752,7 @@ function editSelectedData(idx) {
                 var usr = allUsers.find(function (el) {
                     return el.id === ltableData[idx][d_key];
                 });
-                $('#modals_inp_'+d_key).val( (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '') );
+                $('#modals_inp_'+d_key).val( (usr && usr.first_name ? usr.first_name : '') + ' ' + (usr && usr.last_name ? usr.last_name : '') );
             } else {
                 $('#modals_inp_'+d_key).val( ltableData[idx][d_key] );
             }
@@ -1736,6 +1763,8 @@ function editSelectedData(idx) {
     if (!$('#addingIsInline').is(':checked') || idx > -1 || !lv) {
         $('.js-editmodal').show();
     }
+
+    detailsShowList();
 }
 
 function bind_dropdown() {
@@ -3993,12 +4022,12 @@ function sent_csv_to_backend(is_upload) {
                         '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
                             '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
                         '</td>' +
-                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" onchange="import_row_type_changed(this)" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
@@ -4064,12 +4093,12 @@ function import_test_db_connect() {
                         '<td class="js-import_column-orders" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
                             '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()" '+(hdr.auto ? 'readonly' : '')+'></select>' +
                         '</td>' +
-                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" '+(hdr.auto ? 'readonly' : '')+'>';
+                        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]" onchange="import_row_type_changed(this)" '+(hdr.auto ? 'readonly' : '')+'>';
                     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
                         '<td>' +
@@ -4131,13 +4160,13 @@ function import_add_table_row() {
         '<td class="js-import_column-orders import_not_reference_columns" '+(imp_type == 'csv' || imp_type == 'mysql' ? '' : 'style="display:none;"')+'>' +
             '<select class="form-control _freeze_for_remote" name="columns['+i+'][col]" onfocus="show_import_cols_numbers()">'+option_col+'</select>' +
         '</td>' +
-        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][type]">';
+        '<td><select class="form-control _freeze_for_modify _freeze_for_remote" onchange="import_row_type_changed(this)" name="columns['+i+'][type]">';
     for (var jdx = 0; jdx < importTypesDDL.length; jdx++) {
         html += '<option '+(inputed_type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
     }
     html += '</select></td>' +
         '<td>' +
-            '<input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'">' +
+            '<input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'" '+($.inArray(inputed_type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'>' +
         '</td>' +
         '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
             '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+$('#import_columns_add_default').val()+'">' +
@@ -4439,6 +4468,8 @@ function changeImportStyle(sel) {
         $('#import_columns_row_add').show();
     }
 
+    freeze_size_columns();
+
     var key = getConnNoteKey(style, action);
     $('#import_method_notes').val( table_meta.conn_notes && table_meta.conn_notes[key] ? table_meta.conn_notes[key] : '' );
 }
@@ -4462,6 +4493,18 @@ function changeImportAction (sel) {
 
     var key = getConnNoteKey(type, action);
     $('#import_method_notes').val( table_meta.conn_notes && table_meta.conn_notes[key] ? table_meta.conn_notes[key] : '' );
+
+    freeze_size_columns();
+}
+
+function freeze_size_columns() {
+    var selects = $('#import_main_columns select');
+    for (var i in selects) {
+        if (selects[i].nodeName && $.inArray($(selects[i]).val(), ['Date','Date Time','Auto Number','Attachment']) != -1) {
+            var sibling_inp = $(selects[i].parentNode.nextElementSibling).find('input').first();
+            $(sibling_inp).prop('readonly', true);
+        }
+    }
 }
 
 function getConnNoteKey (type, action) {
@@ -4585,6 +4628,16 @@ function show_import_cols_numbers() {
         });
     }
     $(evt.target).html(html);
+}
+
+function import_row_type_changed(sel) {
+    var type = $(sel).val();
+    var sibling_inp = $(sel.parentNode.nextElementSibling).find('input').first();
+    if ($.inArray(type, ['Date','Date Time','Auto Number','Attachment']) != -1) {
+        $(sibling_inp).prop('readonly', true);
+    } else {
+        $(sibling_inp).prop('readonly', false);
+    }
 }
 
 function partially_import_ref_table($ref_tb, $to_del) {
@@ -5196,17 +5249,17 @@ function changeDataTableRowHeight(sel) {
     if (!sel) sel = 'Medium';
     $('#rh_small, #rh_med, #rh_big').attr('src', '/img/row_height_fade.png');
     if (sel == 'Small') {
-        $('.table>tbody>tr>td .td_wrap').css('height', '30px');
+        $('.table>tbody>tr>td .td_wrap').css('min-height', '30px');
         $('#rh_small').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Small');
     } else
     if (sel == 'Medium') {
-        $('.table>tbody>tr>td .td_wrap').css('height', '40px');
+        $('.table>tbody>tr>td .td_wrap').css('min-height', '40px');
         $('#rh_med').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Medium');
     } else
     if (sel == 'Big') {
-        $('.table>tbody>tr>td .td_wrap').css('height', '60px');
+        $('.table>tbody>tr>td .td_wrap').css('min-height', '60px');
         $('#rh_big').attr('src', '/img/row_height_active.png');
         localStorage.setItem('row_height', 'Big');
     }
@@ -5230,7 +5283,8 @@ function getGlobalOffset(direction, elem_id) {
 }
 
 var stretchedtables = localStorage.getItem('stretched_tables') == '1' ? true : false;
-$('#tableStretch_btn').css('color', stretchedtables ? '#ccc' : '#444').css('font-size', stretchedtables ? '1.5em' : '1em');
+$('#tableStretch_btn_top').css('color', !stretchedtables ? '#ccc' : '#444');
+$('#tableStretch_btn_btm').css('color', stretchedtables ? '#ccc' : '#444');
 $('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
 $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
 function tableStretch() {
@@ -5238,7 +5292,8 @@ function tableStretch() {
     $('#tbAddRow, #tbHeaders, #tbFavoriteCheckRow, #tbFavoriteHeaders').css('width', stretchedtables ? '100%' : 'auto');
     $('#divTbData, #tbFavoriteDataDiv').css('min-width', stretchedtables ? '100%' : 'auto');
     localStorage.setItem('stretched_tables', stretchedtables ? '1' : '0');
-    $('#tableStretch_btn').css('color', stretchedtables ? '#ccc' : '#444').css('font-size', stretchedtables ? '1.5em' : '1em');
+    $('#tableStretch_btn_top').css('color', !stretchedtables ? '#ccc' : '#444');
+    $('#tableStretch_btn_btm').css('color', stretchedtables ? '#ccc' : '#444');
 }
 
 function SpanColumnsWithTheSameData(id) {
@@ -5380,6 +5435,9 @@ function img_preview_activate() {
 }
 
 $(document).on('click', function (e) {
+    if (e.target.id != 'download_icon') {
+        $('#download_menu').hide();
+    }
     if (e.target.id != 'theme_img') {
         $('#theme_menu').hide();
     }
@@ -5390,38 +5448,6 @@ $(document).on('click', function (e) {
         $('#showHideColumnsList').hide();
     }
 });
-
-//-------- shining stars on the landing page
-var shining = 3;
-function activateStarsTo(id) {
-    var elem = $('#'+id);
-    if (elem && public_tables) {
-        var idx = 0, max = public_tables.length, eh = $(elem).height(), ew = $(elem).width(), i = 0;
-        setInterval(function() {
-            var rleft = Math.random()*ew;
-            var rtop = Math.random()*eh;
-
-            $(elem).append('<a id="appeared_star_'+i+'" style="color: #eee;transition: all '+shining+'s;font-size: 0;position:absolute;top:'+rtop+'px;left:'+rleft+'px;" href="'+public_tables[idx].li+'">'+public_tables[idx].name+'</a>');
-            shine_star( $('#appeared_star_'+i) );
-            i++;
-
-            idx++;
-            if (idx == max) idx = 0;
-        }, 500);
-    }
-}
-
-function shine_star(elem) {
-    setTimeout(function () {
-        $(elem).css('font-size', '100%');
-        setTimeout(function () {
-            $(elem).css('font-size', '0');
-            setTimeout(function () {
-                $(elem).remove();
-            }, shining*1000);
-        }, shining*1000);
-    }, shining*1000);
-}
 
 //-------------- change app theme
 function changeTheme(name) {
