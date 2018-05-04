@@ -4499,8 +4499,8 @@ function changeImportAction (sel) {
 
 function freeze_size_columns() {
     var selects = $('#import_main_columns select');
-    for (var i in selects) {
-        if (selects[i].nodeName && $.inArray($(selects[i]).val(), ['Date','Date Time','Auto Number','Attachment']) != -1) {
+    for (var i = 0; i < selects.length; i++) {
+        if ($.inArray($(selects[i]).val(), ['Date','Date Time','Auto Number','Attachment']) != -1) {
             var sibling_inp = $(selects[i].parentNode.nextElementSibling).find('input').first();
             $(sibling_inp).prop('readonly', true);
         }

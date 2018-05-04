@@ -38,8 +38,8 @@
                             {!! $treeTables['public']['html'] !!}
                         </div>
                         <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                            <input id="searchValInTab_public" type="text" class="form-control" style="display: inline-block; width: 88%;">
-                            <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('public')"><i class="fa fa-search"></i></button>
+                            <input id="searchValInTab_public" type="text" class="form-control" onchange="searchInTab('public')" style="display: inline-block; width: 88%;">
+                            <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;font-size: 1.7em;" onclick="searchInTab('public')"><i class="fa fa-search"></i></button>
                         </div>
                     </div>
                     <div id="tablebar_private_wrapper" class="tab-content" style="display:none; position: absolute; top: 50px; left: 0; right: 0; bottom: 0; border: 1px solid #cccccc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);">
@@ -48,8 +48,8 @@
                                 {!! $treeTables['private']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                                <input id="searchValInTab_private" type="text" class="form-control" style="display: inline-block; width: 88%;">
-                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
+                                <input id="searchValInTab_private" type="text" class="form-control" onchange="searchInTab('private')" style="display: inline-block; width: 88%;">
+                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;font-size: 1.7em;" onclick="searchInTab('private')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
                             <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
@@ -61,8 +61,8 @@
                                 {!! $treeTables['favorite']['html'] !!}
                             </div>
                             <div style="position: absolute;bottom: 0; left: 0; right: 0;">
-                                <input id="searchValInTab_favorite" type="text" class="form-control" style="display: inline-block; width: 88%;">
-                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
+                                <input id="searchValInTab_favorite" type="text" class="form-control" onchange="searchInTab('favorite')" style="display: inline-block; width: 88%;">
+                                <button class="btn btn-default" style="border:none;width: 10%;background-color: transparent;padding: 0;font-size: 1.7em;" onclick="searchInTab('favorite')"><i class="fa fa-search"></i></button>
                             </div>
                         @else
                             <div style="padding: 15px;">Register and Login to add and manage your own collection of data tables.</div>
@@ -1250,6 +1250,5 @@
         $importReferences = JSON.parse('{!! json_encode($importReferences) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
         allUsers = JSON.parse('{!! json_encode($allUsers) !!}');
-        public_tables = JSON.parse('{!! json_encode($public_tables) !!}');
     </script>
 @endpush
