@@ -3,7 +3,14 @@
 @section('content')
     <div id="stars_appears" style="position: absolute;top: 50px;left: 0;text-align: center;right: 0;bottom: 0;background-color: #222;">
         <a href="{{ route('homepage') }}">
-            <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 350px);">UTable - your table data in one place</h1>
+            <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 350px);">
+            TaBuDa</h1>
+
+            <h2 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 350px);">
+             - a space for managing and sharing tabulated data.</h2>
+
+            <h2 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 350px);">
+             - a platform facilitating collaboration of work with tabulated data.</h2>            
         </a>
     </div>
 @endsection

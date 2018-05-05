@@ -10,7 +10,7 @@ class TableService {
     private $subdomain = "";
 
     public function __construct() {
-        if( preg_match('/^www\.?(.+)\.tabledataplace\.com$/i', $_SERVER['HTTP_HOST']/*'www.sub.tabledataplace.com'*/, $subdomain) ) {
+        if( preg_match('/^www\.?(.+)\.tabuda\.space$/i', $_SERVER['HTTP_HOST']/*'www.sub.tabuda.space'*/, $subdomain) ) {
             $this->subdomain = $subdomain[1];
         }
     }
