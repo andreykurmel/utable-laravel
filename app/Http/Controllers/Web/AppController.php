@@ -163,6 +163,7 @@ class AppController extends Controller
             'settingsDDL_References_Headers' => $tableName ? $this->tableService->getHeaders('cdtns') : [],
             'settingsRights_Headers' => $tableName ? $this->tableService->getHeaders('permissions') : [],
             'settingsRights_Fields_Headers' => $tableName ? $this->tableService->getHeaders('permissions_fields') : [],
+            'settingsRights_Rows_Headers' => $tableName ? $this->tableService->getHeaders('range') : [],
             'selectedEntries' => $selEntries ? $selEntries : 'All',
             'settingsEntries' => $settingsEntries ? $settingsEntries : 'All',
             //'canEditSettings' => $tableName ? $this->getCanEditSetings($tableName) : "",

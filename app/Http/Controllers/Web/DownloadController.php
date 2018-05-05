@@ -60,7 +60,7 @@ class DownloadController extends Controller
 
         $data = array();
         foreach ($respArray['headers'] as $key => $val) {
-            $data[0][$key] = $val->name;
+            $data[0][$key] = implode(' ', array_unique(explode(',', $val->name)));
         }
 
         foreach ($respArray['data'] as $row) {
@@ -106,7 +106,7 @@ class DownloadController extends Controller
         $html .= "<thead><tr>";
         foreach ($respArray['headers'] as $hdr) {
             if ($hdr->web == 'Yes') {
-                $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".$hdr->name."</th>";
+                $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".implode(' ', array_unique(explode(',', $hdr->name)))."</th>";
             }
         }
         $html .= "</tr></thead>";
@@ -159,12 +159,19 @@ class DownloadController extends Controller
         $respArray = $this->tableService->getData($post);
 
         $html = "<table>";
+        $html .= "<header>";
+        foreach ($respArray['headers'] as $hdr) {
+            if ($hdr->web == 'Yes') {
+                $html .= "<".$hdr->field.">".implode(' ', array_unique(explode(',', $hdr->name)))."</".$hdr->field.">";
+            }
+        }
+        $html .= "</header>";
         foreach ($respArray['data'] as $row) {
             $row = (array)$row;
             $html .= "<row>";
             foreach ($respArray['headers'] as $hdr) {
                 if ($hdr->web == 'Yes') {
-                    $html .= "<".preg_replace('/[^\w\d]/i', '', $hdr->name).">".$row[$hdr->field]."</".preg_replace('/[^\w\d]/i', '', $hdr->name).">";
+                    $html .= "<".$hdr->field.">".$row[$hdr->field]."</".$hdr->field.">";
                 }
             }
             $html .= "</row>";

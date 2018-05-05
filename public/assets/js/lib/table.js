@@ -1742,10 +1742,10 @@ function editSelectedData(idx) {
 
     if (hide_update) $('#modal_btn_update').hide();
 
-    bind_dropdown();
-
     //set current values for editing
     if (idx > -1) {
+        bind_dropdown();
+
         for (var key in ltableHeaders) {
             d_key = ltableHeaders[key].field;
             if (d_key == 'createdBy' || d_key == 'modifiedBy') {
@@ -2018,7 +2018,7 @@ function addRowInline() {
     var d_key;
     for(var key in tableHeaders) {
         d_key = tableHeaders[key].field;
-        emptyDataObject[d_key] = $('#' + d_key + 0 + tableHeaders[key].input_type + '_addrow').html();
+        emptyDataObject[d_key] = $('#' + d_key + 0 + tableHeaders[key].input_type + '_addrow > .td_wrap').html();
     }
     tableData.push(emptyDataObject);
 
@@ -3643,8 +3643,10 @@ function ddlTabShowOptions() {
 var settingsRights,
     settingsRights_hdr,
     settingsRights_Fields_hdr,
+    settingsRights_Rows_hdr,
     settingsRights_Obj,
     settingsRights_FieldsObj,
+    settingsRights_RowsObj,
     settingsRights_selectedIndex = -1,
     settingsRights_TableMeta,
     settingsUsersNames;
@@ -3662,10 +3664,12 @@ function getRightsDatas(tableName) {
             settingsRights = response.data;
             settingsRights_hdr = response.Rights_hdr;
             settingsRights_Fields_hdr = response.Rights_Fields_hdr;
+            settingsRights_Rows_hdr = response.Rights_Rows_hdr;
             settingsRights_TableMeta = response.table_meta;
             settingsUsersNames = response.users_names;
             settingsRights_Obj = setAllNullObj(settingsRights_hdr);
             settingsRights_FieldsObj = setAllNullObj(settingsRights_Fields_hdr);
+            settingsRights_RowsObj = setAllNullObj(settingsRights_Rows_hdr);
             showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
         },
         error: function () {
@@ -3712,7 +3716,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
         tableData += '<td><a '+(idx == -1 ? 'onclick="showSettingsRightsDataTable(settingsRights_Fields_hdr, \'\', '+i+')"' : '')+' class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
         for(key in headers) {
             d_key = headers[key].field;
-            if (d_key != 'fields') {
+            if (d_key != 'fields' && d_key != 'rows') {
                 tableData +=
                     '<td ' +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
@@ -3751,7 +3755,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
         tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
         for(key in headers) {
             d_key = headers[key].field;
-            if (d_key != 'fields') {
+            if (d_key != 'fields' && d_key != 'rows') {
                 tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && d_key === 'table_id') {
                     tbHiddenData += settingsRights_TableMeta.name;
@@ -3780,6 +3784,90 @@ function showSettingsRightsDataTable(headers, data, idx) {
 
         $('.rights_fields_check_edit').html('<input type="checkbox" '+(edit ? 'checked' : '')+(!settingsRights[idx].user_id ? ' disabled ' : '')+' onclick="toggleAllrights('+settingsRights_selectedIndex+', \'edit\', '+(!edit ? true : false)+')">');
         $('.rights_fields_check_view').html('<input type="checkbox" '+(view ? 'checked' : '')+' onclick="toggleAllrights('+settingsRights_selectedIndex+', \'view\', '+(!view ? true : false)+')">');
+
+        //show rows table
+        data = settingsRights[idx].rows;
+        headers = settingsRights_Rows_hdr;
+        tableData = tbHiddenData = tbAddRow = '';
+        var edited_fields = ['opr','field','compare','val'];
+        for (var i = 0; i < data.length; i++) {
+            tableData += "<tr id='row_" + i + "_settings_rows_rights'>";
+            tableData += '<td><a class="btn-tower-id" ><span class="font-icon">`</span><b>'+ (i+1) +'</b></a></td>';
+            for (key in headers) {
+                d_key = headers[key].field;
+                if (d_key != 'fields' && d_key != 'rows') {
+                    tableData +=
+                        '<td ' +
+                        'id="' + d_key + i + '_settings_rows_rights"' +
+                        'data-key="' + d_key + '"' +
+                        'data-idx="' + i + '"' +
+                        'data-table="range"' +
+                        'data-table_idx="' + idx + '"' +
+                        (($.inArray(d_key, edited_fields) > -1) ? 'onclick="showInlineEdit_ROWRIGHT(\'' + d_key + i + '_settings_rows_rights\', 1)"' : '') +
+                        'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                        var usr = allUsers.find(function (el) {
+                            return el.id === data[i][d_key];
+                        });
+                        if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                    } else {
+                        tableData += (data[i][d_key] ? data[i][d_key] : '');
+                    }
+                    tableData += '</td>';
+                }
+            }
+            tableData += "<td><button onclick='deleteSettingsRights(\"range\", "+data[i].id+", "+i+")'><i class='fa fa-trash-o'></i></button></td>";
+            tableData += "</tr>";
+
+            tbHiddenData += "<tr style='visibility: hidden;'>";
+            tbHiddenData += '<td><span class="font-icon">`</span><b>'+ (i+1) +'</b></td>';
+            for (key in headers) {
+                d_key = headers[key].field;
+                if (d_key != 'fields' && d_key != 'rows') {
+                    tbHiddenData += '<td style="' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
+                    if (idx == -1 && d_key === 'tb_id') {
+                        tbHiddenData += settingsDDL_TableMeta.name;
+                    } else if (idx != -1 && d_key === 'list_id') {
+                        tbHiddenData += settingsDDLs[idx].name;
+                    } else
+                    if (d_key == 'createdBy' || d_key == 'modifiedBy') {
+                        var usr = allUsers.find(function (el) {
+                            return el.id === data[i][d_key];
+                        });
+                        if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                    } else {
+                        tbHiddenData += (data[i][d_key] ? data[i][d_key] : '');
+                    }
+                    tbHiddenData += '</td>';
+                }
+            }
+            if (i == 0) {
+                tbHiddenData += '<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\">Add</a></td>';
+            } else {
+                tbHiddenData += "<td><button><i class='fa fa-trash-o'></i></button></td>";
+            }
+            tbHiddenData += "</tr>";
+        }
+
+        tbAddRow += "<tr style='height: 37px;'><td></td>";
+        for (key in headers) {
+            d_key = headers[key].field;
+            if (d_key != 'fields' && d_key != 'rows') {
+                tbAddRow += '<td ' +
+                    'id="add_' + d_key + '_settings_rows_rights"' +
+                    'data-key="' + d_key + '"' +
+                    (($.inArray(d_key, edited_fields) > -1) ? 'onclick="showInlineEdit_ROWRIGHT(\'add_' + d_key + '_settings_rows_rights\', 0)"' : '') +
+                    'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
+                    (($.inArray(d_key, edited_fields) == -1) ? 'auto' : '') +
+                    '</td>';
+            }
+        }
+        tbAddRow += "<td><a href=\"javascript:void(0)\" class=\"button blue-gradient glossy\" onclick=\"savePermissionRows()\">Add</a></td>";
+        tbAddRow += "</tr>";
+
+        $('#tbSettingsRights_Rows_headers').html(tbHiddenData);
+        $('#tbSettingsRights_Rows_data').html(tableData+tbAddRow);
+        //---------------
     } else {
         $('#tbSettingsRights_headers').html(tbHiddenData);
         $('#tbSettingsRights_data').html(tableData);
@@ -3793,6 +3881,171 @@ function showSettingsRightsDataTable(headers, data, idx) {
     }
 
     changeTheme(currentTheme);
+}
+
+function showInlineEdit_ROWRIGHT(id, isUpdate) {
+    if ($('#'+id).data('innerHTML')) {
+        return;
+    }
+
+    $('#'+id).data('innerHTML', $('#'+id).html());
+    var key = $('#'+id).data('key'),
+        idx = $('#'+id).data('idx'),
+        html, options;
+
+    if (key == 'opr') {
+        options = '<option>AND</option><option>OR</option>';
+    } else
+    if (key == 'compare') {
+        options = '<option></option><option><</option><option>=</option><option>></option>';
+    }
+
+    if (key == 'opr' || key == 'compare') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updatePermissionRows(\''+id+'_inp\')' : 'addPermissionRows(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            options +
+            '</select>';
+    } else
+    if (key == 'field') {
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updatePermissionRows(\''+id+'_inp\')' : 'addPermissionRows(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+        for (var i in tablesDropDown) {
+            if (tablesDropDown[i].db_tb == table_meta.db_tb) {
+                for (var j in tablesDropDown[i].items) {
+                    html += '<option value="'+tablesDropDown[i].items[j].field+'">'+tablesDropDown[i].items[j].name+'</option>';
+                }
+                break;
+            }
+        }
+        html += '</select>';
+    } else
+    if (key == 'val') {
+        var table_field = (idx !== undefined ? settingsRights[settingsRights_selectedIndex].rows[idx]['field'] : settingsRights_RowsObj.field);
+
+        html = '<select ' +
+            'id="'+id+'_inp" ' +
+            'data-key="' + $('#'+id).data('key') + '"' +
+            'data-idx="' + $('#'+id).data('idx') + '"' +
+            'data-table="' + $('#'+id).data('table') + '"' +
+            'data-table_idx="' + $('#'+id).data('table_idx') + '"' +
+            'onblur="hideInlineEdit(\''+id+'\')" ' +
+            'onchange="' + (isUpdate ? 'updatePermissionRows(\''+id+'_inp\')' : 'addPermissionRows(\''+id+'_inp\')') + '" ' +
+            'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;">' +
+            '<option></option>';
+
+        if (table_field) {
+            var resp = $.ajax({
+                url: baseHttpUrl + '/getDistinctData?table=' + table_meta.db_tb + '&field=' + table_field,
+                method: 'get',
+                async: false
+            }).responseText;
+            resp = JSON.parse(resp);
+            for (var i in resp) {
+                html += '<option value="'+resp[i]+'">'+resp[i]+'</option>';
+            }
+        }
+
+        html += '</select>';
+    }
+
+    $('#'+id).html(html);
+    $('#'+id+'_inp').val( $('#'+id).data('innerHTML') );
+    $('#'+id+'_inp').focus();
+}
+
+function updatePermissionRows(id) {
+    //update in the table view
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
+    var table = $('#'+id).data('table'),
+        idx = $('#'+id).data('idx'),
+        table_idx = $('#'+id).data('table_idx'),
+        key_name = $('#'+id).data('key'),
+        params;
+    settingsRights[table_idx].rows[idx][key_name] = $('#'+id).val();
+    params = settingsRights[table_idx].rows[idx];
+
+    var strParams = "";
+    for (var key in params) {
+        if (key != 'fields' && key != 'rows' && params[key] !== null) {
+            strParams += key + '=' + btoa(params[key]) + '&';
+        }
+    }
+
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/updateTableRow?tableName=range&' + strParams,
+        success: function (response) {
+            $('.loadingFromServer').hide();
+            if (response.msg) {
+                alert(response.msg);
+            }
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
+}
+
+function addPermissionRows(id) {
+    //update in the table view
+    var par_id = id.substr(0, id.length-4);
+    $('#'+par_id).data('innerHTML', $('#'+id).val());
+
+    var table = $('#'+id).data('table'),
+        key_name = $('#'+id).data('key');
+
+    settingsRights_RowsObj[key_name] = $('#'+id).val();
+}
+
+function savePermissionRows() {
+    settingsRights_RowsObj['permission_id'] = settingsRights[settingsRights_selectedIndex].id;
+
+    var params = settingsRights_RowsObj;
+    var strParams = "";
+    for (var key in params) {
+        if (key != 'fields' && key != 'rows' && params[key] !== null) {
+            strParams += key + '=' + btoa(params[key]) + '&';
+        }
+    }
+
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'GET',
+        url: baseHttpUrl + '/addTableRow?tableName=range&' + strParams,
+        success: function (response) {
+            settingsRights_RowsObj.id = response.last_id;
+            settingsRights[settingsRights_selectedIndex].rows.push(settingsRights_RowsObj);
+            settingsRights_RowsObj = setAllNullObj(settingsRights_Rows_hdr);
+            showSettingsRightsDataTable(settingsRights_Fields_hdr, '', settingsRights_selectedIndex);
+
+            $('.loadingFromServer').hide();
+            if (response.msg) {
+                alert(response.msg);
+            }
+        },
+        error: function () {
+            $('.loadingFromServer').hide();
+            alert("Server error");
+        }
+    });
 }
 
 function updateSettingsRightsItem(key, idx, id) {
@@ -3828,7 +4081,11 @@ function deleteSettingsRights(tableName, rowId, idx) {
         showSettingsRightsDataTable(settingsRights_hdr, settingsRights, -1);
         $('#tbSettingsRights_Fields_data').html('');
     } else {
-        settingsRights[settingsRights_selectedIndex].fields.splice(idx, 1);
+        if (tableName == 'range') {
+            settingsRights[settingsRights_selectedIndex].rows.splice(idx, 1);
+        } else {
+            settingsRights[settingsRights_selectedIndex].fields.splice(idx, 1);
+        }
         showSettingsRightsDataTable(settingsRights_Fields_hdr, settingsRights[settingsRights_selectedIndex].fields, settingsRights_selectedIndex);
     }
 

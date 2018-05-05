@@ -318,6 +318,7 @@ class TableController extends Controller
         if (Auth::user()) {
             $Rightsdatas['Rights_hdr'] = $this->tableService->getHeaders('permissions');
             $Rightsdatas['Rights_Fields_hdr'] = $this->tableService->getHeaders('permissions_fields');
+            $Rightsdatas['Rights_Rows_hdr'] = $this->tableService->getHeaders('range');
             $Rightsdatas['table_meta'] = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
 
             $usrs = DB::table('users')->get();
@@ -336,6 +337,11 @@ class TableController extends Controller
                 $Rights->fields = DB::connection('mysql_sys')
                     ->table('permissions_fields')
                     ->where('permissions_id', '=', $Rights->id)
+                    ->get();
+
+                $Rights->rows = DB::connection('mysql_sys')
+                    ->table('range')
+                    ->where('permission_id', '=', $Rights->id)
                     ->get();
             }
         }
@@ -402,9 +408,13 @@ class TableController extends Controller
             if ($request->tableName == 'permissions') {
                 $res = DB::connection('mysql_sys')->table('permissions')->where('id', '=', $id)->delete();
                 $res = DB::connection('mysql_sys')->table('permissions_fields')->where('permissions_id', '=', $id)->delete();
+                $res = DB::connection('mysql_sys')->table('range')->where('permission_id', '=', $id)->delete();
             }
             if ($request->tableName == 'permissions_fields') {
                 $res = DB::connection('mysql_sys')->table('permissions_fields')->where('id', '=', $id)->delete();
+            }
+            if ($request->tableName == 'range') {
+                $res = DB::connection('mysql_sys')->table('range')->where('id', '=', $id)->delete();
             }
 
             if ($res) {

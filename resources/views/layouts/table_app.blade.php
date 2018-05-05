@@ -250,11 +250,13 @@
 
         .download_btn {
             border-radius: 50%;
-            width: 60px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             opacity: 0.4;
             color: #fff;
             font-weight: bold;
+            font-size: 0.8em;
+            padding: 0;
         }
         .download_btn:hover {
             opacity: 0.9;
@@ -279,7 +281,7 @@
                 </li>
                 <li style="display: inline-block">
                     <button id="theme_btn" class="btn btn-default" onclick="$('#theme_menu').toggle();" style="border: none;margin: 12px;padding: 2px 0;height: 25px;">
-                        <img id="theme_img" src="/img/eye.png" height="20">
+                        <img id="theme_img" src="/img/theme.png" height="20">
                     </button>
                     <div id="theme_menu" style="position: absolute;top: 37px;z-index: 100;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 35px;left: 10px;">
                         <button class="btn btn-default" onclick="changeTheme('light');" style="background-color: #fff;padding: 10px;"></button>

@@ -178,7 +178,7 @@
                             <button id="download_btn" type="button" class="btn btn-default" onclick="$('#download_menu').toggle();" style="padding: 0;">
                                 <i id="download_icon" class="fa fa-download" style="padding: 8px 12px;"></i>
                             </button>
-                            <div id="download_menu" style="position: absolute;top: 40px;right: 5px;width:392px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;">
+                            <div id="download_menu" style="position: absolute;top: 40px;right: 5px;width:272px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;">
                                 <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('PRINT')" style="background-color: #a00;">Print</button>
                                 <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('CSV')" style="background-color: #a00;">CSV</button>
                                 <button type="button" class="btn btn-default download_btn" onclick="downloaderGo('PDF')" style="background-color: #aa0;">PDF</button>
@@ -680,7 +680,7 @@
                                     </tbody>
                                 </table>
                                 <div style="top: 36px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
-                                    <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -32px;">
+                                    <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -35px;">
                                         <thead>
                                         <tr>
                                             <th class="sorting nowrap">#</th>
@@ -700,7 +700,36 @@
                                 </div>
                             </div>
                             <div id="settings_permissions_rows_tab" class="dataTables_body" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 78px; bottom: 32px; right: 10px; width: calc(50% - 20px); background-color: #fff; display: none;z-index: 100; border: 2px solid #AAA; border-radius: 6px 6px 0 0;">
-                                Rows
+                                <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
+                                    <thead>
+                                    <tr>
+                                        <th class="sorting nowrap">#</th>
+                                        @foreach($settingsRights_Rows_Headers as $hdr)
+                                            <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                        @endforeach
+                                        <th class="sorting nowrap" style="width: 30px;">Actions</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody id="tbSettingsRights_Rows_headers">
+                                    </tbody>
+                                </table>
+                                <div style="top: 32px; position: absolute; z-index: 150; bottom: 0; overflow: auto; min-width:100%;" class="table_body_viewport">
+                                    <table class="table responsive-table responsive-table-on dataTable" style="margin-bottom: 0; margin-top: -35px;">
+                                        <thead>
+                                        <tr>
+                                            <th class="sorting nowrap">#</th>
+                                            @foreach($settingsRights_Rows_Headers as $hdr)
+                                                <th class="sorting nowrap" data-key="{{ $hdr->field }}" style="{{ $hdr->web == 'No' ? 'display: none;' : '' }}">{{ $hdr->name }}</th>
+                                            @endforeach
+                                            <th class="sorting nowrap" style="width: 30px;">Actions</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody id="tbSettingsRights_Rows_data">
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             <div class="dataTables_footer" style="position: absolute; bottom: 25px; right: 0; left: 10px">
