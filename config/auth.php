@@ -26,7 +26,7 @@ return [
    | Default: false
    */
 
-    'expose_api' => env('EXPOSE_API', false),
+    'expose_api' => env('EXPOSE_API', true),
 
     /*
     |--------------------------------------------------------------------------

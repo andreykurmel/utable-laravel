@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class TableService {
     private $subdomain = "";
+    private $user;
+
+    public function getUser() {
+        if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+            $this->user = DB::connection('mysql')
+                ->table('users as u')
+                ->join('api_tokens as a', 'a.user_id', '=', 'u.id')
+                ->where('a.id', '=', $_SERVER['HTTP_AUTHORIZATION'])
+                ->first();
+        } else {
+            $this->user = Auth::user();
+        }
+    }
 
     public function __construct() {
         if( preg_match('/^www\.?(.+)\.tabuda\.space$/i', $_SERVER['HTTP_HOST']/*'www.sub.tabuda.space'*/, $subdomain) ) {
@@ -29,7 +42,7 @@ class TableService {
             $query['opt'] = "";
         }
 
-        if(empty($tableName)) {
+        if (empty($tableName)) {
             $responseArray["error"] = TRUE;
             $responseArray["msg"] = "TableName Not Found!";
             return $responseArray;
@@ -58,6 +71,8 @@ class TableService {
             $this->setRemoteConnection($table_meta->conn_id);
         }
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
+
+        $available_rows = $this->getPermissionsRows(Auth::user() ? Auth::user()->id : 0, $table_meta->id);
 
         $fields_for_select = [];
         if (Auth::user()) {
@@ -112,6 +127,18 @@ class TableService {
             if (count($fields_for_settings_select) > 0) {
                 $sql->whereIn($tableName.'.'.'field', $fields_for_settings_select);
             }
+        }
+
+        if ($available_rows) {
+            $sql->where(function ($q) use ($available_rows) {
+                foreach ($available_rows as $ar) {
+                    if ($ar->opr == 'OR') {
+                        $q->orWhere($ar->field, $ar->compare, $ar->val);
+                    } else {
+                        $q->where($ar->field, $ar->compare, $ar->val);
+                    }
+                }
+            });
         }
 
         if (!empty($query['searchKeyword']) && $fields) {
@@ -653,6 +680,16 @@ class TableService {
             ->where('r.user_id', '=', $user_id)
             ->where('r.table_id', '=', $table_id)
             ->select('rf.*')
+            ->get();
+    }
+
+    private function getPermissionsRows($user_id, $table_id) {
+        return DB::connection('mysql_sys')
+            ->table('permissions as p')
+            ->join('range as r', 'p.id', '=', 'r.permission_id')
+            ->where('p.user_id', '=', $user_id)
+            ->where('p.table_id', '=', $table_id)
+            ->select('r.*')
             ->get();
     }
 }

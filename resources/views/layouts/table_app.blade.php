@@ -26,8 +26,7 @@
 
     <style>
         @keyframes move-twink-back {
-            0%   {font-size: 100%;}
-            50%  {font-size: 0;}
+            0%  {font-size: 0;}
             100% {font-size: 100%;}
         }
 

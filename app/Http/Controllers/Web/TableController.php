@@ -16,48 +16,28 @@ class TableController extends Controller
 {
     private $tableService;
     private $system_fields;
+    private $user;
+
+    public function getUser() {
+        if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+            $this->user = DB::connection('mysql')
+                ->table('users as u')
+                ->join('api_tokens as a', 'a.user_id', '=', 'u.id')
+                ->where('a.id', '=', $_SERVER['HTTP_AUTHORIZATION'])
+                ->first();
+        } else {
+            $this->user = Auth::user();
+        }
+    }
 
     public function __construct(TableService $ts) {
         $this->tableService = $ts;
         $this->system_fields = ['id','refer_tb_id','createdBy','createdOn','modifiedBy','modifiedOn'];
     }
 
-    public function getUTable(Request $request) {
-        /*$post = [
-            'tableName' => 'st',
-            'c' => 10,
-            'changedFilter' => '{"name":"site_name","val":"Ozark","status":false}',
-            'fields' => '{"id":1,"site_name":"Phenix City","site_id":"AL-01","site_div":null,"street":null,"city":null,"county":"Russell","state":"AL","zipcode":"n/a","lat_dec":"32","lat_dms":null,"lat_deg":null,"lat_min":null,"lat_sec":null,"long_dec":"-85.002222","long_dms":null,"long_deg":null,"long_min":null,"long_sec":null,"first_name":null,"last_name":null,"phone":null,"email":null,"str_type":null,"str_id":null,"twr_type":null,"elev_grd":"340","height":null,"agl":"479","amsl":"819","bta_nbr":null,"bta_name":null,"mta_nbr":null,"mta_name":null,"fcc_nbr":"1037006","faa_nbr":"1994-ASO-2485-OE","fa_nbr":null,"status":null,"createdBy":null,"createdOn":"2017-12-15 09:23:56","modifiedBy":null,"modifiedOn":"2017-12-15 09:23:56"}',
-            'filterData' => '[{"key":"site_name","name":"Name","val":[{"value":"Phenix City","checked":1,"$$hashKey":"object:4229"},{"value":"Ozark","checked":false,"$$hashKey":"object:4230"},{"value":"Frost","checked":1,"$$hashKey":"object:4231"},{"value":"Titus","checked":1,"$$hashKey":"object:4232"},{"value":"Montgomery","checked":1,"$$hashKey":"object:4233"},{"value":"Waterloo SE","checked":1,"$$hashKey":"object:4234"},{"value":"Ethelsville","checked":1,"$$hashKey":"object:4235"},{"value":"Phenix City 1","checked":1,"$$hashKey":"object:4236"},{"value":"Phenix City 2 ","checked":1,"$$hashKey":"object:4237"},{"value":"Pine Apple","checked":1,"$$hashKey":"object:4238"}],"checkAll":false,"$$hashKey":"object:273"},{"key":"site_id","name":"ID","val":[{"value":"AL-01","checked":1,"$$hashKey":"object:4249"},{"value":"AL-02","checked":1,"$$hashKey":"object:4250"},{"value":"AL-03","checked":1,"$$hashKey":"object:4251"},{"value":"AL-04","checked":1,"$$hashKey":"object:4252"},{"value":"AL-05","checked":1,"$$hashKey":"object:4253"},{"value":"AL-06","checked":1,"$$hashKey":"object:4254"},{"value":"AL-07","checked":1,"$$hashKey":"object:4255"},{"value":"AL-08","checked":1,"$$hashKey":"object:4256"},{"value":"AL-09","checked":1,"$$hashKey":"object:4257"},{"value":"AL-10","checked":1,"$$hashKey":"object:4258"}],"checkAll":true,"$$hashKey":"object:274"}]',
-            'getfilters' => true,
-            'p' => 0,
-            'q' => '{"opt":"lat","lat_dec":"","long_dec":"","distance":""}'
-        ];
-        $this->tableService->getData((object)$post);*/
-
-        $tb_settings_display = DB::connection('mysql_sys')->table('tb_settings_display')->get();
-
-        $ddl = DB::connection('mysql_sys')->table('tb')
-            ->join('tb_settings_display as ts', 'tb.id', '=', 'ts.tb_id')
-            ->join('ddl_items as di', 'ts.ddl_id', '=', 'di.list_id')
-            ->select('ts.field', 'di.option')
-            ->whereNotNull('di.option')
-            ->where('tb.db_tb', '=', 'tb_settings_display')
-            ->get();
-
-        if (/*$tb && */$tb_settings_display) {
-            //$responseArray["utables"] = $tb;
-            $responseArray["utablesettings"] = $tb_settings_display;
-            $responseArray["ddls"] = array();
-            foreach($ddl as $row) {
-                $responseArray["ddls"][$row->field][] = $row->option;
-            }
-        } else {
-            $responseArray["error"] = TRUE;
-            $responseArray["msg"] = "";
-        }
-
-        return $responseArray;
+    public function getTables(Request $request) {
+        $this->getUser();
+        return $this->user->id;
     }
 
     public function getSelectedTable(Request $request) {
@@ -65,7 +45,7 @@ class TableController extends Controller
     }
 
     public function addTableRow(Request $request) {
-        $tableName= $request->tableName;
+        $tableName = $request->tableName;
 
         $params = $request->except(['id', 'tableName']);
         foreach ($params as $key => $par) {
@@ -282,7 +262,7 @@ class TableController extends Controller
     public function getDDLdatas(Request $request)
     {
         $DDLdatas = [];
-        if (Auth::user()) {
+        if ($this->user) {
             $DDLdatas['DDL_hdr'] = $this->tableService->getHeaders('ddl');
             $DDLdatas['DDL_items_hdr'] = $this->tableService->getHeaders('ddl_items');
             $DDLdatas['table_meta'] = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();

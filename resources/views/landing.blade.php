@@ -18,27 +18,43 @@
     table_meta = JSON.parse('{!! json_encode($tableMeta) !!}');
     public_tables = JSON.parse('{!! json_encode($public_tables) !!}');
 
-    var col_stars = 20, speed = 3;
+    var col_stars = 20, speed = 3, i = 0;
     $(document).ready(function () {
-        var elem = $('#stars_appears');
-        if (elem && public_tables) {
-            var idx = 0, max = public_tables.length, eh = $(elem).height(), ew = $(elem).width();
+        var idx = 0, max = public_tables.length;
+        if (public_tables) {
+            setInterval(function() {
+                add_star(idx);
+
+                idx++;
+                if (idx == max) idx = 0;
+            }, (speed*1000)/col_stars);
+
+            /*var idx = 0, max = public_tables.length, eh = $(elem).height(), ew = $(elem).width();
             for (var i = 0; i < col_stars; i++) {
                 var rleft = Math.random()*ew;
                 var rtop = Math.random()*eh;
 
-                setTimeout(add_star(elem, idx, rtop, rleft), Math.random()*speed*1000);
+                setTimeout(add_star(elem, idx, rtop, rleft), (rleft/ew)*speed*1000);
 
                 idx++;
                 if (idx == max) idx = 0;
-            }
+            }*/
         }
     });
 
-    function add_star(elem, idx, top, left) {
-        $(elem).append('<div style="width: '+(10*public_tables[idx].name.length)+'px;text-align: center;position:absolute;top:'+top+'px;left:'+left+'px;">' +
-            '<a style="color: #eee;animation:move-twink-back '+speed+'s linear infinite;" href="'+public_tables[idx].li+'">'+public_tables[idx].name+'</a>' +
+    function add_star(idx) {
+        var left = Math.random()*100;
+        var top = Math.random()*100;
+        console.log();
+        var wi = (10*public_tables[idx].name.length)+'px';
+        $('#stars_appears').append('<div id="star_'+i+'" style="width: '+wi+';text-align: center;position:absolute;top:calc('+top+'% - 50px);left:calc('+left+'% - '+wi+');">' +
+            '<a style="animation:move-twink-back '+speed+'s linear;font-size: 0;color: #eee;" href="'+public_tables[idx].li+'">'+public_tables[idx].name+'</a>' +
             '</div>');
+        var star = $('#star_'+i);
+        i++;
+        setTimeout(function() {
+            $(star).remove();
+        }, speed*1000);
     }
 </script>
 @endpush

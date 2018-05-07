@@ -62,3 +62,10 @@ Route::resource('permissions', 'Authorization\PermissionsController', [
 Route::get('/settings', 'SettingsController@index');
 
 Route::get('/countries', 'CountriesController@index');
+
+
+
+/**
+ * Utable routes
+ */
+Route::get('getTables', 'TableController@getTables')->name('getTables');

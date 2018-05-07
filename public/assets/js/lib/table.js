@@ -119,7 +119,7 @@ $(document).ready(function () {
 
 /* --------------------- Variables ---------------------- */
 
-var baseHttpUrl = "/api",
+var baseHttpUrl = "/web",
     selectedTableName = $('#inpSelectedTable').val(),
     selectedTableGroup = $('#inpSelectedTableGroup').val(),
     selectedEntries = $('#inpSelectedEntries').val(),

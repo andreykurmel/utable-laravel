@@ -2,6 +2,7 @@
 
 namespace Vanguard\Http\Controllers\Api\Auth;
 
+use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Vanguard\Events\User\LoggedIn;
@@ -41,6 +42,8 @@ class AuthController extends ApiController
         }
 
         $user = auth()->user();
+        $api_tok = DB::connection('mysql')->table('api_tokens')->where('user_id', '=', $user->id)->orderBy('expires_at', 'desc')->first();
+        $api_tok = $api_tok->id;
 
         if ($user->isBanned()) {
             $this->invalidateToken($token);
@@ -54,7 +57,7 @@ class AuthController extends ApiController
 
         event(new LoggedIn);
 
-        return $this->respondWithArray(compact('token'));
+        return $this->respondWithArray(compact('api_tok'));
     }
 
     private function invalidateToken($token)

@@ -101,29 +101,35 @@ class DownloadController extends Controller
     private function downloader_pdf($post) {
         $respArray = $this->tableService->getData($post);
 
-        $html = "<table style='border-collapse: collapse;' width=\"100%\" page-break-inside: auto;>";
+        $html = "";
+        $col_per_page = 9;
+        $mult = ceil(count($respArray['headers']) / $col_per_page);
 
-        $html .= "<thead><tr>";
-        foreach ($respArray['headers'] as $hdr) {
-            if ($hdr->web == 'Yes') {
-                $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>".implode(' ', array_unique(explode(',', $hdr->name)))."</th>";
-            }
-        }
-        $html .= "</tr></thead>";
+        for ($step = 1; $step < $mult; $step++) {
+            $html .= "<table style='border-collapse: collapse;page-break-inside: auto;page-break-after: always;' width=\"100%\">";
 
-        $html .= "<tbody>";
-        foreach ($respArray['data'] as $row) {
-            $row = (array)$row;
-            $html .= "<tr>";
-            foreach ($respArray['headers'] as $hdr) {
-                if ($hdr->web == 'Yes') {
-                    $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>".$row[$hdr->field]."</td>";
+            $html .= "<thead><tr><th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>Row #</th>";
+            for ($i = 0 + ($step-1)*$col_per_page; $i < $col_per_page + ($step-1)*$col_per_page; $i++) {
+                if ($respArray['headers'][$i]->web == 'Yes') {
+                    $html .= "<th style='border: solid 1px #000;padding: 3px 5px;background-color: #AAA;'>" . implode(' ', array_unique(explode(',', $respArray['headers'][$i]->name))) . "</th>";
                 }
             }
-            $html .= "</tr>";
+            $html .= "</tr></thead>";
+
+            $html .= "<tbody>";
+            foreach ($respArray['data'] as $idx => $row) {
+                $row = (array)$row;
+                $html .= "<tr><td style='border: solid 1px #000;padding: 3px 5px;'>".($idx+1)."</td>";
+                for ($i = 0 + ($step-1)*$col_per_page; $i < $col_per_page + ($step-1)*$col_per_page; $i++) {
+                    if ($respArray['headers'][$i]->web == 'Yes') {
+                        $html .= "<td style='border: solid 1px #000;padding: 3px 5px;'>" . $row[ $respArray['headers'][$i]->field ] . "</td>";
+                    }
+                }
+                $html .= "</tr>";
+            }
+            $html .= "</tbody>";
+            $html .= "</table>";
         }
-        $html .= "</tbody>";
-        $html .= "</table>";
 
         $pdf = new Dompdf();
         $pdf->setPaper("A4", "landscape");
