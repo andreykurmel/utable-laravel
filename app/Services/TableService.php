@@ -378,9 +378,15 @@ class TableService {
                         if (property_exists($result[$i], $file->field)) {
                             if (is_numeric($result[$i]->{$file->field})) $result[$i]->{$file->field} = '';
 
-                            $result[$i]->{$file->field} .= '<a target="_blank" href="/storage/'.$file->filepath.$file->filename.'">' .
-                                ($file->is_img ? '<img src="/storage/'.$file->filepath.$file->filename.'" height="30">' : $file->filename) .
-                                '</a>';
+                            $result[$i]->{$file->field} .= '<a class="link_with_deleter" target="_blank" href="/storage/'.$file->filepath.$file->filename.'">' .
+                                ($file->is_img ? '<img class="_img_preview" src="/storage/'.$file->filepath.$file->filename.'" height="30">' : $file->filename);
+
+                            //owner or user with edit rights can delete file
+                            if (isset($fields_for_select) && ($fields_for_select == 1 || $fields_for_select[$file->field] == 1)) {
+                                $result[$i]->{$file->field} .= '<span onclick="delete_dd_file('.$file->tb_id.', '.$file->row_id.', \''.$file->field.'\', \''.$file->filename.'\')"> &times;</span>';
+                            }
+
+                            $result[$i]->{$file->field} .= '</a>';
                         }
                     }
                 }

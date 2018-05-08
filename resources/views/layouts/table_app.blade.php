@@ -8,7 +8,7 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Table Data Place</title>
+    <title>Tabuda.Space</title>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
 
@@ -260,6 +260,13 @@
         .download_btn:hover {
             opacity: 0.9;
             color: #fff;
+        }
+
+        .link_with_deleter > span {
+            display: none;
+        }
+        .link_with_deleter:hover > span {
+            display: inline;
         }
     </style>
 

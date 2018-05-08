@@ -262,7 +262,7 @@ class TableController extends Controller
     public function getDDLdatas(Request $request)
     {
         $DDLdatas = [];
-        if ($this->user) {
+        if (Auth::user()) {
             $DDLdatas['DDL_hdr'] = $this->tableService->getHeaders('ddl');
             $DDLdatas['DDL_items_hdr'] = $this->tableService->getHeaders('ddl_items');
             $DDLdatas['table_meta'] = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();
@@ -956,11 +956,14 @@ class TableController extends Controller
                     }
 
                     $presentCols = [];
-                    foreach ($columns as &$col) {
-                        if (empty($col['size'])) $col['size'] = 0;
+                    foreach ($columns as $col) {
+                        if (empty($col['size'])) { $col['size'] = 0; }
+                        else { $col['size'] = floatval(str_replace(',', '.', $col['size'])); }
                         $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
-                        if (!isset($col_size[0])) $col_size[0] = 9;
+                        if (!isset($col_size[0])) $col_size[0] = 7;
                         if (!isset($col_size[1])) $col_size[1] = 2;
+                        $col_size[0] += $col_size[1];
+
                         if ($col['field'] && !in_array($col['field'], $this->system_fields)) {
                             //prevent error if we have two the same names for columns
                             if (in_array($col['field'], $presentCols)) {
@@ -1023,6 +1026,9 @@ class TableController extends Controller
         //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
             if ($col['field']) {
+                if (empty($col['size'])) { $col['size'] = 0; }
+                else { $col['size'] = floatval(str_replace(',', '.', $col['size'])); }
+
                 DB::connection('mysql_sys')->table('tb_settings_display')->insert([
                     'user_id' => Auth::user()->id,
                     'tb_id' => $tb_id,
@@ -1094,11 +1100,13 @@ class TableController extends Controller
             //modify table
             try {
                 Schema::connection('mysql_data')->table($table_meta->db_tb, function (Blueprint $table) use ($columns) {
-                    foreach ($columns as $col) {
-                        if (empty($col['size'])) $col['size'] = 0;
+                    foreach ($columns as &$col) {
+                        if (empty($col['size'])) { $col['size'] = 0; }
+                        else { $col['size'] = floatval(str_replace(',', '.', $col['size'])); }
                         $col_size = $col['size'] > 0 ? explode('.', $col['size']) : [];
-                        if (!isset($col_size[0])) $col_size[0] = 9;
+                        if (!isset($col_size[0])) $col_size[0] = 7;
                         if (!isset($col_size[1])) $col_size[1] = 2;
+                        $col_size[0] += $col_size[1];
 
                         //for deleting columns
                         if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
@@ -1177,6 +1185,9 @@ class TableController extends Controller
 
         //add settings to 'tb_settings_display'
         foreach ($columns as $col) {
+            if (empty($col['size'])) { $col['size'] = 0; }
+            else { $col['size'] = floatval(str_replace(',', '.', $col['size'])); }
+
             //for deleting columns
             if ($col['stat'] == 'del' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
                 //del column
@@ -1201,6 +1212,16 @@ class TableController extends Controller
                     'modifiedBy' => Auth::user()->id,
                     'modifiedOn' => now()
                 ]);
+
+                //update field name for stored files in this field
+                if ($col['type'] == 'Attachment') {
+                    DB::connection('mysql_sys')->table('files')
+                        ->where('tb_id', '=', $table_meta->id)
+                        ->where('field', '=', $col['old_field'])
+                        ->update([
+                            'field' => $col['field']
+                        ]);
+                }
             }
             //for adding columns
             if ($col['stat'] == 'add' && $col['field'] && !in_array($col['field'], $this->system_fields)) {
@@ -1463,11 +1484,11 @@ class TableController extends Controller
                 $request->file('up_file')->storeAs("public/".$filePath, $fileName);
             }
 
-            $filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
+            /*$filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
             $filesCnt = $filesCnt->{$request->field};
             DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->update([
                 (string)$request->field => ($filesCnt ? $filesCnt+1 : 1)
-            ]);
+            ]);*/
 
             $ext = pathinfo($fileName, PATHINFO_EXTENSION);
 
@@ -1480,7 +1501,11 @@ class TableController extends Controller
                 'is_img' => (in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
             ]);
         }
-        return ['error' => !$res, 'key' => $request->field];
+        return [
+            'error' => !$res,
+            'key' => $request->field,
+            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
+        ];
     }
 
     public function ChangeDDFile(Request $request) {
@@ -1505,11 +1530,13 @@ class TableController extends Controller
             $filePath = $request->table."/".$request->row."/".$request->field."/";
             Storage::delete("public/".$filePath."/".$request->filename);
 
-            $filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
+            /*$filesCnt = DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->first();
             $filesCnt = $filesCnt->{$request->field};
             DB::connection('mysql_data')->table( $request->table )->where('id', '=', $request->row)->update([
                 $request->field => $filesCnt-1
-            ]);
+            ]);*/
+
+            $ext = pathinfo($request->filename, PATHINFO_EXTENSION);
 
             $res = DB::connection('mysql_sys')
                 ->table('files')
@@ -1519,6 +1546,10 @@ class TableController extends Controller
                 ->where('filename', '=', $request->filename)
                 ->delete();
         }
-        return ['error' => !$res, 'key' => $request->field];
+        return [
+            'error' => !$res,
+            'key' => $request->field,
+            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
+        ];
     }
 }

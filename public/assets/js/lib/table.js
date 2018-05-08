@@ -49,6 +49,12 @@ $(document).ready(function () {
     });
 
     $(document).keydown(function (e) {
+        if (e.keyCode == 27) {
+            //hide popups by pressing 'esc'
+            $('.loginForm, .registerForm, .passResetForm').hide();
+            $('#modals, .editSidebarTableForm').hide();
+            hideEditPopUp();
+        }
         if (e.keyCode == 37) {
             if (e.ctrlKey) {//ctrl+left arrow (show/hide menutree)
                 showHideTableLib();
@@ -156,7 +162,8 @@ var settingsTableName = 'tb_settings_display',
     ddl_names_for_settings = [],
     changePageWhenList = false,
     sortCol = '', sortASC = false,
-    currentTheme = '';
+    currentTheme = '',
+    were_uploaded_files = false;
 
 /* -------------------- Functions ---------------------- */
 
@@ -385,7 +392,7 @@ function showDataTable(headers, data) {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
+                    tableData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -423,7 +430,7 @@ function showDataTable(headers, data) {
                         (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
                         '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                     if (headers[key].f_type == 'Attachment') {
-                        tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
+                        tableData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                     }
                     tbAddRow += '</div></td>';
                     /*if (d_key == 'id') {
@@ -471,7 +478,7 @@ function showDataTable(headers, data) {
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
+                    tbHiddenData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else {
                     tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
                 }
@@ -615,6 +622,8 @@ function showDataTable(headers, data) {
     }
 
     changeTheme(currentTheme);
+    hideEditPopUp();
+    img_preview_activate();
 }
 document.addEventListener('mousemove', handleElemResize, false);
 document.addEventListener('mouseup', handleEndResize, false);
@@ -1136,15 +1145,28 @@ function detailsShowAttach() {
 function detailsShowPictures() {
     $("#details_li_pictures").addClass("active");
     $("#details_li_files").removeClass("active");
+    $("#details_li_uploads").removeClass("active");
     $("#details_pictures").show();
     $("#details_files").hide();
+    $("#details_uploads").hide();
 }
 
 function detailsShowFiles() {
     $("#details_li_files").addClass("active");
     $("#details_li_pictures").removeClass("active");
+    $("#details_li_uploads").removeClass("active");
     $("#details_files").show();
     $("#details_pictures").hide();
+    $("#details_uploads").hide();
+}
+
+function detailsShowUploads() {
+    $("#details_li_uploads").addClass("active");
+    $("#details_li_pictures").removeClass("active");
+    $("#details_li_files").removeClass("active");
+    $("#details_uploads").show();
+    $("#details_pictures").hide();
+    $("#details_files").hide();
 }
 //---------------------------
 function initMap() {
@@ -1656,7 +1678,7 @@ function editSelectedData(idx) {
                     '<td>';
                 if (idx > -1) {
                     htmlAttach += '<div style="margin-bottom: 5px;">' +
-                        '<button class="dropdown_btn" id="modals_dd_[is_img]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-is_img="[is_img]" data-val="'+(/*ltableData[idx][d_key] ? ltableData[idx][d_key] :*/ 0)+'" style="display: none;">' +
+                        '<button class="dropdown_btn" id="modals_dd_[add_info]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-info="[add_info]" data-edit="'+ltableHeaders[key].can_edit+'" style="display: none;">' +
                         'Files (0)' +
                         '</button>' +
                         '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
@@ -1733,12 +1755,14 @@ function editSelectedData(idx) {
     }
     $('#modals_rows').html(html);
     if (htmlAttach) {
-        $('#modals_pictures').html( htmlAttach.replace(/\[is_img\]/gi, '1') );
-        $('#modals_files').html( htmlAttach.replace(/\[is_img\]/gi, '0') );
+        $('#modals_pictures').html( htmlAttach.replace(/\[add_info\]/gi, 'is_img') );
+        $('#modals_files').html( htmlAttach.replace(/\[add_info\]/gi, 'not_img') );
+        $('#modals_uploads').html( htmlAttach.replace(/\[add_info\]/gi, 'upload') );
         $('#details_li_attach').show();
     } else {
         $('#details_li_attach').hide();
     }
+    were_uploaded_files = false;
 
     if (hide_update) $('#modal_btn_update').hide();
 
@@ -1778,80 +1802,97 @@ function bind_dropdown() {
 function bind_dropdown_clicked(elem) {
     elem.classList.toggle("dropdown_active");
     var panel = elem.nextElementSibling;
-    var is_img = elem.dataset.is_img;
 
     if (panel.style.display === "block") {
         panel.style.display = "none";
     } else {
-        $.ajax({
-            url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field+'&img='+is_img,
-            method: 'get',
-            success: function (resp) {
-                var html = '<table class="table">' +
-                    '<thead><tr>' +
+        if (elem.dataset.info == 'upload') {
+            if (elem.dataset.edit == 0) {
+                return;
+            }
+
+            var html = '<div style="width: 100%;height:34px;">' +
+                    '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \'upload_'+panel.dataset.field+'\')">' +
+                        '<option value="file">Browse</option>' +
+                        '<option value="link">Link</option>' +
+                        '<option value="drag">Drag & Drop</option>' +
+                    '</select>' +
+                    '<button class="btn btn-primary" style="float: right;" onclick="upload_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\')">Upload</button>' +
+                '</div>' +
+                '<div style="width: 100%;margin-top: 5px;">' +
+                    '<input id="dd_file_for_upload_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
+                    '<input id="dd_link_for_upload_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
+                    '<div id="dd_drag_for_upload_'+panel.dataset.field+'" style="position: relative;height: 75px;display: none;border:2px dashed #ccc;">' +
+                        '<div style="position: absolute;z-index: 0;width: 100%;height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
+                    '</div>' +
+                '</div>';
+            panel.innerHTML = html;
+            panel.style.display = "block";
+            var dr = new Dropzone("#dd_drag_for_upload_"+panel.dataset.field, {
+                url: baseHttpUrl + "/UploadDDFile",
+                paramName: 'up_file',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                params: {
+                    table: table_meta.db_tb,
+                    table_id: panel.dataset.table,
+                    row: panel.dataset.row,
+                    field: panel.dataset.field
+                }
+            });
+            dr.on("success", function(file, resp) {
+                if (!resp.error) {
+                    were_uploaded_files = true;
+                    var btn = document.getElementById('modals_dd_'+(resp.is_img ? 'is' : 'not')+'_img_'+resp.key);
+                    var panel = btn.nextElementSibling;
+                    panel.style.display = "none";
+                    bind_dropdown_clicked(btn);
+
+                    btn = document.getElementById('modals_dd_upload_'+resp.key);
+                    panel = btn.nextElementSibling;
+                    panel.style.display = "none";
+                    bind_dropdown_clicked(btn);
+                }
+            });
+        } else {
+            var is_img = elem.dataset.info == 'is_img' ? '1' : '0';
+            $.ajax({
+                url: baseHttpUrl + '/getFilesForField?table_id='+panel.dataset.table+'&row_id='+panel.dataset.row+'&field='+panel.dataset.field+'&img='+is_img,
+                method: 'get',
+                success: function (resp) {
+                    var html = '<table class="table">' +
+                        '<thead><tr>' +
                         '<th>File</th>' +
                         '<th>Notes</th>' +
                         '<th>Actions</th>' +
-                    '</tr></thead>';
-                for (var i in resp) {
-                    html += '<tr>' +
-                        '<td><a target="_blank" href="/storage/'+resp[i].filepath+resp[i].filename+'">';
-                    if (is_img == '1') {
-                        html += '<img class="_img_preview" src="/storage/'+resp[i].filepath+resp[i].filename+'" alt="'+resp[i].filename+'" style="max-width: 250px; max-height: 150px;">';
-                    } else {
-                        html += resp[i].filename;
+                        '</tr></thead>';
+                    for (var i in resp) {
+                        html += '<tr>' +
+                            '<td><a target="_blank" href="/storage/'+resp[i].filepath+resp[i].filename+'">';
+                        if (is_img == '1') {
+                            html += '<img class="_img_preview" src="/storage/'+resp[i].filepath+resp[i].filename+'" alt="'+resp[i].filename+'" style="max-width: 250px; max-height: 150px;">';
+                        } else {
+                            html += resp[i].filename;
+                        }
+                        html += '</a></td>' +
+                            '<td><input class="form-control" '+(elem.dataset.edit == 0 ? 'readonly' : '')+' type="text" value="'+(resp[i].notes ? resp[i].notes : '')+'" onchange="change_dd_file(this, '+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')"></td>' +
+                            '<td style="text-align: center;">' +
+                            (
+                                elem.dataset.edit == 1 ?
+                                '<button class="btn btn-danger" onclick="delete_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')">&times;</button>' :
+                                ''
+                            ) +
+                            '</td>' +
+                            '</tr>';
                     }
-                    html += '</a></td>' +
-                        '<td><input class="form-control" type="text" value="'+(resp[i].notes ? resp[i].notes : '')+'" onchange="change_dd_file(this, '+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\')"></td>' +
-                        '<td style="text-align: center;"><button class="btn btn-danger" onclick="delete_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', \''+resp[i].filename+'\', '+is_img+')">&times;</button></td>' +
-                        '</tr>';
+                    html += '</table>';
+                    panel.innerHTML = html;
+                    panel.style.display = "block";
+                    if (is_img == '1') img_preview_activate();
                 }
-                html += '</table>' +
-                    '<div style="width: 100%;height:34px;">' +
-                        '<select class="form-control" style="width: 150px;float: left;" onchange="change_dd_type(this, \''+is_img+'_'+panel.dataset.field+'\')">' +
-                            '<option value="file">Browse</option>' +
-                            '<option value="link">Link</option>' +
-                            '<option value="drag">Drag & Drop</option>' +
-                        '</select>' +
-                        '<button class="btn btn-primary" style="float: right;" onclick="upload_dd_file('+panel.dataset.table+', '+panel.dataset.row+', \''+panel.dataset.field+'\', '+is_img+')">Upload</button>' +
-                    '</div>' +
-                    '<div style="width: 100%;margin-top: 5px;">' +
-                        '<input id="dd_file_for_'+is_img+'_'+panel.dataset.field+'" type="file" class="form-control" placeholder="Select a file">' +
-                        '<input id="dd_link_for_'+is_img+'_'+panel.dataset.field+'" type="text" class="form-control" placeholder="Type a link" style="display: none;">' +
-                        '<div id="dd_drag_for_'+is_img+'_'+panel.dataset.field+'" style="position: relative;height: 75px;display: none;border:2px dashed #ccc;">' +
-                            '<div style="position: absolute;z-index: 0;width: 100%;height: 75px;display: flex;justify-content: center;align-items: center;">Drag & Drop File Here</div>' +
-                        '</div>' +
-                    '</div>';
-                panel.innerHTML = html;
-                panel.style.display = "block";
-                var dr = new Dropzone("#dd_drag_for_"+is_img+'_'+panel.dataset.field, {
-                    url: baseHttpUrl + "/UploadDDFile",
-                    paramName: 'up_file',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    params: {
-                        table: table_meta.db_tb,
-                        table_id: panel.dataset.table,
-                        row: panel.dataset.row,
-                        field: panel.dataset.field
-                    }
-                });
-                dr.on("success", function(file, resp) {
-                    if (!resp.error) {
-                        var btn = document.getElementById('modals_dd_'+is_img+'_'+resp.key);
-                        var panel = btn.nextElementSibling;
-
-                        btn.dataset.val++;
-                        //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                        //btn.innerHTML = 'Files ('+btn.dataset.val+')';
-                        panel.style.display = "none";
-                        bind_dropdown_clicked(btn);
-                    }
-                });
-                img_preview_activate();
-            }
-        });
+            });
+        }
     }
 }
 
@@ -1872,15 +1913,15 @@ function change_dd_type(elem, id) {
     }
 }
 
-function upload_dd_file(table, row, field, is_img) {
+function upload_dd_file(table, row, field) {
     event.preventDefault();
 
     var data = new FormData();
 
-    if ($('#dd_link_for_'+is_img+'_'+field).val()) {
-        data.append('file_link', $('#dd_link_for_'+is_img+'_'+field).val());
+    if ($('#dd_link_for_upload_'+field).val()) {
+        data.append('file_link', $('#dd_link_for_upload_'+field).val());
     } else {
-        jQuery.each(jQuery('#dd_file_for_'+is_img+'_'+field)[0].files, function(i, file) {
+        jQuery.each(jQuery('#dd_file_for_upload_'+field)[0].files, function(i, file) {
             data.append('up_file', file);
         });
     }
@@ -1898,12 +1939,14 @@ function upload_dd_file(table, row, field, is_img) {
         method: 'POST',
         success: function(resp) {
             if (!resp.error) {
-                var btn = document.getElementById('modals_dd_'+is_img+'_'+field);
+                were_uploaded_files = true;
+                var btn = document.getElementById('modals_dd_'+(resp.is_img ? 'is' : 'not')+'_img_'+resp.key);
                 var panel = btn.nextElementSibling;
+                panel.style.display = "none";
+                bind_dropdown_clicked(btn);
 
-                btn.dataset.val++;
-                //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                //btn.innerHTML = 'Files ('+btn.dataset.val+')';
+                btn = document.getElementById('modals_dd_upload_'+resp.key);
+                panel = btn.nextElementSibling;
                 panel.style.display = "none";
                 bind_dropdown_clicked(btn);
             }
@@ -1911,7 +1954,8 @@ function upload_dd_file(table, row, field, is_img) {
     });
 }
 
-function delete_dd_file(table, row, field, filename, is_img) {
+function delete_dd_file(table, row, field, filename) {
+    event.preventDefault();
     swal({
         title: 'Delete file',
         text: 'Are you sure?',
@@ -1935,14 +1979,15 @@ function delete_dd_file(table, row, field, filename, is_img) {
                 method: 'POST',
                 success: function(resp) {
                     if (!resp.error) {
-                        var btn = document.getElementById('modals_dd_'+is_img+'_'+field);
-                        var panel = btn.nextElementSibling;
-
-                        btn.dataset.val--;
-                        //tableData[ btn.dataset.idx ][ btn.dataset.key ] = btn.dataset.val;
-                        //btn.innerHTML = 'Files ('+btn.dataset.val+')';
-                        panel.style.display = "none";
-                        bind_dropdown_clicked(btn);
+                        if ($('#modals').is(':visible')) {
+                            were_uploaded_files = true;
+                            var btn = document.getElementById('modals_dd_'+(resp.is_img ? 'is' : 'not')+'_img_'+resp.key);
+                            var panel = btn.nextElementSibling;
+                            panel.style.display = "none";
+                            bind_dropdown_clicked(btn);
+                        } else {
+                            changePage(selectedPage + 1);
+                        }
                     }
                 }
             });
@@ -2196,7 +2241,7 @@ function showFavoriteDataTable(headers, data) {
                     tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
+                    tableData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -2228,7 +2273,7 @@ function showFavoriteDataTable(headers, data) {
                     tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
+                    tbHiddenData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -4284,9 +4329,9 @@ function sent_csv_to_backend(is_upload) {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+' onchange="import_chaged_req(this)"></td>' +
                         '<td>' +
                             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
                             '<button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row('+i+')">&times;</button>' +
@@ -4355,9 +4400,9 @@ function import_test_db_connect() {
                         html += '<option '+(hdr.type == importTypesDDL[jdx].option ? 'selected="selected"' : '')+'>'+importTypesDDL[jdx].option+'</option>';
                     }
                     html += '</select></td>' +
-                        '<td><input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
+                        '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+(hdr.size ? hdr.size : '')+'" '+(hdr.auto || $.inArray(hdr.type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'></td>' +
                         '<td><input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+hdr.default+'" '+(hdr.auto ? 'readonly' : '')+'></td>' +
-                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+'></td>' +
+                        '<td><input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+(hdr.required ? 'checked' : '')+' '+(hdr.auto ? 'readonly' : '')+' onchange="import_chaged_req(this)"></td>' +
                         '<td>' +
                             '<input type="hidden" id="import_columns_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
                             '<button type="button" class="btn btn-default _freeze_for_modify _freeze_for_remote" onclick="import_del_row('+i+')">&times;</button>' +
@@ -4423,13 +4468,13 @@ function import_add_table_row() {
     }
     html += '</select></td>' +
         '<td>' +
-            '<input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'" '+($.inArray(inputed_type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'>' +
+            '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][size]" value="'+$('#import_columns_add_size').val()+'" '+($.inArray(inputed_type, ['Date','Date Time','Auto Number','Attachment']) != -1 ? 'readonly' : '')+'>' +
         '</td>' +
         '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
             '<input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][default]" value="'+$('#import_columns_add_default').val()+'">' +
         '</td>' +
         '<td class="import_not_reference_columns" '+(imp_type != 'ref' ? '' : 'style="display:none;"')+'>' +
-            '<input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+($('#import_columns_add_required').is(':checked') ? 'checked="checked"' : '')+'>' +
+            '<input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns['+i+'][required]" '+($('#import_columns_add_required').is(':checked') ? 'checked="checked"' : '')+' onchange="import_chaged_req(this)">' +
         '</td>' +
         '<td>' +
             '<input type="hidden" id="import_columns_ref_deleted_'+i+'" name="columns['+i+'][stat]" value="add">' +
@@ -4875,6 +4920,18 @@ function set_submit_action() {
 
     $('#import_columns_ref_field_'+row_idx).html(html);
 }*/
+
+function import_toggle_all_req() {
+    if ($('#import_check_all_req').is(':checked')) {
+        $('#import_main_columns tbody input[type="checkbox"]').prop('checked', true);
+    } else {
+        $('#import_main_columns tbody input[type="checkbox"]').prop('checked', true);
+    }
+}
+
+function import_chaged_req(elem) {
+    if($(elem).is(':checked')) $('#import_check_all_req').prop('checked',false);
+}
 
 function show_import_cols_numbers() {
     var evt = event || window.event;
@@ -5689,6 +5746,7 @@ function img_preview_activate() {
     $('._img_preview').on('mouseleave', function (e) {
         $('#_i_preview').html('').hide();
     });
+    $('._img_preview').removeClass('_img_preview');
 }
 
 $(document).on('click', function (e) {
@@ -5720,4 +5778,27 @@ function changeTheme(name) {
         $('.table>tbody>tr>td').css('background-color', '#ddd');
         currentTheme = 'dark';
     }
+}
+
+function hideEditPopUp() {
+    if (were_uploaded_files) {
+        were_uploaded_files = false;
+        changePage(selectedPage + 1);
+    }
+}
+
+function saveTableOwnerNotes(el) {
+    var notes = $(el).val();
+    $.ajax({
+        url: baseHttpUrl + '/updateTableRow?tableName=tb_notes&id=' + btoa(table_notes_owner_id) + '&notes=' + btoa(notes),
+        method: 'get'
+    });
+}
+
+function saveTableNotes(el) {
+    var notes = $(el).val();
+    $.ajax({
+        url: baseHttpUrl + '/updateTableRow?tableName=tb_notes&id=' + btoa(table_notes_user_id) + '&notes=' + btoa(notes),
+        method: 'get'
+    });
 }

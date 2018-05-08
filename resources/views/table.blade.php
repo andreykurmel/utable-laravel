@@ -197,18 +197,18 @@
 
                 <!-- Tabs -->
                 <ul class="tabs" style="width: fit-content;">
+                    @if($owner && $tableName)
+                        <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
+                    @endif
+                    @if(Auth::user() && $tableName)
+                        <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
+                    @endif
                     <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                     @if($tableName)
                         <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
                     @endif
                     @if($tableName == 'st')
                         <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
-                    @endif
-                    @if(Auth::user() && $tableName)
-                        <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
-                    @endif
-                    @if($owner && $tableName)
-                    <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                     @endif
                 </ul>
 
@@ -910,7 +910,7 @@
                                                                 <th>Type</th>
                                                                 <th>Size</th>
                                                                 <th>Default Value</th>
-                                                                <th>Required</th>
+                                                                <th>Required <input id="import_check_all_req" type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" onchange="import_toggle_all_req();"></th>
                                                                 <th>Delete</th>
                                                             </tr>
                                                             <tr class="import_reference_columns" style="display: none;">
@@ -946,13 +946,13 @@
                                                                     </select>
                                                                 </td>
                                                                 <td>
-                                                                    <input type="number" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto || in_array($hdr->type, ['Date','Date Time','Auto Number','Attachment']) ? 'readonly' : ''}}>
+                                                                    <input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][size]" value="{{ $hdr->maxlen }}" {{ $hdr->auto || in_array($hdr->type, ['Date','Date Time','Auto Number','Attachment']) ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="import_not_reference_columns">
                                                                     <input type="text" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][default]" value="{{ $hdr->default }}" {{ $hdr->auto ? 'readonly' : ''}}>
                                                                 </td>
                                                                 <td class="import_not_reference_columns">
-                                                                    <input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}}>
+                                                                    <input type="checkbox" class="form-control _freeze_for_modify _freeze_for_remote" name="columns[{{ $loop->index }}][required]" {{ $hdr->auto ? 'readonly' : ''}} {{ $hdr->auto || $hdr->required ? 'checked' : ''}} onchange="import_chaged_req(this)">
                                                                 </td>
                                                                 <td>
                                                                     <input type="hidden" id="import_columns_deleted_{{ $loop->index }}" name="columns[{{ $loop->index }}][stat]">
@@ -980,7 +980,7 @@
                                                                 </select>
                                                             </td>
                                                             <td>
-                                                                <input type="number" class="form-control import_columns_add" id="import_columns_add_size">
+                                                                <input type="text" class="form-control import_columns_add" id="import_columns_add_size">
                                                             </td>
                                                             <td class="import_not_reference_columns">
                                                                 <input type="text" class="form-control import_columns_add" id="import_columns_add_default">
@@ -1091,6 +1091,8 @@
                     Notes
                 </header>
                 <dl class="white-bg with-mid-padding" id="acd-notes" style="position:absolute;top: 38px;bottom: 0;right: 0;left: 0;overflow: hidden;">
+                    <textarea class="form-control" style="position: absolute; height: 49%;top: 1%; left: 1%; right: 1%;resize: none;" {{ $owner && $tableMeta ? 'onchange=saveTableOwnerNotes(this)' : 'disabled' }}>{{ $table_notes ? $table_notes['owner'] : '' }}</textarea>
+                    <textarea class="form-control" style="position: absolute; height: 49%;top: 50%; left: 1%; right: 1%;resize: none;" {{ $tableMeta && Auth::user() ? 'onchange=saveTableNotes(this)' : 'disabled' }}>{{ $table_notes ? $table_notes['user'] : '' }}</textarea>
                 </dl>
             </div>
         </section>
@@ -1101,7 +1103,7 @@
             <div class="modal-blocker visible"></div>
             <div class="modal" style="display:block;left: 20%;right: 30%; top: 23px; bottom: 23px; opacity: 1; margin-top: 0; max-height: 650px;">
                 <ul class="modal-actions children-tooltip">
-                    <li class="red-hover"><a href="javascript:void(0)" title="Close" onclick="$('.js-editmodal').hide();">Close</a></li>
+                    <li class="red-hover"><a href="javascript:void(0)" title="Close" onclick="$('.js-editmodal').hide();hideEditPopUp();">Close</a></li>
                 </ul>
                 <div class="modal-bg" style="height: 100%; position:relative;">
                     <div class="modal-content custom-scroll" style="box-shadow: none;border: none;position: absolute;top: 20px;left: 20px;right: 20px;bottom: 50px;">
@@ -1136,6 +1138,7 @@
                                             <ul class="tabs same-height" style="margin-top: 10px">
                                                 <li class="active" id="details_li_pictures"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowPictures()">Pictures</a></li>
                                                 <li id="details_li_files"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowFiles()">Files</a></li>
+                                                <li id="details_li_uploads"><a href="javascript:void(0)" class="with-small-padding" onclick="detailsShowUploads()">Uploads</a></li>
                                             </ul>
                                             <!-- Content -->
                                             <div class="tabs-content" style="position: absolute;top: 33px;left: 0;right: 0;bottom: 0;overflow: auto;">
@@ -1155,6 +1158,14 @@
                                                         </table>
                                                     </div>
                                                 </div>
+                                                <div id="details_uploads" class="tab-active" style="position: relative; width: 100%; height: 100%; display: none;">
+                                                    <div class="with-padding">
+                                                        <table align="center" border="1" cellspacing="0" style="background:white;color:black;width:100%;">
+                                                            <tbody id="modals_uploads">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1167,7 +1178,7 @@
                             <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
                             <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
                         @endif
-                        <button type="button" onclick="$('.js-editmodal').hide();" class="button small" style="float: right;margin-left: 10px;">Close</button>
+                        <button type="button" onclick="$('.js-editmodal').hide();hideEditPopUp();" class="button small" style="float: right;margin-left: 10px;">Close</button>
                         @if(Auth::user())
                             <button id="modal_btn_update" class="btn btn-info btn-sm" onclick="updateRowModal()" style="float: right;">Update</button>
                         @endif
@@ -1279,5 +1290,8 @@
         $importReferences = JSON.parse('{!! json_encode($importReferences) !!}');
         tablesDropDown = JSON.parse('{!! preg_replace('/\'/i', '`', json_encode($tablesDropDown)) !!}');
         allUsers = JSON.parse('{!! json_encode($allUsers) !!}');
+        table_notes_owner_id = {{ isset($table_notes['owner_id']) ? $table_notes['owner_id'] : 0 }};
+        table_notes_user_id = {{ isset($table_notes['user_id']) ? $table_notes['user_id'] : 0 }};
+        console.log(table_notes_owner_id, table_notes_user_id);
     </script>
 @endpush

@@ -91,11 +91,39 @@ class AppController extends Controller
 
         $tableName = $tableMeta ? $tableMeta->db_tb : '';
 
+        $table_notes = ['owner' => '', 'user' => ''];
+
         $selEntries = $tableName ? $this->getSelectedEntries($tableName) : 10;
         $settingsEntries = $tableName ? $this->getSelectedEntries('tb_settings_display') : 10;
 
         if ($tableMeta) {
             $tableMeta->conn_notes = json_decode($tableMeta->conn_notes);
+
+            //------------------ get table notes (owner`s and user`s)
+            $tn = DB::connection('mysql_sys')->table('tb_notes')->where('tb_id', '=', $tableMeta->id)->where('user_id', '=', 0)->first();
+            if (!$tn) {
+                DB::connection('mysql_sys')->table('tb_notes')->insert([
+                    'tb_id' => $tableMeta->id,
+                    'user_id' => 0
+                ]);
+                $tn = DB::connection('mysql_sys')->table('tb_notes')->where('tb_id', '=', $tableMeta->id)->where('user_id', '=', 0)->first();
+            }
+            $table_notes['owner'] = $tn->notes;
+            $table_notes['owner_id'] = $tn->id;
+
+            if (Auth::user()) {
+                $tn = DB::connection('mysql_sys')->table('tb_notes')->where('tb_id', '=', $tableMeta->id)->where('user_id', '=', Auth::user()->id)->first();
+                if (!$tn) {
+                    DB::connection('mysql_sys')->table('tb_notes')->insert([
+                        'tb_id' => $tableMeta->id,
+                        'user_id' => Auth::user()->id
+                    ]);
+                    $tn = DB::connection('mysql_sys')->table('tb_notes')->where('tb_id', '=', $tableMeta->id)->where('user_id', '=', Auth::user()->id)->first();
+                }
+                $table_notes['user'] = $tn->notes;
+                $table_notes['user_id'] = $tn->id;
+            }
+            //-------------------- end get table notes
         }
 
         $importHeaders = ($tableName ? $this->tableService->getImportHeaders($tableName) : []);
@@ -173,7 +201,8 @@ class AppController extends Controller
             'importConnections' => $connections,
             'tablesDropDown' => $tablesDropDown,
             'allUsers' => DB::connection('mysql')->table('users')->get(),
-            'public_tables' => $this->public_tables
+            'public_tables' => $this->public_tables,
+            'table_notes' => $table_notes
         ];
     }
 
