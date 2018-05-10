@@ -360,7 +360,7 @@
                 @if(Auth::user())
                     <li style="display: inline-block">
                         <a href="{{ route('profile') }}" style="display: flex;align-items: center;padding: 10px;">
-                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->avatar ? Auth::user()->avatar : url('assets/img/profile.png') }}" width="30" style="margin-right: 5px;">
+                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->avatar ? '/upload/users/'.Auth::user()->avatar : url('assets/img/profile.png') }}" width="30" style="margin-right: 5px;">
                             {{ Auth::user()->first_name ? Auth::user()->first_name." ".Auth::user()->last_name : Auth::user()->username }}
                         </a>
                     </li>
