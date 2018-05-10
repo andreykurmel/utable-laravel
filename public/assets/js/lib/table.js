@@ -400,7 +400,7 @@ function showDataTable(headers, data) {
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tableData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tableData += '</div></td>';
             }
@@ -480,7 +480,7 @@ function showDataTable(headers, data) {
                 if (headers[key].f_type == 'Attachment') {
                     tbHiddenData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tbHiddenData += '</div></td>';
             }
@@ -535,7 +535,7 @@ function showDataTable(headers, data) {
                 'style="text-align: center;position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
                 '>' +
                 '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
-                    headers[$hdr].unit +
+                (headers[$hdr]._u_factor ? headers[$hdr].unit_display :headers[$hdr].unit) +
                 '</span>' +
                 '</th>';
         }
@@ -685,7 +685,7 @@ function showFiltersList(filters) {
     for (var i = 0; i < filtersData.length; i++) {
         if (filtersData[i]) {
             filtersHTML += '<div>' +
-                '<dt onclick="showFilterTabs('+i+')">'+filtersData[i].name+'</dt>' +
+                '<dt onclick="showFilterTabs('+i+')">' + _.uniq( filtersData[i].name.split(',') ).join(' ') + '</dt>' +
                 '<dd class="acd-filter-elem" data-idx="'+i+'" style="position:relative;max-height: '+filterMaxHeight+'px;overflow: auto;'+(filtersData[i].name != curFilter ? 'display: none;' : '')+'">' +
                     '<div class="with-small-padding">' +
                         '<div class="blue-bg with-small-padding filterheader">' +
@@ -1391,11 +1391,11 @@ function showInlineEdit(id, instant) {
         return;
     }
 
-    //freeze 'unit' field if 'unit_ddl' is empty (for Settings/Display Tab)
+    //freeze 'unit' and 'unit_display' field if 'unit_ddl' is empty (for Settings/Display Tab)
     if (
         id.indexOf('settingsDisplay') > -1
         &&
-        key == 'unit'
+        (key == 'unit' || key == 'unit_display')
         &&
         !settingsTableData[idx].unit_ddl
     ) {
@@ -1438,7 +1438,7 @@ function showInlineEdit(id, instant) {
                 html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
             }
         } else
-        if (key == 'unit') {
+        if (key == 'unit' || key == 'unit_display') {
             for (var i in settingsDDLs) {
                 if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
                     for (var j in settingsDDLs[i].items) {
@@ -1595,7 +1595,11 @@ function updateRowData(idx, key, id, to_change) {
         }
     }
 
-    ltableData[idx][key] = $('#'+id).val();
+    if ($('#'+id).prop('type') == 'checkbox') {
+        ltableData[idx][key] = $('#'+id).is(':checked') ? 'No' : 'Yes';//reverted because we get previous state
+    } else {
+        ltableData[idx][key] = $('#'+id).val();
+    }
 
     var par_id = id.substr(0, id.length-4);
     $('#'+par_id).data('innerHTML', ltableData[idx][key]);
@@ -1618,8 +1622,12 @@ function updateRowModal() {
     var idx = $('.js-editmodal').data('idx'), d_key;
     for(var key in ltableHeaders) {
         d_key = ltableHeaders[key].field;
-        if ($.inArray(d_key, system_fields) == -1) {
-            ltableData[idx][d_key] = $('#modals_inp_'+d_key).val();
+        if ($.inArray(d_key, system_fields) == -1 && $('#modals_inp_'+d_key).length) {
+            if ($('#modals_inp_'+d_key).prop('type') == 'checkbox') {
+                ltableData[idx][d_key] = $('#modals_inp_'+d_key).is(':checked') ? 'Yes' : 'No';
+            } else {
+                ltableData[idx][d_key] = $('#modals_inp_'+d_key).val();
+            }
         }
     }
 
@@ -1674,8 +1682,8 @@ function editSelectedData(idx) {
         d_key = ltableHeaders[key].field;
         if ($.inArray(d_key, not_editable) == -1) {
             if (ltableHeaders[key].f_type == 'Attachment') {
-                htmlAttach += '<tr><td><label>' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label></td>' +
-                    '<td>';
+                htmlAttach += '<tr><td style="text-align: center;">' +
+                    '<label style="font-size: 1.7em;margin: 15px 0 5px 0;">' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label>';
                 if (idx > -1) {
                     htmlAttach += '<div style="margin-bottom: 5px;">' +
                         '<button class="dropdown_btn" id="modals_dd_[add_info]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-info="[add_info]" data-edit="'+ltableHeaders[key].can_edit+'" style="display: none;">' +
@@ -1696,6 +1704,12 @@ function editSelectedData(idx) {
                 if ($.inArray(d_key, system_fields) != -1) {
                     html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
                 } else
+                if (!lv && (d_key === 'web' || d_key === 'filter')) {
+                    html += '<label class="switch_t">' +
+                        '<input type="checkbox" id="modals_inp_'+d_key+'" '+(idx > -1 && ltableData[idx][d_key] == "Yes" ? 'checked' : '')+'>' +
+                        '<span class="toggler round"></span>' +
+                        '</label>';
+                } else
                 if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
                     html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
                 } else
@@ -1713,7 +1727,7 @@ function editSelectedData(idx) {
                             html += '<option value="'+i+'">'+tmp_ddl_id[i]+'</option>';
                         }
                     } else
-                    if (d_key == 'unit') {
+                    if (d_key == 'unit' || d_key == 'unit_display') {
                         for (var i in settingsDDLs) {
                             if (settingsDDLs[i].id == settingsTableData[idx].unit_ddl) {
                                 for (var j in settingsDDLs[i].items) {
@@ -1748,7 +1762,7 @@ function editSelectedData(idx) {
                     html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" readonly/>';
                 }
                 html += '</td>';
-                html += '<td><label style="padding: 0 15px;">' + (ltableHeaders[key].unit ? ltableHeaders[key].unit : '')  + '</label></td>';
+                html += '<td><label style="padding: 0 15px;">' + (ltableHeaders[key].unit ? (ltableHeaders[key]._u_factor ? ltableHeaders[key].unit_display : ltableHeaders[key].unit) : '')  + '</label></td>';
                 html += "</tr>";
             }
         }
@@ -1778,7 +1792,7 @@ function editSelectedData(idx) {
                 });
                 $('#modals_inp_'+d_key).val( (usr && usr.first_name ? usr.first_name : '') + ' ' + (usr && usr.last_name ? usr.last_name : '') );
             } else {
-                $('#modals_inp_'+d_key).val( ltableData[idx][d_key] );
+                $('#modals_inp_'+d_key).val( (ltableHeaders[key]._u_factor ? getUnitConversion(ltableHeaders[key], ltableData[idx][d_key]) : ltableData[idx][d_key]) );
             }
         }
     }
@@ -2249,7 +2263,7 @@ function showFavoriteDataTable(headers, data) {
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tableData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tableData += '</div></td>';
             }
@@ -2281,7 +2295,7 @@ function showFavoriteDataTable(headers, data) {
                     });
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tbHiddenData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tbHiddenData += '</div></td>';
             }
@@ -2330,7 +2344,7 @@ function showFavoriteDataTable(headers, data) {
             tbDataHeaders += '<th ' +
                 'data-key="' + headers[$hdr].field + '" ' +
                 'style="text-align: center;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;' : '') + '">' +
-                    headers[$hdr].unit +
+                (headers[$hdr]._u_factor ? headers[$hdr].unit_display : headers[$hdr].unit) +
                 '</th>';
         }
     }
@@ -2488,7 +2502,7 @@ function favoritesCopyToClipboard() {
             for (var j = 0; j < selectedColumns.length; j++) {
                 for (var k = 0; k < favoriteTableHeaders.length; k++) {
                     if (favoriteTableHeaders[k].field == selectedColumns[j] && favoriteTableHeaders[k].unit) {
-                        textToClip += "<th>" + favoriteTableHeaders[k].unit + "</th>";
+                        textToClip += "<th>" + (favoriteTableHeaders[k]._u_factor ? favoriteTableHeaders[k].unit_display : favoriteTableHeaders[k].unit) + "</th>";
                     }
                 }
             }
@@ -2499,7 +2513,11 @@ function favoritesCopyToClipboard() {
             var idx = $(elem).data('idx');
             textToClip += "<tr>";
             for (var j = 0; j < selectedColumns.length; j++) {
-                textToClip += "<td>" + favoriteTableData[ idx ][ selectedColumns[j] ] + "</td>";
+                for (var k = 0; k < favoriteTableHeaders.length; k++) {
+                    if (favoriteTableHeaders[k].field == selectedColumns[j]) {
+                        textToClip += "<td>" + (favoriteTableHeaders[k]._u_factor ? getUnitConversion(favoriteTableHeaders[k], favoriteTableData[ idx ][ selectedColumns[j] ]) : favoriteTableData[ idx ][ selectedColumns[j] ]) + "</td>";
+                    }
+                }
             }
             textToClip += "</tr>";
         });
@@ -2507,6 +2525,7 @@ function favoritesCopyToClipboard() {
 
         $(document.body).append(textToClip);
         copyToClipboard(tableForCopy);
+        $('#tableForCopy').remove();
     } else {
         swal({
             title: "Not available",
@@ -2663,11 +2682,27 @@ function showSettingsDataTable(headers, data) {
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
                     'data-settings="true"' +
-                    ($.inArray(d_key, system_fields) == -1 && d_key != 'field' && d_key != 'name' ? 'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' : '') + //canEditSettings
+                    (
+                        $.inArray(d_key, system_fields) == -1 && d_key != 'field' && d_key != 'name' && d_key != 'web' && d_key != 'filter' ?
+                        'onclick="showInlineEdit(\'' + headers[key].field + i + '_settingsDisplay\', '+authUser+')"' :
+                        ''
+                    ) + //canEditSettings
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (d_key === 'web' || d_key === 'filter') {
+                    tableData += '<label class="switch_t">' +
+                        '<input type="checkbox" id="'+headers[key].field + i + '_settingsDisplay_inp" '+(data[i][d_key] == "Yes" ? 'checked' : '')+'>' +
+                        '<span ' +
+                        (
+                            authUser ?
+                            'onclick="updateRowData('+i+',\''+d_key+'\',\''+headers[key].field + i + '_settingsDisplay_inp\', \''+authUser+'\')" ' :
+                            'onclick="updateSettingsRowLocal('+i+',\''+d_key+'\',\''+headers[key].field + i + '_settingsDisplay_inp\')"'
+                        ) +
+                        'class="toggler round"></span>' +
+                        '</label>';
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -2700,6 +2735,12 @@ function showSettingsDataTable(headers, data) {
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
                     tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                } else
+                if (d_key === 'web' || d_key === 'filter') {
+                    tbHiddenData += '<label class="switch_t">' +
+                        '<input type="checkbox">' +
+                        '<span class="toggler round"></span>' +
+                        '</label>';
                 } else
                 if (d_key === 'dfot_odr') {
                     tbHiddenData += '<button class="btn btn-sm" style="width: 100%">'+ key +'</button>';
@@ -3058,19 +3099,7 @@ function updateSettingsRowLocal(idx, key, id) {
     var val = $('#'+id).val();
     var header_key = settingsTableData[idx]['field'];
     if (key == "sum") {
-        /*$scope.sumArr = [];
-        for (var l = 0; l < $scope.uTableSettings.length; l++) {
-            if ($scope.uTableSettings[l].tb_id == $scope.selectedTableId && $scope.uTableSettings[l].sum == 'Yes') {
-                $scope.sumArr.push({ "key": $scope.uTableSettings[l].field, "total": 0 });
-            }
-        }
-        for (var k = 0; k < $scope.selectedTableData.length;k++) {
-            for (var m = 0; m < $scope.sumArr.length;m++) {
-                if ($scope.selectedTableData[k][$scope.sumArr[m].key] && !isNaN($scope.selectedTableData[k][$scope.sumArr[m].key])) {
-                    $scope.sumArr[m].total += Number($scope.selectedTableData[k][$scope.sumArr[m].key]);
-                }
-            }
-        }*/
+        //
     } else if (key == "filter") {
         if (val == "Yes") {
             $.ajax({
@@ -5733,21 +5762,21 @@ function img_preview_activate() {
         var c = (img.t != "") ? "<br/>" + img.t : "";
         $("#_i_preview").html("<img src='" + img.attr('src') + "' alt='Image preview' style='max-width: 750px; max-height: 450px;'/>").show();
         $("#_i_preview").css({
-            "top": (e.pageY + xOffset) + "px",
-            "left": (e.pageX + yOffset) + "px"
-        });
-    });
-    $('._img_preview').on('mousemove', function (e) {
-        $("#_i_preview").css({
-            "top": (e.pageY + xOffset) + "px",
-            "left": (e.pageX + yOffset) + "px"
+            "top": /*(e.pageY + xOffset) +*/ "50%",
+            "left": /*(e.pageX + yOffset) + */"50%",
+            "transform": "translate(-50%, -50%)"
         });
     });
     $('._img_preview').on('mouseleave', function (e) {
-        $('#_i_preview').html('').hide();
+        if (e.relatedTarget.id != '_i_preview' && e.relatedTarget.parentNode.id != '_i_preview') {
+            $('#_i_preview').html('').hide();
+        }
     });
     $('._img_preview').removeClass('_img_preview');
 }
+$('#_i_preview').on('mouseleave', function (e) {
+    $('#_i_preview').html('').hide();
+});
 
 $(document).on('click', function (e) {
     if (e.target.id != 'download_icon') {
@@ -5801,4 +5830,20 @@ function saveTableNotes(el) {
         url: baseHttpUrl + '/updateTableRow?tableName=tb_notes&id=' + btoa(table_notes_user_id) + '&notes=' + btoa(notes),
         method: 'get'
     });
+}
+
+function getUnitConversion(conv, val) {
+    if (conv._u_opr == 'add') {
+        return val + conv._u_factor;
+    }
+    if (conv._u_opr == 'substract') {
+        return val - conv._u_factor;
+    }
+    if (conv._u_opr == 'divide') {
+        return val / conv._u_factor;
+    }
+    if (conv._u_opr == 'multiply') {
+        return val * conv._u_factor;
+    }
+    return '';
 }

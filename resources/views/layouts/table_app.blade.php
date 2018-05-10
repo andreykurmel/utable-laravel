@@ -26,8 +26,9 @@
 
     <style>
         @keyframes move-twink-back {
-            0%  {font-size: 0;}
-            100% {font-size: 100%;}
+            0%  {opacity: 1;font-size: 0;}
+            90% {opacity: 1;font-size: 100%;}
+            100% {opacity: 0;font-size: 100%;}
         }
 
         html, body {
@@ -268,6 +269,66 @@
         .link_with_deleter:hover > span {
             display: inline;
         }
+
+
+        /* The switch - the box around the toggler */
+        .switch_t {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch_t input {display:none;}
+
+        /* The toggler */
+        .switch_t .toggler {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .switch_t .toggler:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .switch_t input:checked + .toggler {
+            background-color: #2196F3;
+        }
+
+        .switch_t input:focus + .toggler {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        .switch_t input:checked + .toggler:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Rounded togglers */
+        .switch_t .toggler.round {
+            border-radius: 34px;
+        }
+
+        .switch_t .toggler.round:before {
+            border-radius: 50%;
+        }
     </style>
 
     @stack('styles')
@@ -298,8 +359,8 @@
             <ul class="nav navbar-nav navbar-right" style="float: right;">
                 @if(Auth::user())
                     <li style="display: inline-block">
-                        <a href="{{ route('profile') }}">
-                            <i class="fa fa-user"></i>
+                        <a href="{{ route('profile') }}" style="display: flex;align-items: center;padding: 10px;">
+                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->avatar ? Auth::user()->avatar : url('assets/img/profile.png') }}" width="30" style="margin-right: 5px;">
                             {{ Auth::user()->first_name ? Auth::user()->first_name." ".Auth::user()->last_name : Auth::user()->username }}
                         </a>
                     </li>

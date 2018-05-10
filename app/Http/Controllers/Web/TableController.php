@@ -36,8 +36,18 @@ class TableController extends Controller
     }
 
     public function getTables(Request $request) {
-        $this->getUser();
-        return $this->user->id;
+        if ($request->create > 0) {
+            for ($i = $request->create; $i < $request->create+5000; $i++) {
+                DB::connection('mysql_data')->table('st')->insert([
+                    'site_name' => 'test_'.$i,
+                    'site_id' => 'i_'.$i,
+                    'street' => 'street_'.$i,
+                    'lat_dec' => $i,
+                    'long_dec' => $i,
+                ]);
+            }
+            return "done! rows - ".DB::connection('mysql_data')->table('st')->count();
+        }
     }
 
     public function getSelectedTable(Request $request) {
@@ -1036,7 +1046,6 @@ class TableController extends Controller
                     'name' => (!empty($col['header']) ? $col['header'] : $col['field']),
                     'web' => (in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
                     'filter' => 'No',
-                    'sum' => 'No',
                     'input_type' => 'Input',
                     'min_wth' => 0,
                     'max_wth' => 0,
@@ -1234,7 +1243,6 @@ class TableController extends Controller
                         'name' => $col['header'],
                         'web' => (in_array($col['field'], $this->system_fields) ? 'No' : 'Yes'),
                         'filter' => 'No',
-                        'sum' => 'No',
                         'input_type' => 'Input',
                         'min_wth' => 0,
                         'max_wth' => 0,
@@ -1498,13 +1506,13 @@ class TableController extends Controller
                 'field' => $request->field,
                 'filepath' => $filePath,
                 'filename' => $fileName,
-                'is_img' => (in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
+                'is_img' => (in_array($ext, ['jpg', 'jpeg', 'gif', 'png']) ? 1 : 0)
             ]);
         }
         return [
             'error' => !$res,
             'key' => $request->field,
-            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
+            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'gif', 'png']) ? 1 : 0)
         ];
     }
 
@@ -1549,7 +1557,7 @@ class TableController extends Controller
         return [
             'error' => !$res,
             'key' => $request->field,
-            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'png']) ? 1 : 0)
+            'is_img' => (isset($ext) && in_array($ext, ['jpg', 'jpeg', 'gif', 'png']) ? 1 : 0)
         ];
     }
 }

@@ -646,10 +646,14 @@ class TableService {
     }
 
     private function selectHeaders($table_meta, $user_id) {
-        return DB::connection('mysql_sys')->table('tb_settings_display as tsd')
+        return DB::connection('mysql_sys')
+            ->table('tb_settings_display as tsd')
+            ->leftJoin('unit_conversion as uc', function ($q) {//join unit conversion
+                $q->whereRaw('uc.tb_id = tsd.tb_id AND uc.from_unit = tsd.unit AND uc.to_unit = tsd.unit_display');
+            })
             ->where('tsd.user_id', '=', $user_id ? $user_id : $table_meta->owner)
             ->where('tsd.tb_id', '=', $table_meta->id)
-            ->selectRaw('tsd.*, '.($user_id ? 'tsd.showhide as is_showed' : '1 as is_showed'))
+            ->selectRaw('tsd.*, uc.factor as `_u_factor`, uc.opr as `_u_opr`, '.($user_id ? 'tsd.showhide as is_showed' : '1 as is_showed'))
             ->orderBy('tsd.order')
             ->orderBy('tsd.id')
             ->get();
@@ -673,7 +677,7 @@ class TableService {
 
         DB::connection('mysql_sys')->table('permissions_fields')
             ->where('permissions_id', '=', $res['id'])
-            ->whereIn('field', ['name','web','filter','sum','min_wth','max_wth','order','showhide','notes'])
+            ->whereIn('field', ['name','web','filter','min_wth','max_wth','order','showhide','notes'])
             ->update([
                 'view' => 1
             ]);
