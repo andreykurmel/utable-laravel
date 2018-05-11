@@ -81,6 +81,7 @@
             <!-- Main title -->
             <div id="main-toolbar" class="colvisopts with-small-padding" style="position: absolute; top: 0; font-size:14px;z-index:1000;right: 10px;display: none;">
                 <div style="display: flex;align-items: center;">
+                    <button class="btn btn-primary" style="width: 40px;height: 30px;font-size: 0.7em;padding: 0;white-space: normal;margin-right: 10px;" onclick="saveView()">Save View</button>
                     <img id="rowHeightSize" src="/img/row_height.png" height="35" onclick="$('#rowHeightSize_Menu').toggle();" style="cursor: pointer;">
                     <div id="rowHeightSize_Menu" style="position: absolute;top: 37px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 80px; right:99%;">
                         <img id="rh_small" src="/img/row_height_active.png" height="20" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Small')">
@@ -1272,6 +1273,43 @@
             </div>
         </div>
         <div class="editSidebarTableForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.editSidebarTableForm').hide()"></div>
+
+        {{-- Table edit from sidebar form --}}
+        <div class="transferTableForm" style="position: fixed; top: 0; z-index: 1500;left: calc(50% - 180px);display: none;">
+            <div class="auth" style="font-size: 14px;">
+                <div class="auth-form" style="padding: 15px 15px 5px 15px;">
+                    <div class="form-wrap" style="padding: 15px;">
+                        <h1 style="margin: 0; padding: 0;">Transfer table</h1>
+                        <div style="width: 350px;">
+                            <input type="hidden" id="transfer_table_id">
+                            <input type="hidden" id="transfer_tab">
+                            <input type="hidden" id="transfer_elem_id">
+
+                            <div class="form-group input-icon">
+                                <label for="sidebar_table_name">Select user</label>
+                                <select id="transferUserSearch"></select>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="button" class="btn btn-custom btn-lg btn-block" style="width: 49%;display: inline-block;" onclick="popup_transfer_table()">
+                                    Transfer
+                                </button>
+                                <a href="javascript:void(0)" onclick="$('.transferTableForm').hide();" style="width: 49%;display: inline-block;margin: 0;" class="btn btn-default btn-lg btn-block">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12" style="text-align: center;font-size: 12px;">
+                            <p>@lang('app.copyright') © - {{ settings('app_name') }} {{ date('Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="transferTableForm" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; z-index: 1000; background: #000;display: none;" onclick="$('.transferTableForm').hide()"></div>
 
         <div id='_i_preview' style="position:fixed; z-index: 999999; border: 3px solid #ccc; border-radius: 5px;background-color: #fff;display: none;"></div>
     </div>

@@ -29,7 +29,7 @@ $(document).ready(function () {
         axis: "y"
     });
 
-    $('#selectUserSearch').select2({
+    $('#selectUserSearch, #transferUserSearch').select2({
         ajax: {
             url: baseHttpUrl+'/ajaxSearchUser',
             dataType: 'json',
@@ -52,7 +52,7 @@ $(document).ready(function () {
         if (e.keyCode == 27) {
             //hide popups by pressing 'esc'
             $('.loginForm, .registerForm, .passResetForm').hide();
-            $('#modals, .editSidebarTableForm').hide();
+            $('#modals, .editSidebarTableForm, .transferTableForm').hide();
             hideEditPopUp();
         }
         if (e.keyCode == 37) {
@@ -531,8 +531,10 @@ function showDataTable(headers, data) {
         if (headers[$hdr].unit) {
             tbDataHeaders += '<th ' +
                 'data-key="' + headers[$hdr].field + '" ' +
-                'data-idx="' + (headers[$hdr].rows_ord-1) + '"' +
+                'data-idx="' + $hdr + '"' +
                 'style="text-align: center;position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
+                'style="position: relative;' + (headers[$hdr].web == 'No' || !headers[$hdr].is_showed ? 'display: none;"' : '"') +
+                (headers[$hdr].unit_ddl ? 'onclick="showHeaderInlineEdit(this)"' : '') +
                 '>' +
                 '<span draggable="true" style="text-align: center;white-space: normal;display: inline-block; '+(headers[$hdr].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[$hdr].dfot_wth-27)+'px;' : '')+'">' +
                 (headers[$hdr]._u_factor ? headers[$hdr].unit_display :headers[$hdr].unit) +
@@ -1358,6 +1360,41 @@ function searchKeywordChanged() {
     changePage(1);
 }
 
+function showHeaderInlineEdit(elem) {
+    var idx = $(elem).data('idx'),
+        key = $(elem).data('key');
+
+    if ($(elem).data('innerHTML')) {
+        return;
+    }
+
+    //save current cell data
+    $(elem).data('innerHTML', $(elem).find('span').html());
+
+    var html = '<select class="form-control" ' +
+        'id="HeaderInlineEdit_inp" ' +
+        'onblur="editHeaderBlur(this)" ' +
+        'onchange="updateRowData('+idx+',\''+key+'\',\'HeaderInlineEdit_inp\', \'settings\')" ' +
+        'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;z-index: 999;">';
+    for (var i in settingsDDLs) {
+        if (settingsDDLs[i].id == tableHeaders[idx].unit_ddl) {
+            for (var j in settingsDDLs[i].items) {
+                html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+            }
+        }
+    }
+    html += '</select>';
+
+    $(elem).html(html);
+    $('#HeaderInlineEdit_inp').val( $(elem).data('innerHTML') );
+    $('#HeaderInlineEdit_inp').focus();
+}
+
+function editHeaderBlur(el) {
+    var par = $(el).parent();
+    $(par).html( '<span>'+$(par).data('innerHTML')+'</span>' ).data('innerHTML', '');
+}
+
 function showInlineEdit(id, instant) {
     var lv = $('#list_view').is(':visible'),
         ltableDDls = (lv ? tableDDLs : settingsTableDDLs);
@@ -1365,6 +1402,7 @@ function showInlineEdit(id, instant) {
     var inp_t = $('#'+id).data('input'),
         idx = $('#'+id).data('idx'),
         key = $('#'+id).data('key');
+    console.log(idx, tableHeaders[idx]);
 
 
 
@@ -1433,6 +1471,15 @@ function showInlineEdit(id, instant) {
             'onblur="hideInlineEdit(\''+id+'\')" ' +
             (instant ? 'onchange="updateRowData('+idx+',\''+key+'\',\''+id+'_inp\', \''+instant+'\')" ' : not_instant_func) +
             'style="position:absolute;top: 0;left: 0;width: 100%;height: 100%;z-index: 999;">';
+        if (instant == 'settings') {
+            for (var i in settingsDDLs) {
+                if (settingsDDLs[i].id == tableHeaders[idx].unit_ddl) {
+                    for (var j in settingsDDLs[i].items) {
+                        html += '<option value="'+settingsDDLs[i].items[j].option+'">'+settingsDDLs[i].items[j].option+'</option>';
+                    }
+                }
+            }
+        } else
         if (key == 'ddl_id' || key == 'unit_ddl') {
             for(var i in ltableDDls['ddl_id']) {
                 html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
@@ -1567,11 +1614,15 @@ function updateRow(params, idx, to_change) {
             if (response.msg) {
                 alert(response.msg);
             }
-            if (lv) {
-                showDataTable(tableHeaders, tableData);
+            if (to_change == 'settings') {
+                changePage(selectedPage+1);
             } else {
-                showSettingsDataTable(settingsTableHeaders, settingsTableData);
-                changePageWhenList = true;
+                if (lv) {
+                    showDataTable(tableHeaders, tableData);
+                } else {
+                    showSettingsDataTable(settingsTableHeaders, settingsTableData);
+                    changePageWhenList = true;
+                }
             }
         },
         error: function () {
@@ -1583,13 +1634,14 @@ function updateRow(params, idx, to_change) {
 
 function updateRowData(idx, key, id, to_change) {
     var lv = $('#list_view').is(':visible'),
-        ltableData = (lv && to_change != 'settings' ? tableData : settingsTableData);
+        ltableData = (lv && to_change != 'settings' ? tableData : settingsTableData),
+        ltableHeaders = (lv && to_change != 'settings' ? tableHeaders : settingsTableHeaders);
 
     if (to_change == 'settings') {
         for (var tb in tableHeaders) {
             if (tableHeaders[tb].field == key) {
-                key = 'unit';
-                tableHeaders[tb].unit = $('#'+id).val();
+                key = 'unit_display';
+                tableHeaders[tb].unit_display = $('#'+id).val();
                 break;
             }
         }
@@ -1598,7 +1650,12 @@ function updateRowData(idx, key, id, to_change) {
     if ($('#'+id).prop('type') == 'checkbox') {
         ltableData[idx][key] = $('#'+id).is(':checked') ? 'No' : 'Yes';//reverted because we get previous state
     } else {
-        ltableData[idx][key] = $('#'+id).val();
+        for (var k in ltableHeaders) {
+            var d_key = ltableHeaders[k].field;
+            if (d_key == key) {
+                ltableData[idx][key] = (ltableHeaders[k]._u_factor ? getRevConversion(ltableHeaders[k], $('#'+id).val()) : $('#'+id).val());
+            }
+        }
     }
 
     var par_id = id.substr(0, id.length-4);
@@ -1626,7 +1683,7 @@ function updateRowModal() {
             if ($('#modals_inp_'+d_key).prop('type') == 'checkbox') {
                 ltableData[idx][d_key] = $('#modals_inp_'+d_key).is(':checked') ? 'Yes' : 'No';
             } else {
-                ltableData[idx][d_key] = $('#modals_inp_'+d_key).val();
+                ltableData[idx][d_key] = (ltableHeaders[key]._u_factor ? getRevConversion(ltableHeaders[key], $('#modals_inp_'+d_key).val()) : $('#modals_inp_'+d_key).val());
             }
         }
     }
@@ -5265,6 +5322,20 @@ function jsTreeBuild($tab) {
                                         swal('Create link', 'Please select target folder.');
                                     }
                                 },
+                                "transfer": {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": "Transfer",
+                                    "action": function (obj) {
+                                        var elem_id = $('#tablebar_'+$tab+'_div').jstree('get_selected');
+                                        var elem = $('#tablebar_'+$tab+'_div').jstree('get_node', elem_id);
+                                        $('#transfer_table_id').val( elem.data ? elem.data.tb_id : elem.li_attr['data-tb_id'] );
+                                        $('#transfer_tab').val( $tab );
+                                        $('#transfer_elem_id').val( elem_id );
+                                        $('#transferUserSearch').val( '' );
+                                        $('.transferTableForm').show();
+                                    }
+                                },
                                 "remove": {
                                     "separator_before": false,
                                     "separator_after": false,
@@ -5525,6 +5596,31 @@ function jsTreeBuild($tab) {
     });
     $(document).on('click', function () {
         $('#ctxMenu_tablebar').html('');
+    });
+}
+
+function popup_transfer_table() {
+    var $tab = $('#transfer_tab').val(),
+        $elem_id = $('#transfer_elem_id').val();
+
+    $.ajax({
+        method: 'POST',
+        url: baseHttpUrl + '/transferTable',
+        data: {
+            'to_user_id': $('#transferUserSearch').val(),
+            'table_id': $('#transfer_table_id').val()
+        },
+        success: function (response) {
+            if (response.error) {
+                swal(response.msg);
+            } else {
+                $('#tablebar_'+$tab+'_div').jstree().delete_node($elem_id);
+            }
+            $('.transferTableForm').hide();
+        },
+        error: function () {
+            alert("Server error");
+        }
     });
 }
 
@@ -5846,4 +5942,91 @@ function getUnitConversion(conv, val) {
         return val * conv._u_factor;
     }
     return '';
+}
+
+function getRevConversion(conv, val) {
+    if (conv._u_opr == 'add') {
+        return val - conv._u_factor;
+    }
+    if (conv._u_opr == 'substract') {
+        return val + conv._u_factor;
+    }
+    if (conv._u_opr == 'divide') {
+        return val * conv._u_factor;
+    }
+    if (conv._u_opr == 'multiply') {
+        return val / conv._u_factor;
+    }
+    return '';
+}
+
+
+
+
+function saveView() {
+    swal({
+            title: "New table view",
+            text: "Write name for current view:",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: true,
+            animation: "slide-from-top",
+            inputPlaceholder: "View name"
+        },
+        function (inputValu) {
+            if (inputValu === false) return false;
+
+            if (inputValu === "") {
+                swal.showInputError("You need to write something!");
+                return false
+            }
+
+            var query = {};
+            if (searchKeyword) {
+                query.searchKeyword = searchKeyword;
+            }
+            if (selectedTableName == 'st') {
+                if ($('#frm-search-address').is(':visible')) {
+                    query.opt = 'address';
+                    query.street = $("#frm-address").val();
+                    query.city = $("#frm-city").val();
+                    query.state = $("#frm-state").val();
+                    query.county = $("#frm-county").val();
+                } else if ($('#frm-search-latlng').is(':visible')) {
+                    query.opt = 'lat';
+                    query.lat_dec = $("#frm-dec-lat").val();
+                    query.long_dec = $("#frm-dec-lng").val();
+                    query.distance = $("#frm-dec-radius").val();
+                }
+            }
+            query.sortCol = sortCol;
+            query.sortASC = sortASC;
+
+            $.ajax({
+                url: baseHttpUrl+'/saveTableView',
+                method: 'POST',
+                data: {
+                    table_id: table_meta.id,
+                    view_name: inputValu,
+                    table: selectedTableName,
+                    page: selectedPage,
+                    hdrs: btoa(JSON.stringify(tableHeaders)),
+                    filters: btoa(JSON.stringify(filtersData)),
+                    querys: btoa(JSON.stringify(query))
+                },
+                success: function (resp) {
+                    /*var newNode = {
+                        text: inputValu,
+                        icon: 'fa fa-folder',
+                        li_attr: {
+                            'data-type':'folder',
+                            'data-menu_id':resp.last_id
+                        }
+                    };
+
+                    $('#tablebar_'+$tab+'_div').jstree().create_node('#', newNode, 'last', false, false);*/
+                }
+            });
+        }
+    );
 }

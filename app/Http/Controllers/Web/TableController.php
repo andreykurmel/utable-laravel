@@ -1262,6 +1262,38 @@ class TableController extends Controller
         return 'done';
     }
 
+    public function transferTable(Request $request) {
+        $table = DB::connection('mysql_sys')->table('tb')->where('id', '=', $request->table_id)->first();
+        $to_user_id = $request->to_user_id;
+        if (Auth::user() && Auth::user()->id == $table->owner) {
+            DB::connection('mysql_sys')->table('tb')->where('id', '=', $table->id)->update([
+                'owner' => $to_user_id
+            ]);
+            DB::connection('mysql_sys')->table('menutree_2_tb')->where('tb_id', '=', $table->id)->delete();
+        }
+    }
+
+    public function saveTableView(Request $request) {
+        $table = DB::connection('mysql_sys')->table('tb')->where('id', '=', $request->table_id)->first();
+        if (Auth::user() && Auth::user()->id == $table->owner) {
+            $pathHash = md5(random_bytes(32));
+            DB::connection('mysql_sys')->table('tb_views')->insert([
+                'path_hash' => $pathHash,
+                'view_name' => $request->view_name,
+                'table_name' => $request->table,
+                'page' => $request->page,
+                'headers' => base64_decode($request->hdrs),
+                'filters' => base64_decode($request->filters),
+                'querys' => base64_decode($request->querys),
+                'createdBy' => Auth::user()->id,
+                'createdOn' => now(),
+                'modifiedBy' => Auth::user()->id,
+                'modifiedOn' => now()
+            ]);
+        }
+        return (isset($pathHash) ? $pathHash : '');
+    }
+
     public function menutree_addfolder(Request $request) {
         $id = DB::connection('mysql_sys')->table('menutree')->insert([
             'parent_id' => $request->parent_id,

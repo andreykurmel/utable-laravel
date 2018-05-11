@@ -400,10 +400,12 @@ Route::get('/web/settingsForCreateMySQL', 'AppController@showSettingsForCreateTa
 Route::post('/web/settingsForCreate', 'AppController@showSettingsForCreateTable')->name('showSettingsForCreateTable');
 Route::post('/web/createTableFromMenu', 'TableController@createTableFromMenu')->name('createTableFromMenu');
 Route::post('/web/createTable', 'TableController@createTable')->name('createTable');
+Route::post('/web/transferTable', 'TableController@transferTable')->name('transferTable');
 Route::post('/web/replaceTable', 'TableController@replaceTable')->name('replaceTable');
 Route::post('/web/modifyTable', 'TableController@modifyTable')->name('modifyTable');
 Route::post('/web/remoteTable', 'TableController@remoteTable')->name('remoteTable');
 Route::post('/web/refTable', 'TableController@refTable')->name('refTable');
+Route::post('/web/saveTableView', 'TableController@saveTableView')->name('saveTableView');
 Route::post('/web/UploadDDFile', 'TableController@UploadDDFile')->name('UploadDDFile');
 Route::post('/web/ChangeDDFile', 'TableController@ChangeDDFile')->name('ChangeDDFile');
 Route::post('/web/DeleteDDFile', 'TableController@DeleteDDFile')->name('DeleteDDFile');
@@ -431,5 +433,6 @@ Route::group(['middleware' => 'test.subdomain'], function () {
 //    Route::get('/data/{group}/{tableName}', 'AppController@homepageGroupedTable')->name('group.table');
     Route::get('/data', 'AppController@homepage')->name('homepage');
     Route::get('/data/{table}', 'AppController@homepageTable')->name('homepageTable')->where(['table' => '.+']);
+    Route::get('/view/{view}', 'AppController@homepageView')->name('homepageView')->where(['view' => '.+']);
     //Route::get('/file/{filepath}', 'AppController@getFile')->name('getFile')->where(['filepath' => '.+']);
 });

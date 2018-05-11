@@ -78,10 +78,27 @@ class AppController extends Controller
         }
     }
 
-    private function getVariables($tablePath = "") {
-        $pathElems = explode('/', $tablePath);
-        $tableFullName = end($pathElems);
-        $pathCount = count($pathElems) - 1;
+    public function homepageView($view) {
+        if ($this->viewExist($view)) {
+            return view('table', $this->getVariables($view, true));
+        } else {
+            return redirect( route('homepage') );
+        }
+    }
+
+    private function getVariables($tablePath = "", $is_view = false) {
+        if ($is_view) {
+            $tableFullName = DB::connection('mysql_sys')
+                ->table('tb_views as tv')
+                ->join('tb', 'tb.db_tb', '=', 'tv.table_name')
+                ->where('tv.path_hash', '=', $tablePath)
+                ->first();
+            $tableFullName = $tableFullName->name;
+        } else {
+            $pathElems = explode('/', $tablePath);
+            $tableFullName = end($pathElems);
+            $pathCount = count($pathElems) - 1;
+        }
 
         $tableMeta = $tableFullName
             ?
@@ -291,8 +308,14 @@ class AppController extends Controller
                 });
             //}
             $tables = $tables->get();
+
+            $views = DB::connection('mysql_sys')->table('tb_views')
+                ->where('createdBy', '=', Auth::user()->id)
+                ->selectRaw("*, 0 as m2t_id, 0 as menutree_id, 'eye' as link_type")
+                ->get();
         } else {
             $tables = [];
+            $views = [];
         }
 
         //links can be found on each tab
@@ -311,6 +334,9 @@ class AppController extends Controller
             ->get();
 
         //connect tables and links with folders structure (menutree)
+        foreach ($views as $vw) {
+            $this->add_tb($vw, $res_arr);
+        }
         foreach ($tables as $tb) {
             $this->add_tb($tb, $res_arr);
         }
@@ -348,41 +374,56 @@ class AppController extends Controller
             $html .= '<ul>';
             if ($res_arr->tables) {
                 foreach ($res_arr->tables as $table) {
-                    if ($tab == 'public') {
-                        preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
-                        //get subdomain from root folder or fall to 'general'
-                        $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
-                        $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
-                            .preg_replace('/'.$pub_subdomain.'\//i','', $url)
-                            .$table->name;
+                    //show 'views'
+                    if ($table->link_type == 'eye') {
+                        $link = config('app.url').'/view/'.$table->path_hash;
+
+                        $html .= '<li 
+                            data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' 
+                            data-type="'.$table->link_type.'" 
+                            data-m2t_id="'.$table->m2t_id.'" 
+                            data-tb_id="'.$table->id.'" 
+                            data-href="'.$link.'" 
+                        ><a href="'.$link.'">'.$table->view_name.'</a></li>';
+
+                    //show 'tables' and 'links'
                     } else {
-                        $link = config('app.url').$url.$table->name;
-                    }
+                        if ($tab == 'public') {
+                            preg_match('/\/data\/([^\/]*)/i', $url, $pub_subdomain);
+                            //get subdomain from root folder or fall to 'general'
+                            $pub_subdomain = $pub_subdomain ? $pub_subdomain[1] : 'general';
+                            $link = preg_replace('/\/\/www\./i', '//www.'.($pub_subdomain ? $pub_subdomain.'.' : ''), config('app.url'))
+                                .preg_replace('/'.$pub_subdomain.'\//i','', $url)
+                                .$table->name;
+                        } else {
+                            $link = config('app.url').$url.$table->name;
+                        }
 
-                    $html .= '<li 
-                        data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' 
-                        data-type="'.$table->link_type.'" 
-                        data-m2t_id="'.$table->m2t_id.'" 
-                        data-tb_id="'.$table->id.'" 
-                        data-tb_name="'.$table->name.'" 
-                        data-tb_db="'.$table->db_tb.'" 
-                        data-tb_nbr="'.$table->nbr_entry_listing.'" 
-                        data-tb_notes="'.$table->notes.'" 
-                        data-href="'.$link.'" 
-                    ><a href="'.$link.'">'.$table->name.'</a></li>';
+                        $html .= '<li 
+                            data-jstree=\'{"icon":"fa fa-'.$table->link_type.'"}\' 
+                            data-type="'.$table->link_type.'" 
+                            data-m2t_id="'.$table->m2t_id.'" 
+                            data-tb_id="'.$table->id.'" 
+                            data-tb_name="'.$table->name.'" 
+                            data-tb_db="'.$table->db_tb.'" 
+                            data-tb_nbr="'.$table->nbr_entry_listing.'" 
+                            data-tb_notes="'.$table->notes.'" 
+                            data-href="'.$link.'" 
+                        ><a href="'.$link.'">'.$table->name.'</a></li>';
 
-                    if ($tab == 'favorite') {
-                        $this->links[$table->db_tb] = [
-                            'li' => $link,
-                            'name' => $table->name
-                        ];
-                    }
+                        if ($tab == 'favorite') {
+                            $this->links[$table->db_tb] = [
+                                'li' => $link,
+                                'name' => $table->name
+                            ];
+                        }
 
-                    if ($tab == 'public') {
-                        $this->public_tables[] = [
-                            'li' => $link,
-                            'name' => $table->name
-                        ];
+                        if ($tab == 'public') {
+                            $this->public_tables[] = [
+                                'li' => $link,
+                                'name' => $table->name
+                            ];
+                        }
                     }
                 }
             }
@@ -433,6 +474,10 @@ class AppController extends Controller
     private function getSelectedEntries($tableName) {
         $tb = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $tableName)->first();
         return $tb->nbr_entry_listing;
+    }
+
+    private function viewExist($viewPath) {
+        return DB::connection('mysql_sys')->table('tb_views')->where('path_hash', '=', $viewPath)->count();
     }
 
     private function tableExist($tableName) {
