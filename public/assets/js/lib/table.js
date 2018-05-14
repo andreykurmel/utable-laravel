@@ -14,13 +14,18 @@ $(document).ready(function () {
 
     $('#tableChanger').val( window.location.href  );
 
-    if (selectedTableName) {
-        selectTable(selectedTableName);
-        if (authUser) {//canEditSettings
-            getDDLdatas(selectedTableName);
-            getRightsDatas(selectedTableName);
+    if (view_id) {
+        selectView(view_id);
+    } else {
+        if (selectedTableName) {
+            selectTable(selectedTableName);
+            if (authUser) {//canEditSettings
+                getDDLdatas(selectedTableName);
+                getRightsDatas(selectedTableName);
+            }
         }
     }
+
 
     $(".table_body_viewport").mCustomScrollbar({
         scrollbarPosition: "outside",
@@ -163,9 +168,42 @@ var settingsTableName = 'tb_settings_display',
     changePageWhenList = false,
     sortCol = '', sortASC = false,
     currentTheme = '',
-    were_uploaded_files = false;
+    were_uploaded_files = false,
+    listViewNeedToUpdate = false;
 
 /* -------------------- Functions ---------------------- */
+
+function selectView(view_id) {
+    $('.loadingFromServer').show();
+    $.ajax({
+        method: 'POST',
+        url: baseHttpUrl + '/getSelectedTable?tableView=' + view_id,
+        success: function(response) {
+            if (response.msg) {
+                alert(response.msg);
+            }
+
+            selectedPage = response.page;
+            searchKeyword = response.search;
+            rowsCount = response.rows;
+            tableData = response.data;
+            tableHeaders = response.headers;
+            //tableDDLs = response.ddls;
+            showDataTable(tableHeaders, tableData);
+            showFiltersList(response.filters);
+            showTableFooter();
+            $('.loadingFromServer').hide();
+            $('.colvisopts').show();
+            if (rowsCount > selectedEntries) {
+                $('._tables_pagination').show();
+            }
+        },
+        error: function () {
+            alert("Server error");
+            $('.loadingFromServer').hide();
+        }
+    });
+}
 
 function selectTable(tableName) {
     $('.loadingFromServer').show();
@@ -343,7 +381,7 @@ function showDataTable(headers, data) {
 
         //second column ("star")
         if (authUser) {
-            if (userOwner) {
+            if (userOwner && !view_id) {
                 tableData +=
                     '<td style="min-width: 65px;font-size: 1.5em; text-align: center;">' +
                         '<a href="javascript:void(0)" onclick="toggleFavoriteRow(' + i + ',this)">' +
@@ -381,7 +419,7 @@ function showDataTable(headers, data) {
                     'data-key="' + headers[key].field + '"' +
                     'data-input="' + headers[key].input_type + '"' +
                     'data-idx="' + i + '"' +
-                    ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                    ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit && !view_id ?
                         'onclick="showInlineEdit(\'' + headers[key].field + i + '_dataT\', 1)"' :
                         '') +
                     'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
@@ -400,7 +438,7 @@ function showDataTable(headers, data) {
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tableData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
+                    tableData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tableData += '</div></td>';
             }
@@ -422,7 +460,7 @@ function showDataTable(headers, data) {
                         'data-key="' + headers[key].field + '"' +
                         'data-input="' + headers[key].input_type + '"' +
                         'data-idx="' + i + '"' +
-                        ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit ?
+                        ($.inArray(d_key, system_fields) == -1 && headers[key].f_type != 'Attachment' && headers[key].can_edit && !view_id ?
                             'onclick="showInlineEdit(\'' + headers[key].field + i + headers[key].input_type + '_addrow\', 0)"' :
                             '') +
                         'style="position:relative;' + (headers[key].web == 'No' || !headers[key].is_showed ? 'display: none;' : '') +
@@ -480,7 +518,7 @@ function showDataTable(headers, data) {
                 if (headers[key].f_type == 'Attachment') {
                     tbHiddenData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
+                    tbHiddenData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tbHiddenData += '</div></td>';
             }
@@ -693,13 +731,13 @@ function showFiltersList(filters) {
                         '<div class="blue-bg with-small-padding filterheader">' +
                             '<span class="checkbox replacement '+(filtersData[i].checkAll ? 'checked' : '')+'" tabindex="0" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].checkAll=!filtersData['+i+'].checkAll;filterCheckAll('+i+', filtersData['+i+'].checkAll)">' +
                                 '<span class="check-knob"></span>' +
-                                '<input id="" checked="" class="" name="County" type="checkbox" value="County" tabindex="-1">' +
+                                '<input id="" checked="" class="" name="County" type="checkbox" value="County" tabindex="-1" '+(view_id ? 'disabled' : '')+'>' +
                             '</span>Check/Uncheck All' +
                         '</div>' +
                         '<ul class="list">';
             for (var j = 0; j < filtersData[i].val.length; j++) {
                 filtersHTML += '<li>' +
-                                '<span class="checkbox replacement mr5 '+(filtersData[i].val[j].checked ? 'checked' : '')+'" onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].val['+j+'].checked=!filtersData['+i+'].val['+j+'].checked;filterTable('+i+', filtersData['+i+'].val['+j+'].value, filtersData['+i+'].val['+j+'].checked)">' +
+                                '<span class="checkbox replacement mr5 '+(filtersData[i].val[j].checked ? 'checked' : '')+'" '+(view_id ? 'onclick="curFilter=filtersData['+i+'].name;filtersData['+i+'].val['+j+'].checked=!filtersData['+i+'].val['+j+'].checked;filterTable('+i+', filtersData['+i+'].val['+j+'].value, filtersData['+i+'].val['+j+'].checked)"' : '')+'>' +
                                     '<span class="check-knob"></span><input type="checkbox" />' +
                                 '</span>' +
                                 '<span>' + filtersData[i].val[j].value + '</span>' +
@@ -1057,6 +1095,10 @@ function showList() {
     if (changePageWhenList) {
         changePage(selectedPage+1);
         changePageWhenList = false;
+    }
+    if (listViewNeedToUpdate) {
+        selectTable(selectedTableName);
+        listViewNeedToUpdate = false;
     }
 }
 
@@ -1734,7 +1776,7 @@ function editSelectedData(idx) {
         if (ltableHeaders[key].web == 'No' || !ltableHeaders[key].is_showed) {
             continue;//show fields only showed in the 'list view'
         }
-        if (ltableHeaders[key].can_edit) hide_update = false;
+        if (ltableHeaders[key].can_edit && !view_id) hide_update = false;
 
         d_key = ltableHeaders[key].field;
         if ($.inArray(d_key, not_editable) == -1) {
@@ -1743,7 +1785,7 @@ function editSelectedData(idx) {
                     '<label style="font-size: 1.7em;margin: 15px 0 5px 0;">' + _.uniq( ltableHeaders[key].name.split(',') ).join(' ')  + '</label>';
                 if (idx > -1) {
                     htmlAttach += '<div style="margin-bottom: 5px;">' +
-                        '<button class="dropdown_btn" id="modals_dd_[add_info]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-info="[add_info]" data-edit="'+ltableHeaders[key].can_edit+'" style="display: none;">' +
+                        '<button class="dropdown_btn" id="modals_dd_[add_info]_'+d_key+'" data-idx="'+idx+'" data-key="'+d_key+'" data-info="[add_info]" data-edit="'+(ltableHeaders[key].can_edit && !view_id  ? '1' : '0')+'" style="display: none;">' +
                         'Files (0)' +
                         '</button>' +
                         '<div data-table="'+ltableHeaders[key].tb_id+'" data-row="'+ltableData[idx].id+'" data-field="'+d_key+'" class="dropdown_body"></div>' +
@@ -1767,10 +1809,10 @@ function editSelectedData(idx) {
                         '<span class="toggler round"></span>' +
                         '</label>';
                 } else
-                if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit) {
+                if (ltableHeaders[key].input_type == 'Input' && ltableHeaders[key].can_edit && !view_id) {
                     html += '<input id="modals_inp_'+d_key+'" type="text" class="form-control" />';
                 } else
-                if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit) {
+                if (ltableHeaders[key].input_type == 'Selection' && ltableHeaders[key].can_edit && !view_id) {
                     if (ltableDDLs[d_key]) {
                         var tmp_ddl = ltableDDLs[d_key];
                     }
@@ -2320,7 +2362,7 @@ function showFavoriteDataTable(headers, data) {
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tableData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
+                    tableData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tableData += '</div></td>';
             }
@@ -2352,7 +2394,7 @@ function showFavoriteDataTable(headers, data) {
                     });
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
+                    tbHiddenData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? (headers[key]._u_factor ? getUnitConversion(headers[key], data[i][d_key]) : data[i][d_key]) : '');
                 }
                 tbHiddenData += '</div></td>';
             }
@@ -2772,7 +2814,7 @@ function showSettingsDataTable(headers, data) {
                         '<span draggable="true">' + get_calc_odr(data[i].field) + '</span>' +
                         '</button>';
                 } else {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tableData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tableData += '</div></td>';
             }
@@ -2808,7 +2850,7 @@ function showSettingsDataTable(headers, data) {
                     });
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tbHiddenData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</div></td>';
             }
@@ -3306,6 +3348,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                     'data-idx="' + i + '"' +
                     'data-table="' + add_table_name + '"' +
                     'data-table_idx="' + idx + '"' +
+                    'data-real_val="' + (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '') + '"' +
                     (($.inArray(d_key, edited_fields) > -1) ? 'onclick="'+func_name+'(\'' + d_key + i + add_id_name + '\', 1)"' : '') +
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">';
                 if (idx == -1 && d_key === 'tb_id') {
@@ -3319,8 +3362,26 @@ function showSettingsDDLDataTable(headers, data, idx) {
                         return el.id === data[i][d_key];
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                } else
+                if (d_key == 'ref_tb') {
+                    var tb = tablesDropDown.find(function (el) {
+                        return el.db_tb === data[i][d_key];
+                    });
+                    if (tb) tableData += tb.name;
+                } else
+                if (d_key == 'ref_tb_field' || d_key == 'comp_ref_field' || d_key == 'comp_tar_field') {
+                    var cmp = (d_key == 'comp_tar_field' ? table_meta.db_tb : data[i]['ref_tb']);
+                    var tb = tablesDropDown.find(function (el) {
+                        return el.db_tb === cmp;
+                    });
+                    if (tb) {
+                        var fld = tb.items.find(function (el) {
+                            return el.field === data[i][d_key];
+                        });
+                        if (fld) tableData += fld.name;
+                    }
                 } else {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tableData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -3344,8 +3405,26 @@ function showSettingsDDLDataTable(headers, data, idx) {
                         return el.id === data[i][d_key];
                     });
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
+                } else
+                if (d_key == 'ref_tb') {
+                    var tb = tablesDropDown.find(function (el) {
+                        return el.db_tb === data[i][d_key];
+                    });
+                    if (tb) tableData += tb.name;
+                } else
+                if (d_key == 'ref_tb_field' || d_key == 'comp_ref_field' || d_key == 'comp_tar_field') {
+                    var cmp = (d_key == 'comp_tar_field' ? table_meta.db_tb : data[i]['ref_tb']);
+                    var tb = tablesDropDown.find(function (el) {
+                        return el.db_tb === cmp;
+                    });
+                    if (tb) {
+                        var fld = tb.items.find(function (el) {
+                            return el.field === data[i][d_key];
+                        });
+                        if (fld) tableData += fld.name;
+                    }
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tbHiddenData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }
@@ -3366,6 +3445,7 @@ function showSettingsDDLDataTable(headers, data, idx) {
                 'id="add_' + d_key + add_id_name + '"' +
                 'data-key="' + d_key + '"' +
                 'data-table="' + add_table_name + '"' +
+                'data-real_val=""' +
                 (($.inArray(d_key, edited_fields) > -1) ? 'onclick="'+func_name+'(\'add_' + d_key + add_id_name + '\', 0)"' : '') +
                 'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                     (($.inArray(d_key, edited_fields) == -1) ? 'auto' : '') +
@@ -3404,7 +3484,7 @@ function showInlineEdit_REFDDL(id, isUpdate) {
         return;
     }
 
-    $('#'+id).data('innerHTML', $('#'+id).html());
+    $('#'+id).data('innerHTML', $('#'+id).data('real_val'));
     var key = $('#'+id).data('key'),
         idx = $('#'+id).data('idx'),
         html, options;
@@ -3543,7 +3623,7 @@ function showInlineEdit_SDDL(id, isUpdate) {
         return;
     }
 
-    $('#'+id).data('innerHTML', $('#'+id).html());
+    $('#'+id).data('innerHTML', $('#'+id).data('real_val'));
     var inp_t = $('#'+id).data('input'),
         idx = $('#'+id).data('idx'),
         key = $('#'+id).data('key'),
@@ -3581,8 +3661,9 @@ function showInlineEdit_SDDL(id, isUpdate) {
 
 function updateSettingsDDL(id) {
     //update in the table view
+    var show_val = document.getElementById(id).tagName == 'SELECT' ? $('#'+id+' option:selected').text() : $('#'+id).val();
     var par_id = id.substr(0, id.length-4);
-    $('#'+par_id).data('innerHTML', $('#'+id).val());
+    $('#'+par_id).data('innerHTML', show_val);
 
     var table = $('#'+id).data('table'),
         idx = $('#'+id).data('idx'),
@@ -3631,8 +3712,9 @@ function updateSettingsDDL(id) {
 
 function addSettingsDDL(id) {
     //update in the table view
+    var show_val = document.getElementById(id).tagName == 'SELECT' ? $('#'+id+' option:selected').text() : $('#'+id).val();
     var par_id = id.substr(0, id.length-4);
-    $('#'+par_id).data('innerHTML', $('#'+id).val());
+    $('#'+par_id).data('innerHTML', show_val);
 
     var table = $('#'+id).data('table'),
         key_name = $('#'+id).data('key');
@@ -3680,6 +3762,7 @@ function deleteSettingsDDL(tableName, rowId, idx) {
 }
 
 function saveSettingsDDLRow(tableName) {
+    listViewNeedToUpdate = true;
     if (tableName == 'ddl') {
         settingsDDL_Obj['items'] = [];
         settingsDDL_Obj['referencing'] = [];
@@ -3871,7 +3954,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
                     });
                     if (usr) tableData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tableData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tableData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tableData += '</td>';
             }
@@ -3900,7 +3983,7 @@ function showSettingsRightsDataTable(headers, data, idx) {
                     });
                     if (usr) tbHiddenData += (usr.first_name ? usr.first_name : '') + ' ' + (usr.last_name ? usr.last_name : '');
                 } else {
-                    tbHiddenData += (data[i][d_key] !== null ? data[i][d_key] : '');
+                    tbHiddenData += (data[i][d_key] !== null && data[i][d_key] !== undefined ? data[i][d_key] : '');
                 }
                 tbHiddenData += '</td>';
             }
@@ -5733,6 +5816,7 @@ function tableStretch() {
     localStorage.setItem('stretched_tables', stretchedtables ? '1' : '0');
     $('#tableStretch_btn_top').css('color', !stretchedtables ? '#ccc' : '#444');
     $('#tableStretch_btn_btm').css('color', stretchedtables ? '#ccc' : '#444');
+    showDataTable(tableHeaders, tableData);
 }
 
 function SpanColumnsWithTheSameData(id) {

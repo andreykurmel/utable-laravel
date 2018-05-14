@@ -81,7 +81,9 @@
             <!-- Main title -->
             <div id="main-toolbar" class="colvisopts with-small-padding" style="position: absolute; top: 0; font-size:14px;z-index:1000;right: 10px;display: none;">
                 <div style="display: flex;align-items: center;">
-                    <button class="btn btn-primary" style="width: 40px;height: 30px;font-size: 0.7em;padding: 0;white-space: normal;margin-right: 10px;" onclick="saveView()">Save View</button>
+                    @if(!$view_id)
+                        <button class="btn btn-primary" style="width: 40px;height: 30px;font-size: 0.7em;padding: 0;white-space: normal;margin-right: 10px;" onclick="saveView()">Save View</button>
+                    @endif
                     <img id="rowHeightSize" src="/img/row_height.png" height="35" onclick="$('#rowHeightSize_Menu').toggle();" style="cursor: pointer;">
                     <div id="rowHeightSize_Menu" style="position: absolute;top: 37px;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 80px; right:99%;">
                         <img id="rh_small" src="/img/row_height_active.png" height="20" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Small')">
@@ -89,7 +91,7 @@
                         <img id="rh_big" src="/img/row_height_fade.png" height="40" style="padding: 0 5px;cursor: pointer;" onclick="changeDataTableRowHeight('Big')">
                     </div>
                     <div id="tables_btns" style="display: inline-block;margin-left: 15px;">
-                        @if(Auth::user())
+                        @if(Auth::user() && !$view_id)
                             <div class="listview_btns" style="display: inline-block">
                                 <a href="javascript:void(0)" class="button blue-gradient glossy" onclick="addData()">Add</a>
                                 <input type="checkbox" style="position:relative;top: 4px;width: 20px;height: 20px;" id="addingIsInline" onclick="checkboxAddToggle()">
@@ -106,7 +108,7 @@
                             @endif
                         </div>
                     </div>
-                    @if(Auth::user() && $tableName)
+                    @if(Auth::user() && $tableName && !$view_id)
                         <div style="display: inline-block;">
                             <a href="javascript:void(0)" style="padding: 15px;" onclick="toggleFavoriteTable(this)" title="Favorite table">
                                 <i class="fa {{ ($favorite == 'Active' ? 'fa-star' : 'fa-star-o') }}" style="font-size: 1.5em;"></i>
@@ -114,7 +116,7 @@
                         </div>
                     @endif
                     <div class="showhidemenu" style='margin-right: 10px;display: inline-block;position: relative;top: -1px;'>
-                        <button class="btn btn-default" style="border: none;" onclick="if ($('#searchKeywordDiv').is(':visible')) { $('#searchKeywordDiv').hide() } else { $('#searchKeywordDiv').show();$('#searchKeywordInp').focus(); }">
+                        <button class="btn btn-default" style="border: none;" onclick="if ($('#searchKeywordDiv').is(':visible')) { $('#searchKeywordDiv').hide() } else { $('#searchKeywordDiv').show();$('#searchKeywordInp').val(searchKeyword).focus(); }">
                             <i class="fa fa-search" style="font-size: 1.5em;"></i>
                         </button>
                         <div id="searchKeywordDiv" class="dataTables_filter" style="position: absolute;right: 0;top: 35px;padding: 0;display: none;">
@@ -198,17 +200,17 @@
 
                 <!-- Tabs -->
                 <ul class="tabs" style="width: fit-content;">
-                    @if($owner && $tableName)
+                    @if($owner && $tableName && !$view_id)
                         <li id="li_import_view"><a href="javascript:void(0)" onclick="showImport()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px">Data</a></li>
                     @endif
-                    @if(Auth::user() && $tableName)
+                    @if(Auth::user() && $tableName && !$view_id)
                         <li id="li_settings_view"><a href="javascript:void(0)" onclick="showSettings()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-settings icon-size2"> </i> Settings</a></li>
                     @endif
                     <li class="active" id="li_list_view"><a href="javascript:void(0)" onclick="showList()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">i</span></i> List View</a></li>
                     @if($tableName)
                         <li id="li_favorite_view"><a href="javascript:void(0)" onclick="showFavorite()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="fa fa-star"></span></i> Favorite</a></li>
                     @endif
-                    @if($tableName == 'st')
+                    @if($tableName == 'st' && !$view_id)
                         <li id="li_map_view"><a href="javascript:void(0)" onclick="showMap()" class='with-med-padding' style="padding-bottom:12px;padding-top:12px"><i class="icon-size2"><span class="font-icon">0</span></i> Map View</a></li>
                     @endif
                 </ul>
@@ -1175,7 +1177,7 @@
                         </div>
                     </div>
                     <div style="position:absolute; bottom: 10px; right: 20px; left: 20px;">
-                        @if($owner)
+                        @if($owner && !$view_id)
                             <button id="modal_btn_delete" class="btn btn-danger" onclick="deleteRowModal()" style="float: left;">Delete</button>
                             <button id="modal_btn_add" class="btn btn-success" onclick="addRowModal()" style="float: left;">Add</button>
                         @endif
@@ -1330,6 +1332,6 @@
         allUsers = JSON.parse('{!! json_encode($allUsers) !!}');
         table_notes_owner_id = {{ isset($table_notes['owner_id']) ? $table_notes['owner_id'] : 0 }};
         table_notes_user_id = {{ isset($table_notes['user_id']) ? $table_notes['user_id'] : 0 }};
-        console.log(table_notes_owner_id, table_notes_user_id);
+        view_id = '{{ $view_id ? $view_id : '' }}';
     </script>
 @endpush

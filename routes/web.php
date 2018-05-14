@@ -436,3 +436,4 @@ Route::group(['middleware' => 'test.subdomain'], function () {
     Route::get('/view/{view}', 'AppController@homepageView')->name('homepageView')->where(['view' => '.+']);
     //Route::get('/file/{filepath}', 'AppController@getFile')->name('getFile')->where(['filepath' => '.+']);
 });
+Route::post('/sendEmail', 'AppController@sendEmail')->name('sendEmail');

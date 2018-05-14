@@ -5,6 +5,7 @@ namespace Vanguard\Http\Controllers\Web;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Vanguard\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -219,7 +220,8 @@ class AppController extends Controller
             'tablesDropDown' => $tablesDropDown,
             'allUsers' => DB::connection('mysql')->table('users')->get(),
             'public_tables' => $this->public_tables,
-            'table_notes' => $table_notes
+            'table_notes' => $table_notes,
+            'view_id' => ($is_view ? $tablePath : false)
         ];
     }
 
@@ -749,5 +751,18 @@ class AppController extends Controller
         $to_view['headers'] = $headers;
         $to_view['data_csv'] = '';
         return $to_view;
+    }
+
+    public function sendEmail(Request $request) {
+        if ($request->email && $request->msg) {
+            Mail::send('emails.contact', ['msg' => $request->msg, 'email' => $request->email], function ($mail) use ($request) {
+                $mail->from($request->email);
+                $mail->to( config('mail.from.address') );
+                if ($request->hasFile('attach')) {
+                    $mail->attach($request->attach->path());
+                }
+            });
+        }
+        return redirect()->to(route('landing'));
     }
 }

@@ -29,15 +29,28 @@ class TableService {
     }
 
     public function getData($post) {
-        $fromMainData = isset($post->from_main_data) ? 1 : 0;
-        $tableName = $post->tableName;
         $responseArray = array();
-        $page = isset($post->p) ? (int)$post->p : 0;
-        $count = isset($post->c) ? (int)$post->c : 0;
-        $query = isset($post->q) && !empty((array)json_decode(base64_decode($post->q))) ? (array)json_decode(base64_decode($post->q)) : ['opt' => ''];
-        $fields = isset($post->fields) ? (array)json_decode(base64_decode($post->fields)) : [];
-        $filterData = isset($post->filterData) ? (array)json_decode(base64_decode($post->filterData)) : [];
-        $changedFilter = isset($post->changedFilter) && $post->changedFilter ? json_decode(base64_decode($post->changedFilter)) : false;
+        if ($post->tableView) {
+            $view_obj = DB::connection('mysql_sys')->table('tb_views')->join('tb', 'tb.db_tb', '=', 'tb_views.table_name')->where('path_hash', '=', $post->tableView)->first();
+
+            $fromMainData = 1;
+            $tableName = $view_obj->table_name;
+            $page = $view_obj->page;
+            $count = $view_obj->nbr_entry_listing ? $view_obj->nbr_entry_listing : 0;
+            $query = (array)json_decode($view_obj->querys);
+            $fields = (array)json_decode($view_obj->headers);
+            $filterData = (array)json_decode($view_obj->filters);
+            $changedFilter = false;
+        } else {
+            $fromMainData = isset($post->from_main_data) ? 1 : 0;
+            $tableName = $post->tableName;
+            $page = isset($post->p) ? (int)$post->p : 0;
+            $count = isset($post->c) ? (int)$post->c : 0;
+            $query = isset($post->q) && !empty((array)json_decode(base64_decode($post->q))) ? (array)json_decode(base64_decode($post->q)) : ['opt' => ''];
+            $fields = isset($post->fields) ? (array)json_decode(base64_decode($post->fields)) : [];
+            $filterData = isset($post->filterData) ? (array)json_decode(base64_decode($post->filterData)) : [];
+            $changedFilter = isset($post->changedFilter) && $post->changedFilter ? json_decode(base64_decode($post->changedFilter)) : false;
+        }
         if (!isset($query['opt'])) {
             $query['opt'] = "";
         }
@@ -49,7 +62,7 @@ class TableService {
         }
 
         $fields_for_settings_select = [];
-        if ($post->tableSelected && Auth::user()) {
+        if ($post->tableSelected && Auth::user() && !$post->tableView) {
             $table_sel = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $post->tableSelected)->first();
             if (
                 $table_sel->owner != Auth::user()->id
@@ -72,38 +85,46 @@ class TableService {
         }
         $mysql_conn = $table_meta->is_system ? 'mysql_sys' : 'mysql_data';
 
-        $available_rows = $this->getPermissionsRows(Auth::user() ? Auth::user()->id : 0, $table_meta->id);
+        if (!$post->tableView) {
+            $available_rows = $this->getPermissionsRows(Auth::user() ? Auth::user()->id : 0, $table_meta->id);
+        } else {
+            $available_rows = [];
+        }
 
         $fields_for_select = [];
-        if (Auth::user()) {
-            if (
-                //not admin
-                //Auth::user()->role_id != 1
-                //&&
-                //not owner
-                $table_meta->owner != Auth::user()->id
-            ) {
-                $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_meta->id);
-                if (!$tmp_fields_set) {
-                    $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
+        if (!$post->tableView) {
+            if (Auth::user()) {
+                if (
+                    //not admin
+                    //Auth::user()->role_id != 1
+                    //&&
+                    //not owner
+                    $table_meta->owner != Auth::user()->id
+                ) {
+                    $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_meta->id);
+                    if (!$tmp_fields_set) {
+                        $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
+                    }
+                    foreach ($tmp_fields_set as $fld) {
+                        if ($fld->view) {
+                            $fields_for_select[$fld->field] = $fld->edit;
+                        }
+                    }
+                    $fields_for_select['id'] = 0;
+                } else {
+                    $fields_for_select = 1;
                 }
+            } else {
+                $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
                 foreach ($tmp_fields_set as $fld) {
                     if ($fld->view) {
                         $fields_for_select[$fld->field] = $fld->edit;
                     }
                 }
                 $fields_for_select['id'] = 0;
-            } else {
-                $fields_for_select = 1;
             }
         } else {
-            $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
-            foreach ($tmp_fields_set as $fld) {
-                if ($fld->view) {
-                    $fields_for_select[$fld->field] = $fld->edit;
-                }
-            }
-            $fields_for_select['id'] = 0;
+            $fields_for_select = 1;
         }
 
         $sql = DB::connection($mysql_conn)->table($tableName);
@@ -367,8 +388,10 @@ class TableService {
         $responseArray["data"] = array();
         $responseArray["filters"] = $respFilters;
         $responseArray["ddls"] = $respDDLs;
+        $responseArray["page"] = $page;
+        $responseArray["search"] = isset($query['searchKeyword']) ? $query['searchKeyword']  : '';
         $responseArray["rows"] = $rowsCount;
-        $responseArray["headers"] = $headers;
+        $responseArray["headers"] = (isset($view_obj) ? json_decode($view_obj->headers) : $headers);
         if (count($result)) {
             $files_for_table = DB::connection('mysql_sys')->table('files')->where('tb_id', '=', $table_meta->id)->get();
             if ($files_for_table) {

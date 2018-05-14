@@ -27,7 +27,7 @@
     <style>
         @keyframes move-twink-back {
             0%  {opacity: 1;font-size: 0;}
-            90% {opacity: 1;font-size: 100%;}
+            80% {opacity: 1;font-size: 100%;}
             100% {opacity: 0;font-size: 100%;}
         }
 
@@ -275,8 +275,8 @@
         .switch_t {
             position: relative;
             display: inline-block;
-            width: 60px;
-            height: 34px;
+            width: 30px;
+            height: 17px;
         }
 
         /* Hide default HTML checkbox */
@@ -298,10 +298,10 @@
         .switch_t .toggler:before {
             position: absolute;
             content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
+            height: 13px;
+            width: 13px;
+            left: 2px;
+            bottom: 2px;
             background-color: white;
             -webkit-transition: .4s;
             transition: .4s;
@@ -316,14 +316,14 @@
         }
 
         .switch_t input:checked + .toggler:before {
-            -webkit-transform: translateX(26px);
-            -ms-transform: translateX(26px);
-            transform: translateX(26px);
+            -webkit-transform: translateX(13px);
+            -ms-transform: translateX(13px);
+            transform: translateX(13px);
         }
 
         /* Rounded togglers */
         .switch_t .toggler.round {
-            border-radius: 34px;
+            border-radius: 17px;
         }
 
         .switch_t .toggler.round:before {
@@ -360,7 +360,7 @@
                 @if(Auth::user())
                     <li style="display: inline-block">
                         <a href="{{ route('profile') }}" style="display: flex;align-items: center;padding: 10px;">
-                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->avatar ? '/upload/users/'.Auth::user()->avatar : url('assets/img/profile.png') }}" width="30" style="margin-right: 5px;">
+                            <img alt="image" class="img-circle avatar" src="{{ Auth::user()->avatar ? '/upload/users/'.Auth::user()->avatar : url('assets/img/profile.png') }}" width="30" height="30" style="margin-right: 5px;">
                             {{ Auth::user()->first_name ? Auth::user()->first_name." ".Auth::user()->last_name : Auth::user()->username }}
                         </a>
                     </li>
