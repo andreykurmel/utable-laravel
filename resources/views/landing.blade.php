@@ -65,12 +65,12 @@
     $(document).ready(function () {
         var idx = 0, max = public_tables.length;
         if (public_tables) {
-            /*setInterval(function() {
+            setInterval(function() {
                 add_star(idx);
 
                 idx++;
                 if (idx == max) idx = 0;
-            }, (speed*1000)/col_stars);*/
+            }, (speed*1000)/col_stars);
         }
     });
 
