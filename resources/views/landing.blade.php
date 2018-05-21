@@ -6,25 +6,33 @@
             <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 490px);width: 980px;">
             TaBuDa</h1>
             <h2 style="position: absolute;z-index: 100;top: calc(40% + 20px);left: calc(50% - 490px);">
-            - a space for managing and sharing tabulated data.<br>
-            - a platform facilitating collaboration of work with tabulated data.</h2>
+            - a space for managing and sharing -<br>
+            - a platform facilitating collaboration of work with -</h2>
+            <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 490px);width: 980px;">
+            TaBulated Data.</h1>
+
         </a>
-        <div style="position:absolute; bottom: 15px; left: 0; right: 0;text-align: center;">
+        <div style="position:absolute; bottom: 25px; left: 0; right: 0;text-align: center;">
             <button id="about_btn" class="btn btn-default btn-lg" style="margin-left: 15px;border: 3px solid #ccc;" onclick="if($('#about_div').is(':visible')) {$('._hide').hide(); $('#header_a').show();} else {$('._hide').hide(); $('#about_div').show();}">About</button>
-            <button id="features_btn" class="btn btn-default btn-lg" style="margin-left: 15px;border: 3px solid #ccc;" onclick="if($('#features_div').is(':visible')) {$('._hide').hide(); $('#header_a').show();} else {$('._hide').hide(); $('#features_div').show();}">Features</button>
+
+            <!--button id="features_btn" class="btn btn-default btn-lg" style="margin-left: 15px;border: 3px solid #ccc;" onclick="if($('#features_div').is(':visible')) {$('._hide').hide(); $('#header_a').show();} else {$('._hide').hide(); $('#features_div').show();}">Features</button-->
+
             <button id="contact_btn" class="btn btn-default btn-lg" style="margin-left: 15px;border: 3px solid #ccc;" onclick="if($('#contact_div').is(':visible')) {$('._hide').hide(); $('#header_a').show();} else {$('._hide').hide(); $('#contact_div').show();}">Contact Us</button>
         </div>
-        <div id="about_div" class="_hide" style="position:absolute; top: 40px; right: 30px; left: 30px; bottom: 100px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
+
+        <div id="about_div" class="_hide" style="position:absolute; top: 200px; right: 100px; left: 100px; bottom: 200px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
             <div style="width: 100%; height: 100%; display: flex; align-items: center;justify-content: center;">
                 ABOUT
             </div>
         </div>
-        <div id="features_div" class="_hide" style="position:absolute; top: 40px; right: 30px; left: 30px; bottom: 100px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
+
+        <div id="features_div" class="_hide" style="position:absolute; top: 200px; right: 100px; left: 100px; bottom: 200px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
             <div style="width: 100%; height: 100%; display: flex; align-items: center;justify-content: center;">
                 FEATURES
             </div>
         </div>
-        <div id="contact_div" class="_hide" style="position:absolute; top: 40px; right: 30px; left: 30px; bottom: 100px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
+
+        <div id="contact_div" class="_hide" style="position:absolute; top: 200px; right: 100px; left: 100px; bottom: 200px; background-color: rgba(255,255,255,0.8); opacity: 0.8; border: 3px solid #ccc; border-radius: 5px; display: none;">
             <div style="width: 100%; height: 100%; display: flex; align-items: center;justify-content: center;">
                 <div class="container">
                     <div class="row">
