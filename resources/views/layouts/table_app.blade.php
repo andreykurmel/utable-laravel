@@ -597,7 +597,13 @@
 {!! HTML::script('assets/plugins/jstree/jstree.min.js') !!}
 {!! HTML::script('assets/plugins/jstree/jstree.min.js') !!}
 {!! HTML::script('assets/plugins/dropzone/dropzone.js') !!}
-{!! HTML::script('assets/js/lib/table.js') !!}
+{!! HTML::script('assets/js/app/viewTable.js') !!}
+{!! HTML::script('assets/js/app/favoriteTable.js') !!}
+{!! HTML::script('assets/js/app/displaySettings.js') !!}
+{!! HTML::script('assets/js/app/ddlSettings.js') !!}
+{!! HTML::script('assets/js/app/permissionsSettings.js') !!}
+{!! HTML::script('assets/js/app/importTable.js') !!}
+{!! HTML::script('assets/js/app/additionalFunctions.js') !!}
 
 {{-- Login scripts --}}
 {!! HTML::script('assets/js/as/login.js') !!}
