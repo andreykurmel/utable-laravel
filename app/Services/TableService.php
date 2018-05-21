@@ -142,7 +142,7 @@ class TableService {
             $sql->where($tableName.'.'.'lat_dec', '<', ($query['lat_dec'] + $dist_lat));
             $sql->where($tableName.'.'.'long_dec', '>', ($query['long_dec'] - $dist_long));
             $sql->where($tableName.'.'.'long_dec', '<', ($query['long_dec'] + $dist_long));
-        } elseif ($query['opt'] == 'settings' && $query['tb_id']) {
+        } elseif ($query['opt'] == 'settings' && !empty($query['tb_id'])) {
             $sql->where($tableName.'.'.'tb_id', '=', $query['tb_id']);
             $sql->where($tableName.'.'.'user_id', '=', Auth::user() ? Auth::user()->id : $table_meta->owner);
             if (count($fields_for_settings_select) > 0) {
