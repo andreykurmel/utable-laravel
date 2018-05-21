@@ -688,6 +688,8 @@ class TableService {
         for ($i = 0; $i < count($header_data); $i++) {
             unset($header_data[$i]->id);
             unset($header_data[$i]->is_showed);
+            unset($header_data[$i]->_u_factor);
+            unset($header_data[$i]->_u_opr);
             $header_data[$i]->user_id = Auth::user()->id;
             $header_data[$i]->web = $header_data[$i]->field == 'id' ? 'No' : $header_data[$i]->field;
             DB::connection('mysql_sys')->table('tb_settings_display')->insert((array)$header_data[$i]);
