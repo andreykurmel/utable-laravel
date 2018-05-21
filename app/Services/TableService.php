@@ -68,7 +68,7 @@ class TableService {
                 $table_sel->owner != Auth::user()->id
             ) {
                 $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_sel->id);
-                if (!$tmp_fields_set) {
+                if (count($tmp_fields_set) == 0) {
                     $tmp_fields_set = $this->getPermissionsFields(0, $table_sel->id);
                 }
                 foreach ($tmp_fields_set as $fld) {
@@ -102,7 +102,7 @@ class TableService {
                     $table_meta->owner != Auth::user()->id
                 ) {
                     $tmp_fields_set = $this->getPermissionsFields(Auth::user()->id, $table_meta->id);
-                    if (!$tmp_fields_set) {
+                    if (count($tmp_fields_set) == 0) {
                         $tmp_fields_set = $this->getPermissionsFields(0, $table_meta->id);
                     }
                     foreach ($tmp_fields_set as $fld) {
