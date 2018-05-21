@@ -97,7 +97,7 @@ function showFavoriteDataTable(headers, data) {
                     '>' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tableData += (data[i][d_key] > 0 && tableDDLs['x_ddl_id'][data[i][d_key]] !== null ? tableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
                     tableData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
@@ -129,7 +129,7 @@ function showFavoriteDataTable(headers, data) {
                     '>' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['x_ddl_id'][data[i][d_key]] !== null ? tableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
                     tbHiddenData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';

@@ -376,9 +376,9 @@ class TableService {
                 if ($tableName == 'tb_settings_display')
                 $blet = DB::connection('mysql_sys')->table('ddl')->get();
             }
-            $respDDLs['ddl_id'] = [];
+            $respDDLs['x_ddl_id'] = [];
             foreach ($blet as $item) {
-                $respDDLs['ddl_id'][$item->id] = $item->name;
+                $respDDLs['x_ddl_id'][$item->id] = $item->name;
             }
         }
 

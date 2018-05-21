@@ -508,10 +508,11 @@
                                 <ul class="tabs" style="background-color: #FFF; padding: 5px;">
                                     <li class="active" id="ddl_tab_li_lists" style="float: left;"><a href="javascript:void(0)" onclick="ddlTabShowLists()" class='with-med-padding'>Lists</a></li>
                                     <li id="ddl_tab_li_options" style="float: left;"><a href="javascript:void(0)" onclick="ddlTabShowOptions()" class='with-med-padding'>Options <span id="settings_selected_DDL_name"></span></a></li>
+                                    <li style="float: right;border: none;"><a href="javascript:void(0)" onclick="showInfosTab(1)" class='with-med-padding'><i class="fa fa-info"></i></a></li>
                                 </ul>
                             </div>
                             <!-- content -->
-                            <div id="ddl_tab_lists" class="dataTables_body" style="overflow: auto; position: absolute; top: 42px; bottom: 32px; left: 10px; right: 10px; background-color: #fff;">
+                            <div id="ddl_tab_lists" class="dataTables_body" style="overflow: auto; position: absolute; top: 42px; bottom: 32px; left: 10px; right: 10px; background-color: #fff;z-index: 100;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -543,7 +544,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div id="ddl_tab_options" class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;">
+                            <div id="ddl_tab_options" class="dataTables_body _settings_selected_DDL_regular" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;z-index: 100;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -575,7 +576,7 @@
                                     </table>
                                 </div>
                             </div>
-                            <div id="ddl_tab_refs" class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;">
+                            <div id="ddl_tab_refs" class="dataTables_body _settings_selected_DDL_reference" style="overflow-x: auto; overflow-y: hidden; position: absolute; top: 42px; bottom: 32px; right: 10px; left: 10px; background-color: #fff; display: none;z-index: 100;">
                                 <table class="table dataTable" style="margin-bottom: 0;position: absolute;top: 0;left: 0;right: 0;z-index: 100;">
                                     <thead>
                                     <tr>
@@ -606,6 +607,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div id="ddl_tab_infos" style="overflow-x: auto; overflow-y: hidden; position: absolute; height: 150px; bottom: 32px; right: 10px; left: 10px; display: none;z-index: 200;">
+                                <textarea class="form-control" style="position: absolute; bottom: 0;top: 0; left: 0; right: 0;resize: none;background-color: #eea;" {{ Auth::user() && Auth::user()->role_id == 1 ? 'onchange=saveDDLTableNotes(this)' : 'disabled' }}></textarea>
                             </div>
 
 

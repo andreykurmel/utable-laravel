@@ -120,7 +120,7 @@ function showSettingsDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tableData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tableData += (data[i][d_key] > 0 && settingsTableDDLs['x_ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key === 'web' || d_key === 'filter') {
                     tableData += '<label class="switch_t">' +
@@ -164,7 +164,7 @@ function showSettingsDataTable(headers, data) {
                     'style="position:relative;' + (headers[key].web == 'No' ? 'display: none;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tbHiddenData += (data[i][d_key] > 0 && settingsTableDDLs['x_ddl_id'][data[i][d_key]] !== null ? settingsTableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key === 'web' || d_key === 'filter') {
                     tbHiddenData += '<label class="switch_t">' +

@@ -2,15 +2,12 @@
 
 @section('content')
     <div id="stars_appears" style="position: absolute;top: 50px;left: 0;text-align: center;right: 0;bottom: 0;background-color: #222;">
-        <a id="header_a" class="_hide" href="{{ route('homepage') }}">
-            <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 490px);width: 980px;">
-            TaBuDa</h1>
-            <h2 style="position: absolute;z-index: 100;top: calc(40% + 20px);left: calc(50% - 490px);">
+        <a id="header_a" class="_hide" href="{{ route('homepage') }}" style="display: block;position: absolute;z-index: 100;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <h1 style="margin: 0px;">TaBuDa</h1>
+            <h2 style="margin: 5px 0;">
             - a space for managing and sharing -<br>
             - a platform facilitating collaboration of work with -</h2>
-            <h1 style="position: absolute;z-index: 100;top: 40%;left: calc(50% - 490px);width: 980px;">
-            TaBulated Data.</h1>
-
+            <h1 style="margin: 0px;">TaBulated Data.</h1>
         </a>
         <div style="position:absolute; bottom: 25px; left: 0; right: 0;text-align: center;">
             <button id="about_btn" class="btn btn-default btn-lg" style="margin-left: 15px;border: 3px solid #ccc;" onclick="if($('#about_div').is(':visible')) {$('._hide').hide(); $('#header_a').show();} else {$('._hide').hide(); $('#about_div').show();}">About</button>
@@ -97,16 +94,19 @@
         }, speed*1000);
     }
 
-    /*$(document).on('click', function (e) {console.log("!");
-        if ($('#about_div').is(':visible') && e.target.id != 'about_div') {
+    $(document).on('click', function (e) {console.log("!");
+        if ($('#about_div').is(':visible') && e.target.id != 'about_div' && e.target.id != 'about_btn') {
             $('#about_div').hide();
+            $('#header_a').show();
         }
-        if ($('#features_div').is(':visible') && e.target.id != 'features_div') {
+        if ($('#features_div').is(':visible') && e.target.id != 'features_div' && e.target.id != 'features_btn') {
             $('#features_div').hide();
+            $('#header_a').show();
         }
-        if ($('#contact_div').is(':visible') && e.target.id != 'contact_div') {
+        if ($('#contact_div').is(':visible') && e.target.id != 'contact_div' && e.target.id != 'contact_btn') {
             $('#contact_div').hide();
+            $('#header_a').show();
         }
-    });*/
+    });
 </script>
 @endpush

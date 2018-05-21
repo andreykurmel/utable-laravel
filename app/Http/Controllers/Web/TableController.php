@@ -273,6 +273,12 @@ class TableController extends Controller
     {
         $DDLdatas = [];
         if (Auth::user()) {
+            $ddl_notes = DB::connection('mysql_sys')->table('tb')->whereIn('db_tb', ['ddl', 'ddl_items', 'cdtns'])->get();
+            $DDLdatas['ddl_notes'] = [];
+            foreach ($ddl_notes as $dn) {
+                $DDLdatas['ddl_notes'][$dn->db_tb] = ['id' => $dn->id, 'notes' => $dn->table_notes];
+            }
+
             $DDLdatas['DDL_hdr'] = $this->tableService->getHeaders('ddl');
             $DDLdatas['DDL_items_hdr'] = $this->tableService->getHeaders('ddl_items');
             $DDLdatas['table_meta'] = DB::connection('mysql_sys')->table('tb')->where('db_tb', '=', $request->tableName)->first();

@@ -427,7 +427,7 @@ function showDataTable(headers, data) {
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tableData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tableData += (data[i][d_key] > 0 && tableDDLs['x_ddl_id'][data[i][d_key]] !== null ? tableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (headers[key].f_type == 'Attachment') {
                     tableData += (String(data[i][d_key]).indexOf('<') > -1 ? data[i][d_key] : '');//'<i class="fa fa-paperclip"></i>';
@@ -448,7 +448,7 @@ function showDataTable(headers, data) {
         //add row data
         if (i == 0) {
             tbAddRow += "<tr>";
-            tbAddRow += '<td></td>';
+            tbAddRow += '<td><div class="td_wrap"></div></td>';
             tbAddRow += '<td></td>';
             for(key in headers) {
                 d_key = headers[key].field;
@@ -507,7 +507,7 @@ function showDataTable(headers, data) {
                     (headers[key].max_wth > 0 ? 'max-width: '+headers[key].max_wth+'px;' : '') + '">' +
                     '<div class="td_wrap" style="'+(headers[key].dfot_wth > 0 && localStorage.getItem('stretched_tables')=='0' ? 'width: ' + (headers[key].dfot_wth-14)+'px;' : '')+'">';
                 if (d_key === 'ddl_id' || d_key === 'unit_ddl') {
-                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['ddl_id'][data[i][d_key]] !== null ? tableDDLs['ddl_id'][data[i][d_key]] : '');
+                    tbHiddenData += (data[i][d_key] > 0 && tableDDLs['x_ddl_id'][data[i][d_key]] !== null ? tableDDLs['x_ddl_id'][data[i][d_key]] : '');
                 } else
                 if (d_key == 'createdBy' || d_key == 'modifiedBy') {
                     var usr = allUsers.find(function (el) {
@@ -1444,7 +1444,6 @@ function showInlineEdit(id, instant) {
     var inp_t = $('#'+id).data('input'),
         idx = $('#'+id).data('idx'),
         key = $('#'+id).data('key');
-    console.log(idx, tableHeaders[idx]);
 
 
 
@@ -1523,8 +1522,8 @@ function showInlineEdit(id, instant) {
             }
         } else
         if (key == 'ddl_id' || key == 'unit_ddl') {
-            for(var i in ltableDDls['ddl_id']) {
-                html += '<option value="'+i+'">'+ltableDDls['ddl_id'][i]+'</option>';
+            for(var i in ltableDDls['x_ddl_id']) {
+                html += '<option value="'+i+'">'+ltableDDls['x_ddl_id'][i]+'</option>';
             }
         } else
         if (key == 'unit' || key == 'unit_display') {
@@ -1760,7 +1759,7 @@ function editSelectedData(idx) {
         ltableHeaders = (lv ? tableHeaders : settingsTableHeaders),
         ltableDDLs = (lv ? tableDDLs : settingsTableDDLs),
         not_editable = (lv ? ['id','is_favorited'] : ['id','is_favorited','field','name']);
-    var tmp_ddl_id = ltableDDLs['ddl_id'];
+    var tmp_ddl_id = ltableDDLs['x_ddl_id'];
 
     if (idx > -1) {
         lv ? $('#modal_btn_delete').show() : $('#modal_btn_delete').hide();

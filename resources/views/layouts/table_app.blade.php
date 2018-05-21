@@ -343,18 +343,20 @@
             <ul class="nav navbar-nav navbar-left" style="float: left;">
                 <li style="display: inline-block">
                     <a href="{{ Route::currentRouteName() != 'landing' ? $server : route("homepage") }}" style="padding: 10px 0;height: 30px;">
-                        <img src="{{ url('assets/img/tdp-logo-no-text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
+                        <img src="{{ Route::currentRouteName() != 'landing' ? url('assets/img/tdp-logo-no-text.png') : url('assets/img/tabuda_w_text.png') }}" alt="{{ settings('app_name') }}" style="height: 30px;">
                     </a>
                 </li>
-                <li style="display: inline-block">
-                    <button id="theme_btn" class="btn btn-default" onclick="$('#theme_menu').toggle();" style="border: none;margin: 12px;padding: 2px 0;height: 25px;">
-                        <img id="theme_img" src="/img/theme.png" height="20">
-                    </button>
-                    <div id="theme_menu" style="position: absolute;top: 37px;z-index: 100;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 35px;left: 10px;">
-                        <button class="btn btn-default" onclick="changeTheme('light');" style="background-color: #fff;padding: 10px;"></button>
-                        <button class="btn btn-default" onclick="changeTheme('dark');" style="background-color: #ccc;padding: 10px;margin-top:10px;"></button>
-                    </div>
-                </li>
+                @if(Route::currentRouteName() != 'landing')
+                    <li style="display: inline-block">
+                        <button id="theme_btn" class="btn btn-default" onclick="$('#theme_menu').toggle();" style="border: none;margin: 12px;padding: 2px 0;height: 25px;">
+                            <img id="theme_img" src="/img/theme.png" height="20">
+                        </button>
+                        <div id="theme_menu" style="position: absolute;top: 37px;z-index: 100;display: none;padding: 5px;background-color: #fff;border: solid 1px #ccc;width: 35px;left: 10px;">
+                            <button class="btn btn-default" onclick="changeTheme('light');" style="background-color: #fff;padding: 10px;"></button>
+                            <button class="btn btn-default" onclick="changeTheme('dark');" style="background-color: #ccc;padding: 10px;margin-top:10px;"></button>
+                        </div>
+                    </li>
+                @endif
             </ul>
             <ul class="nav navbar-nav navbar-right" style="float: right;">
                 @if(Auth::user())
